@@ -9,7 +9,8 @@ class SecondaryStructurePrediction(Task):
     def __init__(self, num_states, dataset="training", preprocess=False):
         if num_states not in {3, 8}:
             raise ValueError(
-                "`num_states` must be equal to 3 or 8. " f"Recieved {num_states}."
+                "`num_states` must be equal to 3 or 8. "
+                f"Recieved {num_states}."
             )
 
         self.supported_datasets = {
