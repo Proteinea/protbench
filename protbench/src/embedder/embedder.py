@@ -44,11 +44,14 @@ class Embedder:
         else:
             self.save_path.mkdir(exist_ok=True)
 
+    def save_to_disk_or_store_in_memory(self, idx, embedding):
+        if self.save_path is not None:
+            np.save(self.save_path / Path(str(idx)), embedding)
+        else:
+            self.embeddings.append(embedding)
+
     def embed_data(self, task: Task):
         sequences = task.load_sequences()
-        for idx, example in enumerate(tqdm(data)):
+        for idx, example in enumerate(tqdm(sequences)):
             embedding = self.embedding_function(example)
-            if self.save_path is not None:
-                np.save(self.save_path / Path(str(idx)), embedding)
-            else:
-                self.embeddings.append(embedding)
+            self.save_to_disk_or_store_in_memory(idx, embedding)
