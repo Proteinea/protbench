@@ -12,7 +12,9 @@ def mark_deprecated(use_instead: str = None):
             warnings.warn(msg, DeprecationWarning)
             out = func(*args, **kwargs)
             return out
+
         return wrapper
+
     return _mark_deprecated
 
 
@@ -26,5 +28,7 @@ def mark_experimental(use_instead: str = None):
             warnings.warn(msg, UserWarning)
             out = func(*args, **kwargs)
             return out
+
         return wrapper
+
     return _mark_experimental

@@ -4,6 +4,7 @@ import torch
 from pathlib import Path
 import numpy as np
 from protbench.src import utils
+from protbench.src.tasks import Task
 
 
 @utils.mark_experimental(use_instead=None)
@@ -43,7 +44,8 @@ class Embedder:
         else:
             self.save_path.mkdir(exist_ok=True)
 
-    def embed_data(self, data):
+    def embed_data(self, task: Task):
+        sequences = task.load_sequences()
         for idx, example in enumerate(tqdm(data)):
             embedding = self.embedding_function(example)
             if self.save_path is not None:
