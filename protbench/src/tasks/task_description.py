@@ -35,17 +35,17 @@ class TaskDescription:
         return self._task_name
 
     @task_name.setter
-    def task_name(self, task_name_: str) -> None:
-        utils.validate_type("task_name", task_name_, str)
-        self._task_name = task_name_
+    def task_name(self, task_name: str) -> None:
+        utils.validate_type("task_name", task_name, str)
+        self._task_name = task_name
 
     @property
     def task_type(self) -> Dict[str, str]:
         return self._task_type
 
     @task_type.setter
-    def task_type(self, task_type_: Tuple[Entity, Operation]) -> None:
-        entity, operation = task_type_
+    def task_type(self, task_type: Tuple[Entity, Operation]) -> None:
+        entity, operation = task_type
         valid_entities = get_args(Entity)
         valid_operations = get_args(Operation)
         if entity not in valid_entities:
@@ -66,27 +66,27 @@ class TaskDescription:
         return self.task_description
 
     @task_description.setter
-    def task_description(self, task_description_) -> None:
-        utils.validate_type("task_description", task_description_, str)
-        self._task_description = task_description_
+    def task_description(self, task_description) -> None:
+        utils.validate_type("task_description", task_description, str)
+        self._task_description = task_description
 
     @property
     def num_examples(self) -> int | None:
         return self._num_examples
 
     @num_examples.setter
-    def num_examples(self, num_examples_: Optional[int]) -> None:
-        if num_examples_ is None:
+    def num_examples(self, num_examples: Optional[int]) -> None:
+        if num_examples is None:
             self._num_examples = None
             return
-        utils.validate_type("num_examples", num_examples_, int)
-        if num_examples_ < 1:
+        utils.validate_type("num_examples", num_examples, int)
+        if num_examples < 1:
             raise ValueError(
                 f"Expected num_examples to be greater than zero "
                 "but got {num_examples_} instead."
             )
         else:
-            self._num_examples = num_examples_
+            self._num_examples = num_examples
 
     def __repr__(self) -> str:
         return (
