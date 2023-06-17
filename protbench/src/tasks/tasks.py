@@ -32,8 +32,8 @@ class ResidueToClass(Task):
         """
         super(ResidueToClass, self).__init__()
 
-        self.train_data: List[Dict[str, str | List[int]]] = []
-        self.val_data: List[Dict[str, str | List[int]]] = []
+        self._train_data: List[Dict[str, str | List[int]]] = []
+        self._val_data: List[Dict[str, str | List[int]]] = []
 
         self.num_classes: int = 0
         self.class_to_id: Dict[str, int] = {}
@@ -45,11 +45,13 @@ class ResidueToClass(Task):
 
         self._task_description = self._create_description()
 
-    def get_train_data(self) -> List[Dict[str, str | List[int]]]:
-        return self.train_data
+    @property
+    def train_data(self) -> List[Dict[str, str | List[int]]]:
+        return self._train_data
 
-    def get_val_data(self) -> List[Dict[str, str | List[int]]]:
-        return self.val_data
+    @property
+    def val_data(self) -> List[Dict[str, str | List[int]]]:
+        return self._val_data
 
     def encode_label(self, label: str) -> List[int]:
         """Encode a label string into a list of integers.
@@ -96,8 +98,8 @@ class ResidueToClass(Task):
             else:
                 val_data.append(example)
 
-        self.train_data = train_data
-        self.val_data = val_data
+        self._train_data = train_data
+        self._val_data = val_data
 
     def mask_labels(self, label: List[int], mask: List[bool]) -> List[int]:
         """Mask the labels with the given mask by setting the masked classes to the default
@@ -180,8 +182,8 @@ class SequenceToClass(Task):
             where SET is either train or val and LABEL is the class label.
         """
         super().__init__()
-        self.train_data: List[Dict[str, str | int]] = []
-        self.val_data: List[Dict[str, str | int]] = []
+        self._train_data: List[Dict[str, str | int]] = []
+        self._val_data: List[Dict[str, str | int]] = []
 
         self.num_classes: int = 0
         self.class_to_id: Dict[str, int] = {}
@@ -192,11 +194,13 @@ class SequenceToClass(Task):
 
         self._task_description = self._create_description()
 
-    def get_train_data(self) -> List[Dict[str, str | int]]:
-        return self.train_data
+    @property
+    def train_data(self) -> List[Dict[str, str | int]]:
+        return self._train_data
 
-    def get_val_data(self) -> List[Dict[str, str | int]]:
-        return self.val_data
+    @property
+    def val_data(self) -> List[Dict[str, str | int]]:
+        return self._val_data
 
     def encode_label(self, label: str) -> int:
         if label not in self.class_to_id:
@@ -216,8 +220,8 @@ class SequenceToClass(Task):
                 train_data.append({"sequence": str(item.seq), "label": label})
             else:
                 val_data.append({"sequence": str(item.seq), "label": label})
-        self.train_data = train_data
-        self.val_data = val_data
+        self._train_data = train_data
+        self._val_data = val_data
 
     def _parse_sequence_description(self, sequence_description: str) -> Tuple[str, str]:
         sequence_description_split = sequence_description.split(" ")
@@ -263,18 +267,20 @@ class SequenceToValue(Task):
             where SET is either train or val and VALUE is the value to predict.
         """
         super().__init__()
-        self.train_data: List[Dict[str, str | float]] = []
-        self.val_data: List[Dict[str, str | float]] = []
+        self._train_data: List[Dict[str, str | float]] = []
+        self._val_data: List[Dict[str, str | float]] = []
 
         self.load_and_preprocess_data(data_file)
 
         self._task_description = self._create_description()
 
-    def get_train_data(self) -> List[Dict[str, str | float]]:
-        return self.train_data
+    @property
+    def train_data(self) -> List[Dict[str, str | float]]:
+        return self._train_data
 
-    def get_val_data(self) -> List[Dict[str, str | float]]:
-        return self.val_data
+    @property
+    def val_data(self) -> List[Dict[str, str | float]]:
+        return self._val_data
 
     def load_and_preprocess_data(self, data_file) -> None:
         train_data = []
@@ -286,8 +292,8 @@ class SequenceToValue(Task):
                 train_data.append({"sequence": str(item.seq), "label": label})
             else:
                 val_data.append({"sequence": str(item.seq), "label": label})
-        self.train_data = train_data
-        self.val_data = val_data
+        self._train_data = train_data
+        self._val_data = val_data
 
     def _parse_sequence_description(
         self, sequence_description: str

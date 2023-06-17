@@ -7,8 +7,9 @@ from protbench.src.tasks import TaskDescription
 class Task(abc.ABC):
     """Base class for all tasks. All tasks must inherit from this class."""
 
+    @property
     @abc.abstractmethod
-    def get_train_data(self) -> List[Dict[str, str | Any]]:
+    def train_data(self) -> List[Dict[str, str | Any]]:
         """Abstract method for returning the training data.
 
         Returns:
@@ -19,7 +20,8 @@ class Task(abc.ABC):
         """
         pass
 
-    def get_val_data(self) -> List[Dict[str, str | Any]]:
+    @property
+    def val_data(self) -> List[Dict[str, str | Any]]:
         """Same as get_train_data but for validation data (if available)."""
         return []
 
