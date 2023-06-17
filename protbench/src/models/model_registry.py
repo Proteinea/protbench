@@ -25,7 +25,7 @@ class ModelRegistry:
     pretrained_model_name_map: Dict[str, Any] = {}
 
     @classmethod
-    def add_downstream_model(
+    def register_downstream(
         cls,
         model_name: str,
         model_cls: Optional[Type[torch.nn.Module]] = None,
@@ -44,7 +44,7 @@ class ModelRegistry:
                 f"Please choose a different name."
             )
         if model_cls is None:  # expected when using decorator
-            return lambda model_cls: cls.add_downstream_model(model_name, model_cls)
+            return lambda model_cls: cls.register_downstream(model_name, model_cls)
         if not issubclass(model_cls, torch.nn.Module):
             logging.warning(
                 f"Downstream model {model_name} does not inherit from the torch.nn.Module."
@@ -53,7 +53,7 @@ class ModelRegistry:
         return model_cls
 
     @classmethod
-    def add_pretrained_model(
+    def register_pretrained(
         cls,
         model_name: str,
         model_cls: Any = None,
@@ -72,7 +72,7 @@ class ModelRegistry:
                 f"Please choose a different name."
             )
         if model_cls is None:  # expected when using decorator
-            return lambda model_cls: cls.add_pretrained_model(model_name, model_cls)
+            return lambda model_cls: cls.register_pretrained(model_name, model_cls)
 
         cls.pretrained_model_name_map[model_name] = model_cls
         return model_cls

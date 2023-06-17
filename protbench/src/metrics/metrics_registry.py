@@ -19,7 +19,7 @@ class MetricRegistry:
     metric_name_map: Dict[str, Callable] = {}
 
     @classmethod
-    def add_metric(
+    def register(
         cls,
         metric_name: str,
         metric_fn: Optional[Callable] = None,
@@ -39,7 +39,7 @@ class MetricRegistry:
                 f"Please choose a different name."
             )
         if metric_fn is None:  # expected when using decorator
-            return lambda metric_fn: cls.add_metric(metric_name, metric_fn)
+            return lambda metric_fn: cls.register(metric_name, metric_fn)
         if not callable(metric_fn):
             raise TypeError(
                 f"Expected metric {metric_name} to be callable "

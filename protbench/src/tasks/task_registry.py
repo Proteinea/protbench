@@ -22,7 +22,7 @@ class TaskRegistry:
     task_name_map: Dict[str, Type[Task]] = {}
 
     @classmethod
-    def add_task(
+    def register(
         cls,
         task_name: str,
         task_cls: Optional[Type[Task]] = None,
@@ -41,7 +41,7 @@ class TaskRegistry:
                 f"Please choose a different name."
             )
         if task_cls is None:  # expected when using decorator
-            return lambda task_cls: cls.add_task(task_name, task_cls)
+            return lambda task_cls: cls.register(task_name, task_cls)
         if not issubclass(task_cls, Task):
             logging.warning(
                 f"Task {task_name} does not inherit from the base Task class."
