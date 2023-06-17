@@ -17,10 +17,10 @@ class GlobalMaxPooling1D(nn.Module):
         """
 
         super().__init__()
-        self.global_max_pool1d = partial(torch.max, dim=1)
+        self.global_max_pool1d = partial(torch.amax, dim=1)
 
     def forward(self, x):
-        out, _ = self.global_max_pool1d(x)
+        out = self.global_max_pool1d(x)
         return out
 
 
