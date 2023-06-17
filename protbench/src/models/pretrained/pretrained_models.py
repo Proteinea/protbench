@@ -81,8 +81,7 @@ class HuggingfaceModels(BasePretrainedModel):
         sequences_dataloader = self.get_dataloader(sequences)
         self.model.eval()
         self.model.to(device)
-        embeddings = [torch.empty(1)] * len(sequences)
-        i = 0
+        embeddings = []
         with tqdm(
             sequences_dataloader, desc="Embedding sequences", unit="batch", ascii=" ="
         ) as tqdm_dataloader:
@@ -93,8 +92,7 @@ class HuggingfaceModels(BasePretrainedModel):
                 for attention_mask, embds in zip(
                     batch["attention_mask"].to("cpu"), embds_batch
                 ):
-                    embeddings[i] = embds[attention_mask == 1]
-                    i += 1
+                    embeddings.append(embds[attention_mask == 1])
 
         self.model.to("cpu")
         return embeddings
