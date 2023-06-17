@@ -7,8 +7,8 @@ from protbench.src.metrics import MetricRegistry
 from protbench.src.metrics.utils import preprocess_classification_predictions
 
 
-@MetricRegistry.add_metric("accuracy")
-def accuracy(p: EvalPrediction, _) -> float:
+@MetricRegistry.register("accuracy")
+def compute_accuracy(p: EvalPrediction, *args, **kwargs) -> float:
     """Compute accuracy for classification tasks.
 
     Args:
@@ -22,8 +22,8 @@ def accuracy(p: EvalPrediction, _) -> float:
     return accuracy_score(predictions, labels)
 
 
-@MetricRegistry.add_metric("precision")
-def precision(p: EvalPrediction, task_description: TaskDescription) -> float:
+@MetricRegistry.register("precision")
+def compute_precision(p: EvalPrediction, task_description: TaskDescription) -> float:
     """Compute precision for classification tasks.
 
     Args:
@@ -43,8 +43,8 @@ def precision(p: EvalPrediction, task_description: TaskDescription) -> float:
     return precision_score(predictions, labels, average="macro")
 
 
-@MetricRegistry.add_metric("recall")
-def recall(p: EvalPrediction, task_description: TaskDescription) -> float:
+@MetricRegistry.register("recall")
+def compute_recall(p: EvalPrediction, task_description: TaskDescription) -> float:
     """Compute recall for classification tasks.
 
     Args:
@@ -64,8 +64,8 @@ def recall(p: EvalPrediction, task_description: TaskDescription) -> float:
     return recall_score(predictions, labels, average="macro")
 
 
-@MetricRegistry.add_metric("f1")
-def f1(p: EvalPrediction, task_description: TaskDescription) -> float:
+@MetricRegistry.register("f1")
+def compute_f1(p: EvalPrediction, task_description: TaskDescription) -> float:
     """Compute f1 for classification tasks.
 
     Args:
@@ -85,8 +85,8 @@ def f1(p: EvalPrediction, task_description: TaskDescription) -> float:
     return f1_score(predictions, labels, average="macro")
 
 
-@MetricRegistry.add_metric("spearmanr")
-def spearmanr(p: EvalPrediction, _) -> float:
+@MetricRegistry.register("spearman")
+def compute_spearman(p: EvalPrediction, *args, **kwargs) -> float:
     """
     Compute spearmanr correlation for regression tasks.
 
