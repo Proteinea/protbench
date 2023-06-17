@@ -2,8 +2,8 @@ from typing import Literal, get_args, Optional, Tuple, Dict
 
 from protbench.src.tasks import utils
 
-Entity = Literal["token", "sequence"]
-Operation = Literal[
+ENTITY = Literal["token", "sequence"]
+OPERATION = Literal[
     "binary_classification",
     "multiclass_classification",
     "multilabel_classification",
@@ -16,7 +16,7 @@ class TaskDescription:
     def __init__(
         self,
         name: str,
-        task_type: Tuple[Entity, Operation],
+        task_type: Tuple[ENTITY, OPERATION],
         description: str,
     ):
         """Creates a task description.
@@ -44,10 +44,10 @@ class TaskDescription:
         return self._task_type
 
     @task_type.setter
-    def task_type(self, task_type: Tuple[Entity, Operation]) -> None:
+    def task_type(self, task_type: Tuple[ENTITY, OPERATION]) -> None:
         entity, operation = task_type
-        valid_entities = get_args(Entity)
-        valid_operations = get_args(Operation)
+        valid_entities = get_args(ENTITY)
+        valid_operations = get_args(OPERATION)
         if entity not in valid_entities:
             raise ValueError(
                 f"Expected entity to be one of {', '.join(valid_entities)}"
