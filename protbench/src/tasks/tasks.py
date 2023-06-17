@@ -1,17 +1,17 @@
 from typing import Tuple, List, Dict
 
 from Bio import SeqIO
-import torch
 
 from protbench.src.tasks import Task, TaskRegistry, TaskDescription
 
 
-@TaskRegistry.add_task("residue_to_class")
+@TaskRegistry.register("residue_to_class")
 class ResidueToClass(Task):
     def __init__(
         self,
         seqs_file: str,
         labels_file: str,
+        ignore_index: int = -100,
     ):
         """A generic class for any task where the goal is to predict a class for each
             residue in a protein sequence.
@@ -28,6 +28,7 @@ class ResidueToClass(Task):
 
                 Note: the 'MASK' field does not perform any attention masking on the input sequence. It only affects the loss and metrics computation.
                 Note: The sequence, mask, and labels length must be the same for each sequence in the file.
+            ignore_index (int, optional): the index to ignore in the loss computation. Defaults to -100 (default value for CrossEntropyLoss ignore index).
         """
         super(ResidueToClass, self).__init__()
 
@@ -37,6 +38,7 @@ class ResidueToClass(Task):
         self.num_classes: int = 0
         self.class_to_id: Dict[str, int] = {}
         self.id_to_class: Dict[int, str] = {}
+        self.ignore_index = ignore_index
 
         self.load_and_preprocess_data(seqs_file, labels_file)
         self._check_number_of_classes()
@@ -113,10 +115,9 @@ class ResidueToClass(Task):
         Returns:
             List[int]: masked label
         """
-        ignore_index = torch.nn.CrossEntropyLoss().ignore_index
         for i, mask_value in enumerate(mask):
             if mask_value == 0:
-                label[i] = ignore_index
+                label[i] = self.ignore_index
         return label
 
     def _parse_label_description(
@@ -166,7 +167,7 @@ class ResidueToClass(Task):
             )
 
 
-@TaskRegistry.add_task("sequence_to_class")
+@TaskRegistry.register("sequence_to_class")
 class SequenceToClass(Task):
     def __init__(self, data_file: str) -> None:
         """Generic task of predicting a class for a sequence.
@@ -248,7 +249,7 @@ class SequenceToClass(Task):
             )
 
 
-@TaskRegistry.add_task("sequence_to_value")
+@TaskRegistry.register("sequence_to_value")
 class SequenceToValue(Task):
     def __init__(self, data_file: str) -> None:
         """Generic task of predicting a value for a sequence.
@@ -258,7 +259,7 @@ class SequenceToValue(Task):
                 The file must have the following format:
                 >seq_id SET=train/val VALUE=value
                 sequence
-            
+
             where SET is either train or val and VALUE is the value to predict.
         """
         super().__init__()
