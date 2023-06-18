@@ -42,7 +42,7 @@ class TaskRegistry:
         if task_cls is None:  # expected when using decorator
             return lambda task_cls: cls.register(task_name, task_cls)
         if not issubclass(task_cls, Task):
-            raise RuntimeError(
+            raise TypeError(
                 f"Task {task_name} does not inherit from the base Task class."
             )
         cls.task_name_map[task_name] = task_cls
