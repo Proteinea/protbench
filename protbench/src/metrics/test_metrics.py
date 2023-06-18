@@ -82,7 +82,3 @@ class TestMetrics(unittest.TestCase):
             label_ids=np.array([0, 1, ignore_index, 1, 0, ignore_index]),
         )
         self.assertEqual(compute_accuracy(p, ignore_index=ignore_index), 0.5)
-
-
-if __name__ == "__main__":
-    unittest.main()
