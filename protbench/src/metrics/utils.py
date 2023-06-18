@@ -1,29 +1,23 @@
-import torch
+from typing import Tuple
+
 import numpy as np
-from transformers import EvalPrediction
 
 
-_TORCH_IGNORE_INDEX = torch.nn.CrossEntropyLoss().ignore_index
-
-
-def preprocess_classification_predictions(
-    p: EvalPrediction, ignore_value: int = _TORCH_IGNORE_INDEX
-) -> EvalPrediction:
-    """Preprocess predictions for classification tasks by aligning predictions and labels
-    and removing indices that should be ignored.
+def remove_ignored_predictions(
+    predictions: np.ndarray, labels: np.ndarray, ignore_value: int = -100
+) -> Tuple[np.ndarray, np.ndarray]:
+    """Remove ignored predictions from the predictions and labels.
 
     Args:
-        p (EvalPrediction): predictions object from the hugginface trainer.
-        ignore_value (int, optional): the value present in the label that should be ignored.
-            Defaults to _TORCH_IGNORE_INDEX which is the default ignore index defined in the
-            Pytorch cross entropy loss class.
+        predictions (np.ndarray): numpy array of predictions of shape (N,)
+        labels (np.ndarray): numpy array of labels of shape (N,)
+        ignore_value (int, optional): value to ignore in the labels. Defaults to -100.
 
     Returns:
-        EvalPrediction: predictions object with predictions and labels aligned and ignore values removed.
+        Tuple[np.ndarray, np.ndarray]: tuple of predictions and labels with ignored values removed
+            each of shape (N',) where N' is the number of non-ignored values.
     """
-    predictions, labels = p.predictions, p.label_ids
-    predictions, labels = predictions.reshape(-1), labels.reshape(-1)
-    ignore_mask = np.where(labels != ignore_value)
-    p.predictions = predictions[ignore_mask]
-    p.label_ids = labels[ignore_mask]
-    return p
+    non_ignored_mask = np.where(labels != ignore_value)
+    predictions = predictions[non_ignored_mask]
+    labels = labels[non_ignored_mask]
+    return predictions, labels

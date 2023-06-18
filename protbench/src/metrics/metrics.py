@@ -1,14 +1,17 @@
-from scipy.stats import spearmanr
-from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
-from transformers import EvalPrediction
+from typing import Optional
 
-from protbench.src.tasks import TaskDescription
+from scipy.stats import spearmanr
+from transformers import EvalPrediction
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
+
 from protbench.src.metrics import MetricRegistry
-from protbench.src.metrics.utils import preprocess_classification_predictions
+from protbench.src.metrics.utils import remove_ignored_predictions
 
 
 @MetricRegistry.register("accuracy")
-def compute_accuracy(p: EvalPrediction, *args, **kwargs) -> float:
+def compute_accuracy(
+    p: EvalPrediction, ignore_index: Optional[int] = -100, **kwargs
+) -> float:
     """Compute accuracy for classification tasks.
 
     Args:
@@ -17,13 +20,18 @@ def compute_accuracy(p: EvalPrediction, *args, **kwargs) -> float:
     Returns:
         float: classification accuracy
     """
-    p = preprocess_classification_predictions(p)
-    predictions, labels = p.predictions, p.label_ids
-    return accuracy_score(predictions, labels)
+    predictions, labels = p.predictions.reshape(-1), p.label_ids.reshape(-1)
+    if ignore_index is not None:
+        predictions, labels = remove_ignored_predictions(
+            predictions, labels, ignore_value=ignore_index
+        )
+    return float(accuracy_score(predictions, labels, **kwargs))
 
 
 @MetricRegistry.register("precision")
-def compute_precision(p: EvalPrediction, task_description: TaskDescription) -> float:
+def compute_precision(
+    p: EvalPrediction, ignore_index: Optional[int] = -100, **kwargs
+) -> float:
     """Compute precision for classification tasks.
 
     Args:
@@ -32,19 +40,18 @@ def compute_precision(p: EvalPrediction, task_description: TaskDescription) -> f
     Returns:
         float: classification precision
     """
-    p = preprocess_classification_predictions(p)
-    predictions, labels = p.predictions, p.label_ids
-    if task_description.task_type["operation"] in [
-        "multilabel_classification",
-        "binary_classification",
-    ]:
-        return precision_score(predictions, labels, average="binary")
-
-    return precision_score(predictions, labels, average="macro")
+    predictions, labels = p.predictions.reshape(-1), p.label_ids.reshape(-1)
+    if ignore_index is not None:
+        predictions, labels = remove_ignored_predictions(
+            predictions, labels, ignore_value=ignore_index
+        )
+    return float(precision_score(predictions, labels, **kwargs))
 
 
 @MetricRegistry.register("recall")
-def compute_recall(p: EvalPrediction, task_description: TaskDescription) -> float:
+def compute_recall(
+    p: EvalPrediction, ignore_index: Optional[int] = -100, **kwargs
+) -> float:
     """Compute recall for classification tasks.
 
     Args:
@@ -53,19 +60,18 @@ def compute_recall(p: EvalPrediction, task_description: TaskDescription) -> floa
     Returns:
         float: classification recall
     """
-    p = preprocess_classification_predictions(p)
-    predictions, labels = p.predictions, p.label_ids
-    if task_description.task_type["operation"] in [
-        "multilabel_classification",
-        "binary_classification",
-    ]:
-        return recall_score(predictions, labels, average="binary")
-
-    return recall_score(predictions, labels, average="macro")
+    predictions, labels = p.predictions.reshape(-1), p.label_ids.reshape(-1)
+    if ignore_index is not None:
+        predictions, labels = remove_ignored_predictions(
+            predictions, labels, ignore_value=ignore_index
+        )
+    return float(recall_score(predictions, labels, **kwargs))
 
 
 @MetricRegistry.register("f1")
-def compute_f1(p: EvalPrediction, task_description: TaskDescription) -> float:
+def compute_f1(
+    p: EvalPrediction, ignore_index: Optional[int] = -100, **kwargs
+) -> float:
     """Compute f1 for classification tasks.
 
     Args:
@@ -74,19 +80,18 @@ def compute_f1(p: EvalPrediction, task_description: TaskDescription) -> float:
     Returns:
         float: classification f1
     """
-    p = preprocess_classification_predictions(p)
-    predictions, labels = p.predictions, p.label_ids
-    if task_description.task_type["operation"] in [
-        "multilabel_classification",
-        "binary_classification",
-    ]:
-        return f1_score(predictions, labels, average="binary")
-
-    return f1_score(predictions, labels, average="macro")
+    predictions, labels = p.predictions.reshape(-1), p.label_ids.reshape(-1)
+    if ignore_index is not None:
+        predictions, labels = remove_ignored_predictions(
+            predictions, labels, ignore_value=ignore_index
+        )
+    return float(f1_score(predictions, labels, **kwargs))
 
 
 @MetricRegistry.register("spearman")
-def compute_spearman(p: EvalPrediction, *args, **kwargs) -> float:
+def compute_spearman(
+    p: EvalPrediction, ignore_index: Optional[int] = -100, **kwargs
+) -> float:
     """
     Compute spearmanr correlation for regression tasks.
 
@@ -96,4 +101,9 @@ def compute_spearman(p: EvalPrediction, *args, **kwargs) -> float:
     Returns:
         float: spearmanr correlation
     """
-    return spearmanr(p.label_ids, p.predictions).correlation
+    predictions, labels = p.predictions.reshape(-1), p.label_ids.reshape(-1)
+    if ignore_index is not None:
+        predictions, labels = remove_ignored_predictions(
+            predictions, labels, ignore_value=ignore_index
+        )
+    return spearmanr(predictions, labels, **kwargs).correlation
