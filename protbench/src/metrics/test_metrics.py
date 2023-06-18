@@ -3,14 +3,9 @@ import unittest
 import numpy as np
 from transformers import EvalPrediction
 
-from protbench.src.tasks import TaskDescription
 from protbench.src.metrics import MetricRegistry
 from protbench.src.metrics.metrics import (
     compute_accuracy,
-    compute_precision,
-    compute_recall,
-    compute_f1,
-    compute_spearman,
 )
 
 
