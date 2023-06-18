@@ -16,7 +16,7 @@ from protbench.src.models.pretrained.util_datasets import SequencesDataset
 
 
 @ModelRegistry.register_pretrained("huggingface")
-class HuggingfaceModels(BasePretrainedModel):
+class HuggingFaceModels(BasePretrainedModel):
     def __init__(
         self,
         model_url: str,
