@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Dict
 
 import torch
 from tqdm.auto import tqdm
@@ -20,36 +20,34 @@ class HuggingfaceModels(BasePretrainedModel):
     def __init__(
         self,
         model_url: str,
-        use_auth_token: Optional[str] = None,
         batch_size: int = 1,
         num_workers: int = 1,
+        hf_kwargs: Dict = {},
     ):
         """A template class for loading pretrained models and tokenizers from huggingface.
 
         Args:
-            model_url (str): pretrained model name or path on huggingface. See pretrained_model_name_or_path
+            model_url (str): pretrained model/tokenizer name or path on huggingface. See pretrained_model_name_or_path
                 in https://huggingface.co/docs/transformers/main_classes/model#transformers.PreTrainedModel.from_pretrained
-            use_auth_token (Optional[str], optional): hugginface authentication token. Defaults to None.
+                The model and tokenizer are loaded using transformers.AutoModel/AutoTokenizer.
             batch_size (int): batch size used to batch sequences to extract embeddings. Defaults to 1.
+            num_workers (int): number of workers used in dataloader. Defaults to 1.
+            hf_kwargs (Dict): additional keyword arguments passed to AutoModel/AutoTokenizer.from_pretrained.
+                Defaults to empty dict.
         """
-        self.model = self.load_model(model_url, use_auth_token).get_encoder()  # type: ignore
-        self.freeze_model(self.model)
-        self.tokenizer = self.load_tokenizer(model_url, use_auth_token)
+        self.model = self.load_model(model_url, hf_kwargs)
+        self.tokenizer = self.load_tokenizer(model_url, hf_kwargs)
         self.batch_size = batch_size
         self.num_workers = num_workers
 
-    def load_model(
-        self, model_url: str, use_auth_token: Optional[str] = None
-    ) -> torch.nn.Module:
-        model = AutoModel.from_pretrained(model_url, use_auth_token=use_auth_token)
+    def load_model(self, model_url: str, hf_kwargs: Dict = {}) -> torch.nn.Module:
+        model = AutoModel.from_pretrained(model_url, **hf_kwargs).get_encoder()
         return model
 
     def load_tokenizer(
-        self, tokenizer_url: str, use_auth_token: Optional[str] = None
+        self, tokenizer_url: str, hf_kwargs: Dict = {}
     ) -> PreTrainedTokenizer | PreTrainedTokenizerFast:
-        tokenizer = AutoTokenizer.from_pretrained(
-            tokenizer_url, use_auth_token=use_auth_token
-        )
+        tokenizer = AutoTokenizer.from_pretrained(tokenizer_url, **hf_kwargs)
         return tokenizer
 
     def collate_data(self, batch: List[str]) -> BatchEncoding:
