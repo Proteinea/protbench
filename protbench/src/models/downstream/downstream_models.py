@@ -4,10 +4,10 @@ from transformers.modeling_outputs import SequenceClassifierOutput
 
 from protbench.src.models.downstream import convbert_layers
 
-from protbench.src.models.model_registry import ModelRegistry
+from protbench.src.models.model_registry import DownstreamModelRegistry
 
 
-@ModelRegistry.register_downstream("convbert_for_multiclass_token_classification")
+@DownstreamModelRegistry.register("convbert_for_multiclass_token_classification")
 class ConvBertForMultiClassTokenClassification(
     convbert_layers.ConvBertForTokenClassification
 ):
@@ -58,7 +58,7 @@ class ConvBertForMultiClassTokenClassification(
         return loss
 
 
-@ModelRegistry.register_downstream("convbert_for_binary_token_classification")
+@DownstreamModelRegistry.register("convbert_for_binary_token_classification")
 class ConvBertForBinaryTokenClassification(
     convbert_layers.ConvBertForTokenClassification
 ):
@@ -106,7 +106,7 @@ class ConvBertForBinaryTokenClassification(
         return loss
 
 
-@ModelRegistry.register_downstream("convbert_for_multiclass_sequence_classification")
+@DownstreamModelRegistry.register("convbert_for_multiclass_sequence_classification")
 class ConvBertForMultiClassSeqClassification(
     convbert_layers.ConvBertForSeqClassification
 ):
@@ -152,7 +152,7 @@ class ConvBertForMultiClassSeqClassification(
         return loss
 
 
-@ModelRegistry.register_downstream("convbert_for_binary_sequence_classification")
+@DownstreamModelRegistry.register("convbert_for_binary_sequence_classification")
 class ConvBertForBinarySeqClassification(convbert_layers.ConvBertForSeqClassification):
     def __init__(
         self,
@@ -196,7 +196,7 @@ class ConvBertForBinarySeqClassification(convbert_layers.ConvBertForSeqClassific
         return loss
 
 
-@ModelRegistry.register_downstream("convbert_for_regression")
+@DownstreamModelRegistry.register("convbert_for_regression")
 class ConvBertForRegression(convbert_layers.BaseConvBert):
     def __init__(
         self,

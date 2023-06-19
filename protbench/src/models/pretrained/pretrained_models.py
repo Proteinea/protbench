@@ -11,11 +11,11 @@ from transformers import (
 )
 from torch.utils.data import DataLoader
 from protbench.src.models.pretrained import BasePretrainedModel
-from protbench.src.models.model_registry import ModelRegistry
+from protbench.src.models.model_registry import PretrainedModelRegistry
 from protbench.src.models.pretrained.util_datasets import SequencesDataset
 
 
-@ModelRegistry.register_pretrained("huggingface")
+@PretrainedModelRegistry.register("huggingface")
 class HuggingFaceModels(BasePretrainedModel):
     def __init__(
         self,
