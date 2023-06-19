@@ -7,7 +7,7 @@ from protbench.src.models.downstream import convbert_layers
 from protbench.src.models.model_registry import ModelRegistry
 
 
-@ModelRegistry.add_downstream_model("convbert_for_multiclass_token_classification")
+@ModelRegistry.register_downstream("convbert_for_multiclass_token_classification")
 class ConvBertForMultiClassTokenClassification(
     convbert_layers.ConvBertForTokenClassification
 ):
@@ -20,6 +20,7 @@ class ConvBertForMultiClassTokenClassification(
         num_layers: int = 1,
         kernel_size: int = 7,
         dropout: float = 0.2,
+        loss_ignore_index: int = -100,
     ):
         """
         ConvBert model for multiclass token classification task.
@@ -32,6 +33,7 @@ class ConvBertForMultiClassTokenClassification(
             num_layers: Integer specifying the number of `ConvBert` layers.
             kernel_size: Integer specifying the filter size for the `ConvBert` model. Default: 7
             dropout: Float specifying the dropout rate for the `ConvBert` model. Default: 0.2
+            loss_ignore_index: Integer specifying the value of the labels to ignore in the loss function. Default: -100.
         """
         super(ConvBertForMultiClassTokenClassification, self).__init__(
             num_tokens=num_tokens,
@@ -41,17 +43,22 @@ class ConvBertForMultiClassTokenClassification(
             num_layers=num_layers,
             kernel_size=kernel_size,
             dropout=dropout,
+            loss_ignore_index=loss_ignore_index,
         )
 
     def _compute_loss(self, logits, labels):
         if labels is not None:
-            loss = F.cross_entropy(logits.view(-1, self.num_labels), labels.view(-1))
+            loss = F.cross_entropy(
+                logits.view(-1, self.num_labels),
+                labels.view(-1),
+                ignore_index=self.loss_ignore_index,
+            )
         else:
             loss = None
         return loss
 
 
-@ModelRegistry.add_downstream_model("convbert_for_binary_token_classification")
+@ModelRegistry.register_downstream("convbert_for_binary_token_classification")
 class ConvBertForBinaryTokenClassification(
     convbert_layers.ConvBertForTokenClassification
 ):
@@ -63,6 +70,7 @@ class ConvBertForBinaryTokenClassification(
         num_layers: int = 1,
         kernel_size: int = 7,
         dropout: float = 0.2,
+        loss_ignore_index: int = -100,
     ):
         """
         ConvBert model for binary token classification task.
@@ -74,6 +82,7 @@ class ConvBertForBinaryTokenClassification(
             num_layers: Integer specifying the number of `ConvBert` layers.
             kernel_size: Integer specifying the filter size for the `ConvBert` model. Default: 7
             dropout: Float specifying the dropout rate for the `ConvBert` model. Default: 0.2
+            loss_ignore_index: Integer specifying the value of the labels to ignore in the loss function. Default: -100.
         """
         super(ConvBertForBinaryTokenClassification, self).__init__(
             num_tokens=1,
@@ -83,12 +92,12 @@ class ConvBertForBinaryTokenClassification(
             num_layers=num_layers,
             kernel_size=kernel_size,
             dropout=dropout,
+            loss_ignore_index=loss_ignore_index,
         )
-        self._ignore_index = nn.CrossEntropyLoss().ignore_index
 
     def _compute_loss(self, logits, labels):
         if labels is not None:
-            mask = labels != self._ignore_index
+            mask = labels != self.loss_ignore_index
             loss = F.binary_cross_entropy_with_logits(
                 logits.reshape(labels.shape)[mask], labels[mask].to(logits.dtype)
             )
@@ -97,7 +106,7 @@ class ConvBertForBinaryTokenClassification(
         return loss
 
 
-@ModelRegistry.add_downstream_model("convbert_for_multiclass_sequence_classification")
+@ModelRegistry.register_downstream("convbert_for_multiclass_sequence_classification")
 class ConvBertForMultiClassSeqClassification(
     convbert_layers.ConvBertForSeqClassification
 ):
@@ -143,7 +152,7 @@ class ConvBertForMultiClassSeqClassification(
         return loss
 
 
-@ModelRegistry.add_downstream_model("convbert_for_binary_sequence_classification")
+@ModelRegistry.register_downstream("convbert_for_binary_sequence_classification")
 class ConvBertForBinarySeqClassification(convbert_layers.ConvBertForSeqClassification):
     def __init__(
         self,
@@ -176,20 +185,18 @@ class ConvBertForBinarySeqClassification(convbert_layers.ConvBertForSeqClassific
             dropout=dropout,
             pooling=pooling,
         )
-        self._ignore_index = nn.CrossEntropyLoss().ignore_index
 
     def _compute_loss(self, logits, labels):
         if labels is not None:
-            mask = labels != self._ignore_index
             loss = F.binary_cross_entropy_with_logits(
-                logits.reshape(labels.shape)[mask], labels[mask].to(logits.dtype)
+                logits.reshape(labels.shape), labels.to(logits.dtype)
             )
         else:
             loss = None
         return loss
 
 
-@ModelRegistry.add_downstream_model("convbert_for_regression")
+@ModelRegistry.register_downstream("convbert_for_regression")
 class ConvBertForRegression(convbert_layers.BaseConvBert):
     def __init__(
         self,
@@ -250,8 +257,8 @@ class ConvBertForRegression(convbert_layers.BaseConvBert):
         return loss
 
     def forward(self, embd, labels=None):
-        hidden_inputs = self.convbert_forward(embd)
-        hidden_inputs = self.pooling(hidden_inputs)
+        hidden_inputs, attention_mask = self.convbert_forward(embd)
+        hidden_inputs = self.pooling(hidden_inputs, attention_mask=attention_mask)
         logits = self.decoder(hidden_inputs)
         loss = self._compute_loss(logits, labels)
 
