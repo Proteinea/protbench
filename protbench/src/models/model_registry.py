@@ -4,28 +4,25 @@ from typing import Dict, Optional, Callable, Type, Any
 import torch
 
 
-class ModelRegistry:
+class DownstreamModelRegistry:
     """Central repository for all models.
 
-    - To register a new downstream model you can use the `add_downstream_model` decorator as follows:
-    @ModelRegistry.add_downstream_model('my_new_model')
+    - To register a new downstream model you can use the `register` decorator as follows:
+    @ModelRegistry.register('my_new_model')
     class MyNewModel(torch.nn.Module):
     ...
 
-    - Or you can use the `add_downstream_model` method directly:
+    - Or you can use the `register` method directly:
 
     class MyNewModel(torch.nn.Module):
     ...
-    ModelRegistry.add_downstream_model('my_new_model', MyNewModel)
-
-    - Same instructions apply for pretrained models using `add_pretrained_model`.
+    ModelRegistry.register('my_new_model', MyNewModel)
     """
 
     downstream_model_name_map: Dict[str, Type[torch.nn.Module]] = {}
-    pretrained_model_name_map: Dict[str, Any] = {}
 
     @classmethod
-    def register_downstream(
+    def register(
         cls,
         model_name: str,
         model_cls: Optional[Type[torch.nn.Module]] = None,
@@ -44,7 +41,7 @@ class ModelRegistry:
                 f"Please choose a different name."
             )
         if model_cls is None:  # expected when using decorator
-            return lambda model_cls: cls.register_downstream(model_name, model_cls)
+            return lambda model_cls: cls.register(model_name, model_cls)
         if not issubclass(model_cls, torch.nn.Module):
             logging.warning(
                 f"Downstream model {model_name} does not inherit from the torch.nn.Module."
@@ -52,8 +49,27 @@ class ModelRegistry:
         cls.downstream_model_name_map[model_name] = model_cls
         return model_cls
 
+
+class PretrainedModelRegistry:
+    """Central repository for pretrained models.
+
+    - To register a new pretrained model you can use the `register` decorator as follows:
+    @PretrainedModelRegistry.register('my_new_model')
+    class MyNewModel(torch.nn.Module):
+    ...
+
+    - Or you can use the `register` method directly:
+
+    class MyNewModel(torch.nn.Module):
+    ...
+    PretrainedModelRegistry.register('my_new_model', MyNewModel)
+
+    """
+
+    pretrained_model_name_map: Dict[str, Type[torch.nn.Module]] = {}
+
     @classmethod
-    def register_pretrained(
+    def register(
         cls,
         model_name: str,
         model_cls: Any = None,
@@ -72,7 +88,7 @@ class ModelRegistry:
                 f"Please choose a different name."
             )
         if model_cls is None:  # expected when using decorator
-            return lambda model_cls: cls.register_pretrained(model_name, model_cls)
+            return lambda model_cls: cls.register(model_name, model_cls)
 
         cls.pretrained_model_name_map[model_name] = model_cls
         return model_cls
