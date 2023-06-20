@@ -147,7 +147,7 @@ class TestResidueToClass(unittest.TestCase):
         task = ResidueToClass(
             seqs_file=sequences_file,
             labels_file=labels_file,
-            ignore_index=ignore_index,
+            label_ignore_value=ignore_index,
         )
 
         # Test that all classes have been encoded properly
