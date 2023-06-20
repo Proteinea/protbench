@@ -52,9 +52,13 @@ class GlobalAvgPooling1D(nn.Module):
             attention_mask (torch.Tensor, optional): Attention mask of shape (batch_size, seq_len). Defaults to None.
         """
         if attention_mask is not None:
-            # fill masked values with nan so that they don't affect torch.nanmean
-            x = x.masked_fill(~attention_mask.unsqueeze(-1), torch.nan)
-            out = self.global_avg_pool1d_with_nan(x)
+            if torch.isnan(x).any():
+                # if there are nan values in x, use mean to propagate the nan forward
+                out = self.global_avg_pool1d(x)
+            else:
+                # fill masked values with nan so that they don't affect torch.nanmean
+                x = x.masked_fill(~attention_mask.unsqueeze(-1), torch.nan)
+                out = self.global_avg_pool1d_with_nan(x)
         else:
             out = self.global_avg_pool1d(x)
         return out
