@@ -94,3 +94,6 @@ class HuggingFaceModels(BasePretrainedModel):
 
         self.model.to("cpu")
         return embeddings
+
+    def get_number_of_parameters(self) -> int:
+        return sum(p.numel() for p in self.model.parameters())

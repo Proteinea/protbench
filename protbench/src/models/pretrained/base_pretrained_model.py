@@ -14,3 +14,7 @@ class BasePretrainedModel(abc.ABC):
         self, sequences: List[str], device: torch.device
     ) -> List[torch.Tensor]:
         pass
+
+    @abc.abstractmethod
+    def get_number_of_parameters(self) -> int:
+        pass
