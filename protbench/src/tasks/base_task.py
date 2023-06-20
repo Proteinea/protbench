@@ -1,11 +1,20 @@
 import abc
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 from protbench.src.tasks import TaskDescription
 
 
 class Task(abc.ABC):
     """Base class for all tasks. All tasks must inherit from this class."""
+
+    def __init__(self, label_ignore_value: Optional[int] = None):
+        """Initialize the task.
+
+        Args:
+            label_ignore_value (Optional[int], optional): The value to be ignored in
+                the labels (if applicable). Defaults to None.
+        """
+        self.label_ignore_value = label_ignore_value
 
     @property
     @abc.abstractmethod

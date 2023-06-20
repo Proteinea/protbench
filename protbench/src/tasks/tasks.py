@@ -11,7 +11,7 @@ class ResidueToClass(Task):
         self,
         seqs_file: str,
         labels_file: str,
-        ignore_index: int = -100,
+        label_ignore_value: int = -100,
     ):
         """A generic class for any task where the goal is to predict a class for each
             residue in a protein sequence.
@@ -28,9 +28,10 @@ class ResidueToClass(Task):
 
                 Note: the 'MASK' field does not perform any attention masking on the input sequence. It only affects the loss and metrics computation.
                 Note: The sequence, mask, and labels length must be the same for each sequence in the file.
-            ignore_index (int, optional): the index to ignore in the loss computation. Defaults to -100 (default value for CrossEntropyLoss ignore index).
+            label_ignore_value (int, optional): the value of label to be ignored by loss and metrics computation.
+                Defaults to -100.
         """
-        super(ResidueToClass, self).__init__()
+        super(ResidueToClass, self).__init__(label_ignore_value=label_ignore_value)
 
         self._train_data: List[Dict[str, str | List[int]]] = []
         self._val_data: List[Dict[str, str | List[int]]] = []
@@ -38,7 +39,6 @@ class ResidueToClass(Task):
         self.num_classes: int = 0
         self.class_to_id: Dict[str, int] = {}
         self.id_to_class: Dict[int, str] = {}
-        self.ignore_index = ignore_index
 
         self.load_and_preprocess_data(seqs_file, labels_file)
         self._check_number_of_classes()
@@ -119,7 +119,7 @@ class ResidueToClass(Task):
         """
         for i, mask_value in enumerate(mask):
             if mask_value == 0:
-                label[i] = self.ignore_index
+                label[i] = self.label_ignore_value
         return label
 
     def _parse_label_description(
