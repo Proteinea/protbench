@@ -241,7 +241,7 @@ class SequenceToClass(Task):
     def _create_description(self) -> TaskDescription:
         classification_type = "binary" if self.num_classes == 2 else "multiclass"
         return TaskDescription(
-            name="residue_to_class",
+            name="sequence_to_class",
             task_type=("sequence", f"{classification_type}_classification"),
             description="Generic task of predicting a class for each sequence.",
         )
@@ -314,7 +314,7 @@ class SequenceToValue(Task):
 
     def _create_description(self) -> TaskDescription:
         return TaskDescription(
-            name="residue_to_class",
+            name="sequence_to_value",
             task_type=("sequence", "regression"),
             description="Generic task of predicting a value for each sequence.",
         )
