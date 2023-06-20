@@ -90,10 +90,7 @@ class TaskDescription:
 
     def __repr__(self) -> str:
         return (
-            "*" * 50
-            + "\n"
-            + f"Task Name: {self._task_name}\n"
+            f"Task Name: {self._task_name}\n"
             + f"Task Type: {self._task_type['entity']} {self._task_type['operation']}\n"
-            + f"Task Description: {self._task_description}\n"
-            + "*" * 50
+            + f"Task Description: {self._task_description}"
         )
