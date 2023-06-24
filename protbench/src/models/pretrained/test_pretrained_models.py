@@ -4,7 +4,7 @@ import random
 import torch
 from transformers import AutoModel, AutoTokenizer
 
-from protbench.src.models.pretrained.pretrained_models import HuggingFaceModels
+from protbench.src.models.pretrained.pretrained_models import T5BasedModels
 
 random.seed(42)
 
@@ -48,7 +48,7 @@ class TestHuggingfaceModels(unittest.TestCase):
 
         batch_size = 1
         num_workers = 0
-        hf_models = HuggingFaceModels(
+        hf_models = T5BasedModels(
             test_model, batch_size=batch_size, num_workers=num_workers
         )
         embeddings = hf_models.embed_sequences(sequences, torch.device("cpu"))
@@ -59,7 +59,7 @@ class TestHuggingfaceModels(unittest.TestCase):
         # test batch size > 1 to ensure that final embeddings are not padded
         batch_size = 4
         num_workers = 0
-        hf_models = HuggingFaceModels(
+        hf_models = T5BasedModels(
             test_model, batch_size=batch_size, num_workers=num_workers
         )
         embeddings = hf_models.embed_sequences(sequences, torch.device("cpu"))
@@ -70,7 +70,7 @@ class TestHuggingfaceModels(unittest.TestCase):
         # test num_workers > 0
         batch_size = 4
         num_workers = 1
-        hf_models = HuggingFaceModels(
+        hf_models = T5BasedModels(
             test_model, batch_size=batch_size, num_workers=num_workers
         )
         embeddings = hf_models.embed_sequences(sequences, torch.device("cpu"))

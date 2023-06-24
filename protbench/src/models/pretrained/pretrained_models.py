@@ -41,7 +41,7 @@ class HuggingFaceModels(BasePretrainedModel):
         self.num_workers = num_workers
 
     def load_model(self, model_url: str, hf_kwargs: Dict = {}) -> torch.nn.Module:
-        model = AutoModel.from_pretrained(model_url, **hf_kwargs).get_encoder()
+        model = AutoModel.from_pretrained(model_url, **hf_kwargs)
         return model
 
     def load_tokenizer(
@@ -97,3 +97,31 @@ class HuggingFaceModels(BasePretrainedModel):
 
     def get_number_of_parameters(self) -> int:
         return sum(p.numel() for p in self.model.parameters())
+
+
+@PretrainedModelRegistry.register("t5_based")
+class T5BasedModels(HuggingFaceModels):
+    def __init__(
+        self,
+        model_url: str,
+        batch_size: int = 1,
+        num_workers: int = 1,
+        hf_kwargs: Dict = {},
+    ):
+        """Load T5 based model by loading the model's encoder.
+
+        Args:
+            model_url (str): pretrained model/tokenizer name or path on huggingface. See pretrained_model_name_or_path
+                in https://huggingface.co/docs/transformers/main_classes/model#transformers.PreTrainedModel.from_pretrained
+                The model and tokenizer are loaded using transformers.AutoModel/AutoTokenizer.
+            batch_size (int): batch size used to batch sequences to extract embeddings. Defaults to 1.
+            num_workers (int): number of workers used in dataloader. Defaults to 1.
+            hf_kwargs (Dict): additional keyword arguments passed to AutoModel/AutoTokenizer.from_pretrained.
+                Defaults to empty dict.
+        """
+        super(T5BasedModels, self).__init__(
+            model_url, batch_size, num_workers, hf_kwargs
+        )
+
+    def load_model(self, model_url: str, hf_kwargs: Dict = {}) -> torch.nn.Module:
+        return super(T5BasedModels, self).load_model(model_url, hf_kwargs).get_encoder()
