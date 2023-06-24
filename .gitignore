@@ -134,3 +134,6 @@ demo.ipynb
 
 # playground notebooks
 playground.ipynb
+
+# weights & biases
+wandb/
