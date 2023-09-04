@@ -1,6 +1,7 @@
-from protbench.src.models.pretrained import pretrained_models
-from protbench.src.models.downstream import downstream_models
-from protbench.src.models.model_registry import (
-    DownstreamModelRegistry,
-    PretrainedModelRegistry,
-)
+from protbench.src.models.heads import RegressionHead
+from protbench.src.models.heads import BinaryClassificationHead
+from protbench.src.models.heads import MultiClassClassificationHead
+from protbench.src.models.heads import TokenClassificationHead
+from protbench.src.models.heads import MultiLabelClassificationHead
+from protbench.src.models.pooling import GlobalAvgPooling1D
+from protbench.src.models.pooling import GlobalMaxPooling1D

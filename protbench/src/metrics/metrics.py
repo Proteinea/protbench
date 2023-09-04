@@ -4,11 +4,9 @@ from scipy.stats import spearmanr
 from transformers import EvalPrediction
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 
-from protbench.src.metrics import MetricRegistry
 from protbench.src.metrics.utils import remove_ignored_predictions
 
 
-@MetricRegistry.register("accuracy")
 def compute_accuracy(
     p: EvalPrediction, ignore_index: Optional[int] = -100, **kwargs
 ) -> float:
@@ -28,7 +26,6 @@ def compute_accuracy(
     return float(accuracy_score(predictions, labels, **kwargs))
 
 
-@MetricRegistry.register("precision")
 def compute_precision(
     p: EvalPrediction, ignore_index: Optional[int] = -100, **kwargs
 ) -> float:
@@ -48,7 +45,6 @@ def compute_precision(
     return float(precision_score(predictions, labels, **kwargs))
 
 
-@MetricRegistry.register("recall")
 def compute_recall(
     p: EvalPrediction, ignore_index: Optional[int] = -100, **kwargs
 ) -> float:
@@ -68,7 +64,6 @@ def compute_recall(
     return float(recall_score(predictions, labels, **kwargs))
 
 
-@MetricRegistry.register("f1")
 def compute_f1(
     p: EvalPrediction, ignore_index: Optional[int] = -100, **kwargs
 ) -> float:
@@ -88,7 +83,6 @@ def compute_f1(
     return float(f1_score(predictions, labels, **kwargs))
 
 
-@MetricRegistry.register("spearman")
 def compute_spearman(
     p: EvalPrediction, ignore_index: Optional[int] = -100, **kwargs
 ) -> float:

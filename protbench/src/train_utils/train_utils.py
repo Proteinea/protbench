@@ -195,7 +195,7 @@ class TrainUtils:
             device=self.device,
         )
 
-        if self.task.task_description.task_type["entity"] == "token":
+        if self.task.description.task_type["entity"] == "token":
             # truncate labels as well if entity is token
             labels = [sample["label"][:maxlen] for sample in train_data]
         else:
@@ -211,7 +211,7 @@ class TrainUtils:
                 sequences=[sample["sequence"][:maxlen] for sample in val_data],
                 device=self.device,
             )
-            if self.task.task_description.task_type["entity"] == "token":
+            if self.task.description.task_type["entity"] == "token":
                 labels = [sample["label"][:maxlen] for sample in val_data]
             else:
                 labels = [sample["label"] for sample in val_data]
@@ -228,7 +228,7 @@ class TrainUtils:
         print("*" * 100)
         print(f"Run Name: {self.training_args.run_name}")
         print("-" * 100)
-        print(f"Task Details:\n{self.task.task_description}")
+        print(f"Task Details:\n{self.task.description}")
         print("Number of training samples:", len(self.task.train_data))
         print("Number of validation samples:", len(self.task.val_data))
         print("-" * 100)
@@ -344,7 +344,7 @@ class TrainUtils:
         Returns:
             Callable: The collator.
         """
-        if self.task.task_description.task_type["entity"] == "sequence":
+        if self.task.description.task_type["entity"] == "sequence":
             return collate_inputs
         else:
             if self.task.label_ignore_value == None:
@@ -358,10 +358,10 @@ class TrainUtils:
             )
 
     def _get_logits_preprocessor_fn(self) -> Callable | None:
-        if self.task.task_description.task_type["operation"] == "binary_classification":
+        if self.task.description.task_type["operation"] == "binary_classification":
             return preprocess_binary_classification_logits
         elif (
-            self.task.task_description.task_type["operation"]
+            self.task.description.task_type["operation"]
             == "multiclass_classification"
         ):
             return preprocess_multi_classification_logits

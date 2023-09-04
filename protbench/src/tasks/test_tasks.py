@@ -9,7 +9,8 @@ from Bio.SeqRecord import SeqRecord
 
 
 from protbench.src.tasks import TaskRegistry, Task
-from protbench.src.tasks.tasks import ResidueToClass, SequenceToClass, SequenceToValue
+from protbench.src.tasks.ResidueToClass import ResidueToClass
+from protbench.src.tasks.tasks import SequenceToClass, SequenceToValue
 
 random.seed(42)
 
