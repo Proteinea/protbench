@@ -14,7 +14,7 @@ class MultiLabelClassifierOutpu(ModelOutput):
 
 class TokenClassificationHead(torch.nn.Module):
     def __init__(self, input_dim, output_dim, ignore_index=-100) -> None:
-        super().__init__()
+        super(TokenClassificationHead, self).__init__()
         self.output_dim = output_dim
         self.loss_ignore_index = ignore_index
         self.decoder = nn.Linear(input_dim, output_dim)

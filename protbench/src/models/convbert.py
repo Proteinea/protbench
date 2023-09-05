@@ -51,6 +51,8 @@ class ConvBert(nn.Module):
                 raise ValueError(
                     f"Expected pooling to be [`avg`, `max`]. Recieved: {pooling}"
                 )
+        else:
+            self.pooling = None
 
     def get_extended_attention_mask(self, attention_mask: torch.Tensor) -> torch.Tensor:
         """
@@ -72,12 +74,15 @@ class ConvBert(nn.Module):
         ).min
         return extended_attention_mask
 
-    def convbert_forward(self, embd: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
-        attention_mask = (embd != 0).all(dim=-1)
+    def forward(
+        self, embd: torch.Tensor, attention_mask
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         extended_attention_mask = self.get_extended_attention_mask(
             attention_mask.to(embd.dtype)
         )
-        return (
-            self.transformer_encoder(embd, attention_mask=extended_attention_mask)[0],
-            attention_mask,
-        )
+        hidden_states = self.transformer_encoder(
+            embd, attention_mask=extended_attention_mask
+        )[0]
+        if self.pooling is not None:
+            hidden_states = self.pooling(hidden_states, attention_mask)
+        return hidden_states

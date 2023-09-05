@@ -25,7 +25,7 @@ class ResidueToClass:
             label_ignore_value (int, optional): the value of label to be ignored by loss and metrics computation.
                 Defaults to -100.
         """
-        super(ResidueToClass, self).__init__(label_ignore_value=label_ignore_value)
+        self.label_ignore_value = label_ignore_value
         self._data = []
         self.num_classes: int = 0
         self.class_to_id: Dict[str, int] = {}

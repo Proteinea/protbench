@@ -31,7 +31,7 @@ class FastaResidueToClass(ResidueToClass):
             label_ignore_value (int, optional): the value of label to be ignored by loss and metrics computation.
                 Defaults to -100.
         """
-        super(ResidueToClass, self).__init__(label_ignore_value=label_ignore_value)
+        super(FastaResidueToClass, self).__init__(label_ignore_value=label_ignore_value)
 
         self._data = self.load_and_preprocess_data(seqs_file, labels_file)
         self._check_number_of_classes()

@@ -5,3 +5,5 @@ from protbench.src.models.heads import TokenClassificationHead
 from protbench.src.models.heads import MultiLabelClassificationHead
 from protbench.src.models.pooling import GlobalAvgPooling1D
 from protbench.src.models.pooling import GlobalMaxPooling1D
+from protbench.src.models.convbert import ConvBert
+from protbench.src.models.downstream_model import DownstreamModel

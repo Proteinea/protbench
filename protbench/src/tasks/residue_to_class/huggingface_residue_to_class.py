@@ -10,6 +10,8 @@ class HuggingFaceResidueToClass(ResidueToClass):
         data_files,
         seqs_col: str,
         labels_col: str,
+        mask_col: str | None = None,
+        preprocessing_function=None,
         label_ignore_value: int = -100,
     ):
         """A generic class for any task where the goal is to predict a class for each
@@ -30,10 +32,13 @@ class HuggingFaceResidueToClass(ResidueToClass):
             label_ignore_value (int, optional): the value of label to be ignored by loss and metrics computation.
                 Defaults to -100.
         """
-        super(ResidueToClass, self).__init__(label_ignore_value=label_ignore_value)
+        super(HuggingFaceResidueToClass, self).__init__(
+            label_ignore_value=label_ignore_value
+        )
 
-        self.data = self.load_and_preprocess_data(
-            dataset_url, data_files, seqs_col, labels_col
+        self.preprocessing_function = preprocessing_function
+        self._data = self.load_and_preprocess_data(
+            dataset_url, data_files, seqs_col, labels_col, mask_col
         )
         self._check_number_of_classes()
 
@@ -52,20 +57,23 @@ class HuggingFaceResidueToClass(ResidueToClass):
             labels_file (str): labels file path
         """
         dataset = load_dataset(dataset_url, data_files=data_files)
-        seqs = dataset[seqs_col]
-        labels = dataset[labels_col]
+        seqs = dataset["train"][seqs_col]
+        labels = dataset["train"][labels_col]
         if mask_col is not None:
-            masks = dataset[mask_col]
+            masks = dataset["train"][mask_col]
         else:
             masks = None
 
         for i, (seq, label) in enumerate(zip(seqs, labels)):
-            label = self.encode_label(label)
             if masks:
                 mask = masks[i]
+                seq, label, mask = self.preprocessing_function(seq, label, mask)
                 self.validate_lengths(seq, label, mask)
+                label = self.encode_label(label)
                 label = self.mask_labels(label, mask)
             else:
+                seq, label, _ = self.preprocessing_function(seq, label, None)
+                label = self.encode_label(label)
                 self.validate_lengths(seq, label, None)
             labels[i] = label
         return seqs, labels
