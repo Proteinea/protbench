@@ -429,7 +429,7 @@ def main():
                     save_total_limit=1,
                     metric_for_best_model=get_metric_for_best_model(task),
                     greater_is_better=True,
-                    save_strategy="no",
+                    save_strategy="epoch",
                     report_to="wandb",
                 )
                 trainer = Trainer(
