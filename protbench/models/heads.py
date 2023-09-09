@@ -9,6 +9,7 @@ from transformers.modeling_outputs import (
 
 
 class MultiLabelClassifierOutpu(ModelOutput):
+    # just a dummy class to ensure consistency
     pass
 
 
@@ -61,7 +62,11 @@ class BinaryClassificationHead(torch.nn.Module):
 
     def compute_loss(self, logits, labels):
         if labels is not None:
-            loss = F.binary_cross_entropy_with_logits(logits, labels)
+            loss = F.binary_cross_entropy_with_logits(
+                logits.reshape(labels.shape), labels.to(logits.dtype)
+            )
+            if loss == None:
+                pass
         else:
             loss = None
         return loss
@@ -70,7 +75,7 @@ class BinaryClassificationHead(torch.nn.Module):
         logits = self.decoder(hidden_states)
         loss = self.compute_loss(logits, labels)
 
-        return MultiLabelClassifierOutpu(
+        return TokenClassifierOutput(
             loss=loss,
             logits=logits,
             hidden_states=None,

@@ -1,4 +1,5 @@
 import abc
+from typing import Union, Optional
 from typing import Dict, List, Tuple
 
 
@@ -26,14 +27,14 @@ class ResidueToClass:
                 Defaults to -100.
         """
         self.label_ignore_value = label_ignore_value
-        self._data = []
         self.num_classes: int = 0
         self.class_to_id: Dict[str, int] = {}
         self.id_to_class: Dict[int, str] = {}
 
     @property
-    def data(self) -> List[Dict[str, str | List[int]]]:
-        return self._data
+    @abc.abstractmethod
+    def data(self) -> Tuple[List[str], List[List[int]]]:
+        raise NotImplementedError
 
     def encode_label(self, label: str) -> List[int]:
         """Encode a label string into a list of integers.
@@ -53,14 +54,7 @@ class ResidueToClass:
             encoded_label[i] = self.class_to_id[cls]
         return encoded_label
 
-    @abc.abstractmethod
-    def load_and_preprocess_data(
-        self, *args, **kwargs
-    ) -> Tuple[List[str], List[List[int]]]:
-        """Load and preprocess the data from the given files."""
-        raise NotImplementedError
-
-    def mask_labels(self, label: List[int], mask: List[bool] | None) -> List[int]:
+    def mask_labels(self, label: List[int], mask: Optional[List[bool]]) -> List[int]:
         """Mask the labels with the given mask by setting the masked classes to the default
             pytorch ignore index.
 
@@ -84,7 +78,7 @@ class ResidueToClass:
         return label
 
     def validate_lengths(
-        self, seq: str, label: List[int], mask: List[bool] | None
+        self, seq: str, label: List[int], mask: Optional[List[bool]]
     ) -> None:
         if mask:
             if len(seq) != len(label) or len(seq) != len(mask):

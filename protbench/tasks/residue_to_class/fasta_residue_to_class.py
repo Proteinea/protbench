@@ -1,9 +1,9 @@
 from Bio import SeqIO
 
 
-from typing import List, Tuple
+from typing import List, Tuple, Union, Dict
 
-from protbench.src.tasks.residue_to_class import ResidueToClass
+from protbench.tasks.residue_to_class import ResidueToClass
 
 
 class FastaResidueToClass(ResidueToClass):
@@ -36,6 +36,10 @@ class FastaResidueToClass(ResidueToClass):
         self._data = self.load_and_preprocess_data(seqs_file, labels_file)
         self._check_number_of_classes()
 
+    @property
+    def data(self) -> Tuple[List[str], List[List[int]]]:
+        return self._data
+
     def load_and_preprocess_data(
         self, seqs_file: str, labels_file: str
     ) -> Tuple[List[str], List[List[int]]]:
@@ -64,7 +68,7 @@ class FastaResidueToClass(ResidueToClass):
 
     def _get_mask_from_desc_if_available(
         self, label_description: str
-    ) -> List[bool] | None:
+    ) -> Union[List[bool], None]:
         """Parse the label description to extract the sequence set and mask.
 
         Args:

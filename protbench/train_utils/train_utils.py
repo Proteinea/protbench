@@ -1,5 +1,5 @@
 from functools import partial
-from typing import List, Dict, Type, Any, Tuple, Callable
+from typing import List, Dict, Type, Any, Tuple, Callable, Optional, Union
 
 import torch
 from torch.utils.data import Dataset
@@ -123,7 +123,7 @@ class TrainUtils:
     def get_optimizers(
         self, model: torch.nn.Module
     ) -> Tuple[
-        torch.optim.Optimizer | None, torch.optim.lr_scheduler.LRScheduler | None
+        Optional[torch.optim.Optimizer], Optional[torch.optim.lr_scheduler.LRScheduler]
     ]:
         """Get the optimizer and learning rate scheduler (if set in config) from the config.
 
@@ -179,7 +179,7 @@ class TrainUtils:
 
     def create_embd_datasets(
         self,
-    ) -> Tuple[EmbeddingsDataset, EmbeddingsDataset | None]:
+    ) -> Tuple[EmbeddingsDataset, Union[EmbeddingsDataset, None]]:
         """Create the datasets of embeddings for training and validation.
 
         Returns:

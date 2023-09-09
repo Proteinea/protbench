@@ -4,7 +4,7 @@ import torch
 import transformers.models.convbert as c_bert
 from torch import nn
 
-from protbench.src.models import GlobalAvgPooling1D, GlobalMaxPooling1D
+from protbench.models import GlobalAvgPooling1D, GlobalMaxPooling1D
 
 
 class ConvBert(nn.Module):
