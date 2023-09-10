@@ -80,7 +80,6 @@ class TorchEmbedder(Embedder):
             List[torch.Tensor]: _description_
         """
         embeddings = [None] * total_sequences
-        received_embeddings = 0
         with tqdm(
             desc="Embedding sequences: ",
             unit=" sequence",
@@ -88,18 +87,22 @@ class TorchEmbedder(Embedder):
             colour="blue",
         ) as pbar:
             for _ in range(total_sequences):
-                embeddings_batch = output_queue.get()
-                for i, embedding in embeddings_batch:
-                    embeddings[i] = torch.from_numpy(copy.deepcopy(embedding))
-                    del embedding
-                    received_embeddings += 1
-                    pbar.update(1)
+                i, embedding = output_queue.get()
+                # leaving this here just to make sure, but this should never happen
+                assert embeddings[i] is None
+                embeddings[i] = torch.from_numpy(embedding)
+                # del embedding
+                # del i
+                pbar.update(1)
+            assert output_queue.empty()
         return embeddings
 
     def _run_single_gpu(self, sequences: Iterable[str]) -> List[torch.Tensor]:
         # run on a single gpu
         num_batches = ceil(len(sequences) / self.batch_size)
         embeddings = []
+        self.embedding_function.device = self.devices[0]
+        self.embedding_function.model.to(self.devices[0])
         for batch_start in tqdm(
             range(0, len(sequences), self.batch_size),
             total=num_batches,
@@ -212,12 +215,5 @@ class TorchEmbedder(Embedder):
                     TorchEmbedder.save_embedding_to_disk(
                         i, embedding.numpy(), save_path
                     )
-            if output_queue is not None:
-                output_queue.put(
-                    [
-                        (i, embedding.numpy())
-                        for i, embedding in enumerate(
-                            batch_embeddings, start=batch_start + start_idx
-                        )
-                    ]
-                )
+                if output_queue is not None:
+                    output_queue.put((i, embedding.numpy()))

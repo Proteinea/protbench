@@ -216,6 +216,7 @@ def compute_embeddings(model, tokenizer, train_seqs, val_seqs):
         low_memory=False,
         save_path=None,
         devices=None,
+        batch_size=3,
     )
 
     embeddings = []
@@ -353,7 +354,7 @@ def set_seed(seed):
 
 def main():
     NUM_TRIALS_PER_CHECKPOINT = 1
-    MAX_NUM_SEQS = 100000000000
+    MAX_NUM_SEQS = 10000000
     SEED = 7
 
     checkpoints = [
@@ -366,9 +367,9 @@ def main():
         "ankh-v2-45",
     ]
     tasks = [
-        "ssp-casp12",
-        "ssp-casp14",
         "solubility",
+        "ssp-casp14",
+        "ssp-casp12",
         "fluorescence",
     ]
 
@@ -410,10 +411,10 @@ def main():
                 training_args = TrainingArguments(
                     output_dir=run_name + "-outdir",
                     run_name=run_name,
-                    num_train_epochs=20,
+                    num_train_epochs=50,
                     per_device_train_batch_size=1,
                     per_device_eval_batch_size=1,
-                    warmup_steps=1000,
+                    warmup_steps=0,
                     learning_rate=1e-03,
                     weight_decay=0.0,
                     logging_dir=f"./logs_{run_name}",
