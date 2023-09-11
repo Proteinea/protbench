@@ -18,7 +18,8 @@ class HuggingFaceSequenceToValue(SequenceToValue):
         """Generic task of predicting a class for a sequence.
 
         Args:
-            data_file (str): path to the fasta file containing the sequences and labels.
+            data_file (str): Path to the fasta file containing the sequences
+                             and labels.
                 The file must have the following format:
                 >seq_id LABEL=class
                 sequence

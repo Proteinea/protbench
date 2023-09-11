@@ -11,7 +11,7 @@ class ConvBert(nn.Module):
     def __init__(
         self,
         input_dim: int,
-        nhead: int,
+        num_heads: int,
         hidden_dim: int,
         num_layers: int = 1,
         kernel_size: int = 7,
@@ -23,18 +23,24 @@ class ConvBert(nn.Module):
 
         Args:
             input_dim: Dimension of the input embeddings.
-            nhead: Integer specifying the number of heads for the `ConvBert` model.
-            hidden_dim: Integer specifying the hidden dimension for the `ConvBert` model.
-            num_layers: Integer specifying the number of layers for the `ConvBert` model.
-            kernel_size: Integer specifying the filter size for the `ConvBert` model. Default: 7
-            dropout: Float specifying the dropout rate for the `ConvBert` model. Default: 0.2
-            pooling: String specifying the global pooling function. Accepts "avg" or "max". Default: "max"
+            num_heads: Integer specifying the number of heads for the
+                       `ConvBert` model.
+            hidden_dim: Integer specifying the hidden dimension for the
+                        `ConvBert` model.
+            num_layers: Integer specifying the number of layers for the
+                        `ConvBert` model.
+            kernel_size: Integer specifying the filter size for the
+                         `ConvBert` model. Default: 7
+            dropout: Float specifying the dropout rate for the
+                     `ConvBert` model. Default: 0.2
+            pooling: String specifying the global pooling function.
+                     Accepts "avg" or "max". Default: "max"
         """
         super(ConvBert, self).__init__()
 
         config = c_bert.ConvBertConfig(
             hidden_size=input_dim,
-            num_attention_heads=nhead,
+            num_attention_heads=num_heads,
             intermediate_size=hidden_dim,
             conv_kernel_size=kernel_size,
             num_hidden_layers=num_layers,
@@ -49,29 +55,36 @@ class ConvBert(nn.Module):
                 self.pooling = GlobalMaxPooling1D()
             else:
                 raise ValueError(
-                    f"Expected pooling to be [`avg`, `max`]. Recieved: {pooling}"
+                    "Expected pooling to be [`avg`, `max`]. "
+                    f"Recieved: {pooling}"
                 )
         else:
             self.pooling = None
 
-    def get_extended_attention_mask(self, attention_mask: torch.Tensor) -> torch.Tensor:
+    def get_extended_attention_mask(
+        self, attention_mask: torch.Tensor
+    ) -> torch.Tensor:
         """
-        This function is taken from the `ConvBertModel` implementation in the transformers library.
+        This function is taken from the `ConvBertModel` implementation in the
+        transformers library.
         See: https://github.com/huggingface/transformers/blob/fe861e578f50dc9c06de33cd361d2f625017e624/src/transformers/modeling_utils.py#L863
 
-        It is used to extend the attention mask to work with ConvBert's implementation of self-attention.
+        It is used to extend the attention mask to work with ConvBert's
+        implementation of self-attention.
 
         Args:
-            attention_mask: Tensor of shape [batch_size, seq_len] containing ones in unmasked
-                indices and zeros in masked indices.
+            attention_mask: Tensor of shape [batch_size, seq_len]
+                            containing ones in unmasked indices and zeros
+                            in masked indices.
 
         Returns:
-            Tensor of extended attention mask that can be fed to the ConvBert model.
+            Tensor of extended attention mask that can be fed to the
+            ConvBert model.
         """
         extended_attention_mask = attention_mask[:, None, None, :]
-        extended_attention_mask = (1.0 - extended_attention_mask) * torch.finfo(
-            attention_mask.dtype
-        ).min
+        extended_attention_mask = (
+            1.0 - extended_attention_mask
+        ) * torch.finfo(attention_mask.dtype).min
         return extended_attention_mask
 
     def forward(

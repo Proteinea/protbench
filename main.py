@@ -320,7 +320,7 @@ def compute_embeddings(model, tokenizer, train_seqs, val_seqs):
 def get_downstream_model(task_name, embedding_dim, num_classes):
     convbert_args = {
         "input_dim": embedding_dim,
-        "nhead": 4,
+        "num_heads": 4,
         "hidden_dim": int(embedding_dim / 2),
         "num_layers": 1,
         "kernel_size": 7,

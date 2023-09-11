@@ -19,13 +19,16 @@ class HuggingFaceSequenceToClass(SequenceToClass):
         """Generic task of predicting a class for a sequence.
 
         Args:
-            data_file (str): path to the fasta file containing the sequences and labels.
+            data_file (str): Path to the fasta file containing the sequences
+                             and labels.
                 The file must have the following format:
                 >seq_id LABEL=class
                 sequence
             where SET is either train or val and LABEL is the class label.
         """
-        super(HuggingFaceSequenceToClass, self).__init__(class_to_id=class_to_id)
+        super(HuggingFaceSequenceToClass, self).__init__(
+            class_to_id=class_to_id
+        )
 
         self._data = self.load_and_preprocess_data(
             dataset_url,

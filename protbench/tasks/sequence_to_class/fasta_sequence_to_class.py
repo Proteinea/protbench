@@ -13,7 +13,8 @@ class FastaSequenceToClass(SequenceToClass):
         """Generic task of predicting a class for a sequence.
 
         Args:
-            data_file (str): path to the fasta file containing the sequences and labels.
+            data_file (str): Path to the fasta file containing the sequences
+                             and labels.
                 The file must have the following format:
                 >seq_id LABEL=class
                 sequence
@@ -28,7 +29,9 @@ class FastaSequenceToClass(SequenceToClass):
     def data(self) -> List[Dict[str, Union[str, List[int]]]]:
         return self._data
 
-    def load_and_preprocess_data(self, data_file) -> Tuple[List[str], List[int]]:
+    def load_and_preprocess_data(
+        self, data_file
+    ) -> Tuple[List[str], List[int]]:
         sequences, labels = [], []
         for item in SeqIO.parse(data_file, "fasta"):
             label = item.description.split("=")[-1]

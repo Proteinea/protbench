@@ -19,8 +19,12 @@ class TestMetricRegistry(unittest.TestCase):
             return "test"
 
         self.assertIn("test_metric", MetricRegistry.metric_name_map)
-        self.assertIs(MetricRegistry.metric_name_map["test_metric"], test_metric)
-        self.assertEqual(MetricRegistry.metric_name_map["test_metric"], test_metric)
+        self.assertIs(
+            MetricRegistry.metric_name_map["test_metric"], test_metric
+        )
+        self.assertEqual(
+            MetricRegistry.metric_name_map["test_metric"], test_metric
+        )
 
     def test_add_metric_with_existing_name(self):
         if "test_metric" in MetricRegistry.metric_name_map:
@@ -40,15 +44,18 @@ class TestMetricRegistry(unittest.TestCase):
 class TestMetrics(unittest.TestCase):
     def test_compute_binary_classification_accuracy(self):
         p = EvalPrediction(
-            predictions=np.array([0, 1, 0, 1]), label_ids=np.array([0, 1, 0, 1])
+            predictions=np.array([0, 1, 0, 1]),
+            label_ids=np.array([0, 1, 0, 1]),
         )
         self.assertEqual(compute_accuracy(p), 1.0)
         p = EvalPrediction(
-            predictions=np.array([0, 1, 0, 1]), label_ids=np.array([0, 1, 1, 0])
+            predictions=np.array([0, 1, 0, 1]),
+            label_ids=np.array([0, 1, 1, 0]),
         )
         self.assertEqual(compute_accuracy(p), 0.5)
         p = EvalPrediction(
-            predictions=np.array([0, 1, 0, 1]), label_ids=np.array([1, 0, 1, 0])
+            predictions=np.array([0, 1, 0, 1]),
+            label_ids=np.array([1, 0, 1, 0]),
         )
         self.assertEqual(compute_accuracy(p), 0.0)
 
