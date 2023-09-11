@@ -128,3 +128,12 @@ dmypy.json
 # Pyre type checker
 .pyre/
 demo.ipynb
+
+# vscode
+.vscode/
+
+# playground notebooks
+playground.ipynb
+
+# weights & biases
+wandb/
