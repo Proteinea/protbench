@@ -67,7 +67,7 @@ class ConvBert(nn.Module):
         """
         This function is taken from the `ConvBertModel` implementation in the
         transformers library.
-        See: https://github.com/huggingface/transformers/blob/fe861e578f50dc9c06de33cd361d2f625017e624/src/transformers/modeling_utils.py#L863
+        See: https://github.com/huggingface/transformers/blob/fe861e578f50dc9c06de33cd361d2f625017e624/src/transformers/modeling_utils.py#L863 # noqa
 
         It is used to extend the attention mask to work with ConvBert's
         implementation of self-attention.
