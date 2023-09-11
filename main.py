@@ -175,6 +175,97 @@ def get_val_data(task_name):
     return task_class_map[task_name][0](**task_class_map[task_name][1])
 
 
+def get_data(task_name):
+    if task_name == "ssp-casp12":
+        train_data = HuggingFaceResidueToClass(
+            **{
+                "dataset_url": "proteinea/secondary_structure_prediction",
+                "data_files": "training_hhblits.csv",
+                "data_key": "train",
+                "seqs_col": "input",
+                "labels_col": "dssp3",
+                "mask_col": "disorder",
+                "preprocessing_function": preprocess_ssp_rows,
+            }
+        )
+        val_data = HuggingFaceResidueToClass(
+            class_to_id=train_data.class_to_id,
+            **{
+                "dataset_url": "proteinea/secondary_structure_prediction",
+                "data_files": "CASP12.csv",
+                "data_key": "train",
+                "seqs_col": "input",
+                "labels_col": "dssp3",
+                "mask_col": "disorder",
+                "preprocessing_function": preprocess_ssp_rows,
+            },
+        )
+    elif task_name == "ssp-casp14":
+        train_data = HuggingFaceResidueToClass(
+            **{
+                "dataset_url": "proteinea/secondary_structure_prediction",
+                "data_files": "training_hhblits.csv",
+                "data_key": "train",
+                "seqs_col": "input",
+                "labels_col": "dssp3",
+                "mask_col": "disorder",
+                "preprocessing_function": preprocess_ssp_rows,
+            }
+        )
+        val_data = HuggingFaceResidueToClass(
+            class_to_id=train_data.class_to_id,
+            **{
+                "dataset_url": "proteinea/secondary_structure_prediction",
+                "data_files": "CASP14.csv",
+                "data_key": "train",
+                "seqs_col": "input",
+                "labels_col": "dssp3",
+                "mask_col": "disorder",
+                "preprocessing_function": preprocess_ssp_rows,
+            },
+        )
+    elif task_name == "solubility":
+        train_data = HuggingFaceSequenceToClass(
+            **{
+                "dataset_url": "proteinea/Solubility",
+                "data_files": None,
+                "data_key": "train",
+                "seqs_col": "sequences",
+                "labels_col": "labels",
+            }
+        )
+        val_data = HuggingFaceSequenceToClass(
+            class_to_id=train_data.class_to_id,
+            **{
+                "dataset_url": "proteinea/Solubility",
+                "data_files": None,
+                "data_key": "validation",
+                "seqs_col": "sequences",
+                "labels_col": "labels",
+            },
+        )
+    elif task_name == "fluorescence":
+        train_data = HuggingFaceSequenceToValue(
+            **{
+                "dataset_url": "proteinea/Fluorosence",
+                "data_files": None,
+                "data_key": "train",
+                "seqs_col": "primary",
+                "labels_col": "log_fluorescence",
+            }
+        )
+        val_data = HuggingFaceSequenceToValue(
+            **{
+                "dataset_url": "proteinea/Fluorosence",
+                "data_files": None,
+                "data_key": "validation",
+                "seqs_col": "primary",
+                "labels_col": "log_fluorescence",
+            }
+        )
+    return train_data.data[0], train_data.data[1], val_data.data[0], val_data.data[1]
+
+
 def get_pretrained_model_and_tokenizer(model_name):
     model_url_map = {
         "ankh-base": "ElnaggarLab/ankh-base",
@@ -358,18 +449,18 @@ def main():
     SEED = 7
 
     checkpoints = [
-        "ankh-base",
+        # "ankh-base",
         "ankh-large",
         "ankh-v2-23",
         "ankh-v2-32",
-        "ankh-v2-33",
-        "ankh-v2-41",
-        "ankh-v2-45",
+        # "ankh-v2-33",
+        # "ankh-v2-41",
+        # "ankh-v2-45",
     ]
     tasks = [
-        "solubility",
         "ssp-casp14",
         "ssp-casp12",
+        "solubility",
         "fluorescence",
     ]
 
@@ -378,24 +469,16 @@ def main():
         for task in tasks:
             train_data = get_train_data(task)
             val_data = get_val_data(task)
-            train_seqs = (
-                train_data.data[0][:MAX_NUM_SEQS],
-                train_data.data[1][:MAX_NUM_SEQS],
-            )
-            val_seqs = (
-                val_data.data[0][:MAX_NUM_SEQS],
-                val_data.data[1][:MAX_NUM_SEQS],
-            )
-            val_seqs = (val_seqs[0][:MAX_NUM_SEQS], val_seqs[1][:MAX_NUM_SEQS])
+            train_seqs, train_labels, val_seqs, val_labels = get_data(task)
             train_embds, val_embds = compute_embeddings(
-                pretrained_model, tokenizer, train_seqs[0], val_seqs[0]
+                pretrained_model, tokenizer, train_seqs, val_seqs
             )
             pretrained_model.to("cpu")
             torch.cuda.empty_cache()
             collate_fn = get_collate_fn(task)
             logits_preprocessing_fn = get_logits_preprocessing_fn(task)
-            train_dataset = EmbeddingsDataset(train_embds, train_seqs[1])
-            val_dataset = EmbeddingsDataset(val_embds, val_seqs[1])
+            train_dataset = EmbeddingsDataset(train_embds, train_labels)
+            val_dataset = EmbeddingsDataset(val_embds, val_labels)
             if task in ["ssp-casp12", "ssp-casp14"]:
                 num_classes = train_data.num_classes
             else:
@@ -412,7 +495,7 @@ def main():
                     output_dir=run_name + "-outdir",
                     run_name=run_name,
                     num_train_epochs=50,
-                    per_device_train_batch_size=1,
+                    per_device_train_batch_size=10,
                     per_device_eval_batch_size=1,
                     warmup_steps=0,
                     learning_rate=1e-03,
@@ -422,7 +505,7 @@ def main():
                     do_train=True,
                     do_eval=True,
                     evaluation_strategy="epoch",
-                    gradient_accumulation_steps=16,
+                    gradient_accumulation_steps=2,
                     fp16=False,
                     fp16_opt_level="02",
                     seed=SEED,

@@ -13,6 +13,7 @@ class HuggingFaceSequenceToClass(SequenceToClass):
         data_key: str,
         seqs_col: str,
         labels_col: str,
+        class_to_id: Optional[Dict[str, int]] = None,
         preprocessing_function: Optional[Callable] = None,
     ) -> None:
         """Generic task of predicting a class for a sequence.
@@ -24,7 +25,7 @@ class HuggingFaceSequenceToClass(SequenceToClass):
                 sequence
             where SET is either train or val and LABEL is the class label.
         """
-        super(HuggingFaceSequenceToClass, self).__init__()
+        super(HuggingFaceSequenceToClass, self).__init__(class_to_id=class_to_id)
 
         self._data = self.load_and_preprocess_data(
             dataset_url,

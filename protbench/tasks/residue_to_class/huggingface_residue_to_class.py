@@ -13,6 +13,7 @@ class HuggingFaceResidueToClass(ResidueToClass):
         data_key: str,
         seqs_col: str,
         labels_col: str,
+        class_to_id: Optional[Dict[str, int]] = None,
         mask_col: Optional[str] = None,
         preprocessing_function: Optional[Callable] = None,
         label_ignore_value: int = -100,
@@ -34,7 +35,7 @@ class HuggingFaceResidueToClass(ResidueToClass):
 
         """
         super(HuggingFaceResidueToClass, self).__init__(
-            label_ignore_value=label_ignore_value
+            label_ignore_value=label_ignore_value, class_to_id=class_to_id
         )
 
         self._data = self._load_and_preprocess_data(
