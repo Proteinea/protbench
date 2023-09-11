@@ -1,11 +1,12 @@
 import abc
 
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 
 
 class SequenceToClass(abc.ABC):
     def __init__(
         self,
+        class_to_id: Optional[Dict[str, int]] = None,
     ) -> None:
         """Generic task of predicting a class for a sequence.
 
@@ -19,8 +20,12 @@ class SequenceToClass(abc.ABC):
         super().__init__()
 
         self.num_classes: int = 0
-        self.class_to_id: Dict[str, int] = {}
-        self.id_to_class: Dict[int, str] = {}
+        if class_to_id:
+            self.class_to_id = class_to_id
+            self.id_to_class = {v: k for k, v in class_to_id.items()}
+        else:
+            self.class_to_id: Dict[str, int] = {}
+            self.id_to_class: Dict[int, str] = {}
 
     @property
     @abc.abstractmethod

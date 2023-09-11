@@ -1,5 +1,5 @@
 import abc
-from typing import Union, Optional
+from typing import Optional
 from typing import Dict, List, Tuple
 
 
@@ -7,6 +7,7 @@ class ResidueToClass:
     def __init__(
         self,
         label_ignore_value: int = -100,
+        class_to_id: Optional[Dict[str, int]] = None,
     ):
         """A generic class for any task where the goal is to predict a class for each
             residue in a protein sequence.
@@ -28,8 +29,13 @@ class ResidueToClass:
         """
         self.label_ignore_value = label_ignore_value
         self.num_classes: int = 0
-        self.class_to_id: Dict[str, int] = {}
-        self.id_to_class: Dict[int, str] = {}
+        if class_to_id:
+            self.class_to_id = class_to_id
+            self.num_classes = len(class_to_id)
+            self.id_to_class = {v: k for k, v in class_to_id.items()}
+        else:
+            self.class_to_id: Dict[str, int] = {}
+            self.id_to_class: Dict[int, str] = {}
 
     @property
     @abc.abstractmethod
