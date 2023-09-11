@@ -1,11 +1,9 @@
 import torch
 from torch import nn
 from torch.nn import functional as F
-from transformers.modeling_outputs import (
-    ModelOutput,
-    SequenceClassifierOutput,
-    TokenClassifierOutput,
-)
+from transformers.modeling_outputs import (ModelOutput,
+                                           SequenceClassifierOutput,
+                                           TokenClassifierOutput)
 
 
 class MultiLabelClassifierOutpu(ModelOutput):
@@ -169,6 +167,42 @@ class RegressionHead(torch.nn.Module):
         loss = self.compute_loss(logits, labels)
 
         return SequenceClassifierOutput(
+            loss=loss,
+            logits=logits,
+            hidden_states=None,
+            attentions=None,
+        )
+
+
+class ContactPredictionHead(torch.nn.Module):
+    def __init__(self, input_dim, output_dim, ignore_index=-1):
+        super().__init__()
+
+        self.num_labels = output_dim
+        self.decoder = nn.Linear(input_dim * 2, output_dim)
+        self.ignore_index = ignore_index
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        initrange = 0.1
+        self.decoder.bias.data.zero_()
+        self.decoder.weight.data.uniform_(-initrange, initrange)
+
+    def compute_loss(self, inputs, labels):
+        if labels is None:
+            return
+        return F.cross_entropy(inputs.view(-1, 2), labels.view(-1),
+                               ignore_index=self.ignore_index)
+
+    def forward(self, hidden_states, labels=None):
+        prod = hidden_states[:, :, None, :] * hidden_states[:, None, :, :]
+        diff = hidden_states[:, :, None, :] - hidden_states[:, None, :, :]
+        pairwise_features = torch.cat((prod, diff), -1)
+        logits = self.decoder(pairwise_features)
+        logits = (logits + logits.transpose(1, 2)) / 2
+        loss = self.compute_loss(logits, labels)
+
+        return TokenClassifierOutput(
             loss=loss,
             logits=logits,
             hidden_states=None,
