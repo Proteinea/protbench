@@ -28,12 +28,12 @@ class ResidueToClass:
                 Defaults to -100.
         """
         self.label_ignore_value = label_ignore_value
-        self.num_classes: int = 0
         if class_to_id:
             self.class_to_id = class_to_id
             self.num_classes = len(class_to_id)
             self.id_to_class = {v: k for k, v in class_to_id.items()}
         else:
+            self.num_classes: int = 0
             self.class_to_id: Dict[str, int] = {}
             self.id_to_class: Dict[int, str] = {}
 

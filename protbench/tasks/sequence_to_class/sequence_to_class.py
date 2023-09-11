@@ -19,11 +19,12 @@ class SequenceToClass(abc.ABC):
         """
         super().__init__()
 
-        self.num_classes: int = 0
         if class_to_id:
             self.class_to_id = class_to_id
             self.id_to_class = {v: k for k, v in class_to_id.items()}
+            self.num_classes = len(class_to_id)
         else:
+            self.num_classes = 0
             self.class_to_id: Dict[str, int] = {}
             self.id_to_class: Dict[int, str] = {}
 
