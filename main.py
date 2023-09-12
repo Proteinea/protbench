@@ -17,6 +17,7 @@ from protbench.models import (
     BinaryClassificationHead,
     RegressionHead,
     DownstreamModel,
+    ContactPredictionHead
 )
 from protbench import metrics
 from protbench.utils import (
@@ -37,6 +38,7 @@ from transformers import (
     TrainingArguments,
     EarlyStoppingCallback,
 )
+from scipy.spatial.distance import pdist, squareform
 
 
 class EmbeddingsDataset(Dataset):
@@ -70,9 +72,57 @@ class EmbeddingsDataset(Dataset):
         }
 
 
+class CPDataset(Dataset):
+    def __init__(self, encodings, labels,
+                 valid_masks,
+                 max_length = 1024,
+                 is_pad_embd = False):
+        self.encodings = encodings
+        self.labels = labels
+        self.max_length = max_length
+        self.is_pad_embd = is_pad_embd
+        self.valid_masks = valid_masks
+
+    def __getitem__(self, idx):
+        item = {}
+
+        item['embd'] = torch.tensor(self.encodings[idx]).type(torch.FloatTensor)
+
+        valid_mask = self.valid_masks[idx]
+        contact_map = np.less(squareform(pdist(self.labels[idx])), 8.0).astype(np.int64)
+
+        yind, xind = np.indices(contact_map.shape)
+        invalid_mask = ~(valid_mask[:, None] & valid_mask[None, :])
+        invalid_mask |= np.abs(yind - xind) < 6
+        contact_map[invalid_mask] = -100
+
+        item['labels'] = torch.tensor(contact_map)
+
+        if self.is_pad_embd:
+            pad_embd = torch.zeros(self.max_length, (item['embd'].shape)[1])
+            pad_embd[:(item['embd'].shape)[0], :] = item['embd']
+            item['embd'] = pad_embd
+
+        return item
+
+    def __len__(self):
+        return len(self.labels)
+
+
 def preprocess_ssp_rows(seq, label, mask):
     mask = list(map(float, mask.split()))
     return seq, label, mask
+
+
+def preprocess_contact_prediction_labels(sequence, label, mask):
+    valid_mask = mask
+    contact_map = np.less(squareform(pdist(label)), 8.0).astype(np.int64)
+    yind, xind = np.indices(contact_map.shape)
+    invalid_mask = ~(valid_mask[:, None] & valid_mask[None, :])
+    invalid_mask |= np.abs(yind - xind) < 6
+    contact_map[invalid_mask] = -100
+    return sequence, label, mask
+
 
 
 def get_train_data(task_name):
@@ -83,9 +133,9 @@ def get_train_data(task_name):
                 "dataset_url": "proteinea/secondary_structure_prediction",
                 "data_files": "training_hhblits.csv",
                 "data_key": "train",
-                "seqs_col": "input",
-                "labels_col": "dssp3",
-                "mask_col": "disorder",
+                "sequences_key": "input",
+                "labels_key": "dssp3",
+                "mask_key": "disorder",
                 "preprocessing_function": preprocess_ssp_rows,
             },
         ),
@@ -95,9 +145,9 @@ def get_train_data(task_name):
                 "dataset_url": "proteinea/secondary_structure_prediction",
                 "data_files": "training_hhblits.csv",
                 "data_key": "train",
-                "seqs_col": "input",
-                "labels_col": "dssp3",
-                "mask_col": "disorder",
+                "sequences_key": "input",
+                "labels_key": "dssp3",
+                "mask_key": "disorder",
                 "preprocessing_function": preprocess_ssp_rows,
             },
         ),
@@ -107,8 +157,8 @@ def get_train_data(task_name):
                 "dataset_url": "proteinea/Solubility",
                 "data_files": None,
                 "data_key": "train",
-                "seqs_col": "sequences",
-                "labels_col": "labels",
+                "sequences_key": "sequences",
+                "labels_key": "labels",
             },
         ),
         "fluorescence": (
@@ -117,9 +167,22 @@ def get_train_data(task_name):
                 "dataset_url": "proteinea/Fluorosence",
                 "data_files": None,
                 "data_key": "train",
-                "seqs_col": "primary",
-                "labels_col": "log_fluorescence",
+                "sequences_key": "primary",
+                "labels_key": "log_fluorescence",
             },
+        ),
+        "contact_prediction": (
+            HuggingFaceResidueToClass,
+            {
+                "dataset_url": "proteinea/contact_prediction",
+                "data_files": None,
+                "data_key": "train",
+                "sequences_key": "primary",
+                "labels_key": "tertiary",
+                "mask_key": "valid_mask",
+                "preprocessing_function": preprocess_contact_prediction_labels
+
+            }
         ),
     }
     return task_class_map[task_name][0](**task_class_map[task_name][1])
@@ -133,9 +196,9 @@ def get_val_data(task_name):
                 "dataset_url": "proteinea/secondary_structure_prediction",
                 "data_files": "CASP12.csv",
                 "data_key": "train",
-                "seqs_col": "input",
-                "labels_col": "dssp3",
-                "mask_col": "disorder",
+                "sequences_key": "input",
+                "labels_key": "dssp3",
+                "mask_key": "disorder",
                 "preprocessing_function": preprocess_ssp_rows,
             },
         ),
@@ -145,9 +208,9 @@ def get_val_data(task_name):
                 "dataset_url": "proteinea/secondary_structure_prediction",
                 "data_files": "CASP14.csv",
                 "data_key": "train",
-                "seqs_col": "input",
-                "labels_col": "dssp3",
-                "mask_col": "disorder",
+                "sequences_key": "input",
+                "labels_key": "dssp3",
+                "mask_key": "disorder",
                 "preprocessing_function": preprocess_ssp_rows,
             },
         ),
@@ -157,8 +220,8 @@ def get_val_data(task_name):
                 "dataset_url": "proteinea/Solubility",
                 "data_files": None,
                 "data_key": "validation",
-                "seqs_col": "sequences",
-                "labels_col": "labels",
+                "sequences_key": "sequences",
+                "labels_key": "labels",
             },
         ),
         "fluorescence": (
@@ -167,9 +230,22 @@ def get_val_data(task_name):
                 "dataset_url": "proteinea/Fluorosence",
                 "data_files": None,
                 "data_key": "validation",
-                "seqs_col": "primary",
-                "labels_col": "log_fluorescence",
+                "sequences_key": "primary",
+                "labels_key": "log_fluorescence",
             },
+        ),
+        "contact_prediction": (
+            HuggingFaceResidueToClass,
+            {
+                "dataset_url": "proteinea/contact_prediction",
+                "data_files": None,
+                "data_key": "validation",
+                "sequences_key": "primary",
+                "labels_key": "tertiary",
+                "mask_key": "valid_mask",
+                "preprocessing_function": preprocess_contact_prediction_labels
+
+            }
         ),
     }
     return task_class_map[task_name][0](**task_class_map[task_name][1])
@@ -182,9 +258,9 @@ def get_data(task_name):
                 "dataset_url": "proteinea/secondary_structure_prediction",
                 "data_files": "training_hhblits.csv",
                 "data_key": "train",
-                "seqs_col": "input",
-                "labels_col": "dssp3",
-                "mask_col": "disorder",
+                "sequences_key": "input",
+                "labels_key": "dssp3",
+                "mask_key": "disorder",
                 "preprocessing_function": preprocess_ssp_rows,
             }
         )
@@ -194,9 +270,9 @@ def get_data(task_name):
                 "dataset_url": "proteinea/secondary_structure_prediction",
                 "data_files": "CASP12.csv",
                 "data_key": "train",
-                "seqs_col": "input",
-                "labels_col": "dssp3",
-                "mask_col": "disorder",
+                "sequences_key": "input",
+                "labels_key": "dssp3",
+                "mask_key": "disorder",
                 "preprocessing_function": preprocess_ssp_rows,
             },
         )
@@ -206,9 +282,9 @@ def get_data(task_name):
                 "dataset_url": "proteinea/secondary_structure_prediction",
                 "data_files": "training_hhblits.csv",
                 "data_key": "train",
-                "seqs_col": "input",
-                "labels_col": "dssp3",
-                "mask_col": "disorder",
+                "sequences_key": "input",
+                "labels_key": "dssp3",
+                "mask_key": "disorder",
                 "preprocessing_function": preprocess_ssp_rows,
             }
         )
@@ -218,9 +294,9 @@ def get_data(task_name):
                 "dataset_url": "proteinea/secondary_structure_prediction",
                 "data_files": "CASP14.csv",
                 "data_key": "train",
-                "seqs_col": "input",
-                "labels_col": "dssp3",
-                "mask_col": "disorder",
+                "sequences_key": "input",
+                "labels_key": "dssp3",
+                "mask_key": "disorder",
                 "preprocessing_function": preprocess_ssp_rows,
             },
         )
@@ -230,8 +306,8 @@ def get_data(task_name):
                 "dataset_url": "proteinea/Solubility",
                 "data_files": None,
                 "data_key": "train",
-                "seqs_col": "sequences",
-                "labels_col": "labels",
+                "sequences_key": "sequences",
+                "labels_key": "labels",
             }
         )
         val_data = HuggingFaceSequenceToClass(
@@ -240,8 +316,8 @@ def get_data(task_name):
                 "dataset_url": "proteinea/Solubility",
                 "data_files": None,
                 "data_key": "validation",
-                "seqs_col": "sequences",
-                "labels_col": "labels",
+                "sequences_key": "sequences",
+                "labels_key": "labels",
             },
         )
     elif task_name == "fluorescence":
@@ -250,8 +326,8 @@ def get_data(task_name):
                 "dataset_url": "proteinea/Fluorosence",
                 "data_files": None,
                 "data_key": "train",
-                "seqs_col": "primary",
-                "labels_col": "log_fluorescence",
+                "sequences_key": "primary",
+                "labels_key": "log_fluorescence",
             }
         )
         val_data = HuggingFaceSequenceToValue(
@@ -259,10 +335,38 @@ def get_data(task_name):
                 "dataset_url": "proteinea/Fluorosence",
                 "data_files": None,
                 "data_key": "validation",
-                "seqs_col": "primary",
-                "labels_col": "log_fluorescence",
+                "sequences_key": "primary",
+                "labels_key": "log_fluorescence",
             }
         )
+
+    elif task_name == 'contact_prediction':
+        train_data = HuggingFaceResidueToClass(
+            **{
+                "dataset_url": "proteinea/contact_prediction",
+                "data_files": None,
+                "data_key": "train",
+                "sequences_key": "primary",
+                "labels_key": "tertiary",
+                "mask_key": "valid_mask",
+                "preprocessing_function": preprocess_contact_prediction_labels
+
+            }
+        )
+        val_data = HuggingFaceResidueToClass(
+            class_to_id=train_data.class_to_id,
+            **{
+                "dataset_url": "proteinea/contact_prediction",
+                "data_files": None,
+                "data_key": "train",
+                "sequences_key": "primary",
+                "labels_key": "tertiary",
+                "mask_key": "valid_mask",
+                "preprocessing_function": preprocess_contact_prediction_labels
+
+            }
+        )
+
     return train_data.data[0], train_data.data[1], val_data.data[0], val_data.data[1]
 
 
@@ -373,6 +477,17 @@ def get_downstream_model(task_name, embedding_dim, num_classes):
                 "input_dim": embedding_dim,
             },
         ),
+        'contact_prediction': (
+            ConvBert,
+            {
+                "pooling": None,
+                **convbert_args
+            },
+            ContactPredictionHead,
+            {
+                "input_dim": embedding_dim,
+            }
+        )
     }
     return DownstreamModel(
         task_class_map[task_name][0](**task_class_map[task_name][1]),
@@ -403,6 +518,7 @@ def get_metrics(task_name):
         "fluorescence": lambda x: {
             "spearman": metrics.compute_spearman(x),
         },
+        "contact_prediction": None,
     }
     return task_class_map[task_name]
 
@@ -413,6 +529,8 @@ def get_collate_fn(task_name):
         "ssp-casp14": collate_inputs_and_labels,
         "solubility": collate_inputs,
         "fluorescence": collate_inputs,
+        "contact_prediction": collate_inputs_and_labels,
+
     }
     return task_class_map[task_name]
 
@@ -423,6 +541,7 @@ def get_logits_preprocessing_fn(task_name):
         "ssp-casp14": preprocess_multi_classification_logits,
         "solubility": preprocess_binary_classification_logits,
         "fluorescence": None,
+        "contact_prediction": None,
     }
     return task_class_map[task_name]
 
@@ -433,6 +552,7 @@ def get_metric_for_best_model(task_name):
         "ssp-casp14": "accuracy",
         "solubility": "accuracy",
         "fluorescence": "spearman",
+        "contact_prediction": "eval_loss"
     }
     return task_metric_map[task_name]
 
@@ -449,15 +569,16 @@ def main():
     SEED = 7
 
     checkpoints = [
-        # "ankh-base",
-        "ankh-large",
-        "ankh-v2-23",
-        "ankh-v2-32",
+        "ankh-base",
+        # "ankh-large",
+        # "ankh-v2-23",
+        # "ankh-v2-32",
         # "ankh-v2-33",
         # "ankh-v2-41",
         # "ankh-v2-45",
     ]
     tasks = [
+        "contact_prediction",
         "ssp-casp14",
         "ssp-casp12",
         "solubility",

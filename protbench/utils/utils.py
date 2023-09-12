@@ -1,9 +1,5 @@
-from functools import partial
-from typing import List, Dict, Type, Any, Tuple, Callable, Optional, Union
-
+from typing import List, Dict
 import torch
-from torch.utils.data import Dataset
-from transformers import EvalPrediction, TrainingArguments
 
 
 def collate_inputs(
