@@ -1,8 +1,8 @@
 from typing import Tuple
 
 import torch
-import transformers.models.convbert as c_bert
 from torch import nn
+from transformers.models import convbert
 
 from protbench.models import GlobalAvgPooling1D, GlobalMaxPooling1D
 
@@ -38,7 +38,7 @@ class ConvBert(nn.Module):
         """
         super(ConvBert, self).__init__()
 
-        config = c_bert.ConvBertConfig(
+        config = convbert.ConvBertConfig(
             hidden_size=input_dim,
             num_attention_heads=num_heads,
             intermediate_size=hidden_dim,
@@ -46,7 +46,9 @@ class ConvBert(nn.Module):
             num_hidden_layers=num_layers,
             hidden_dropout_prob=dropout,
         )
-        self.transformer_encoder = c_bert.ConvBertModel(config).encoder
+        self.transformer_encoder = convbert.modeling_convbert.ConvBertEncoder(
+            config
+        )
 
         if pooling is not None:
             if pooling in {"avg", "mean"}:
