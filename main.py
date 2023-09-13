@@ -135,7 +135,7 @@ def get_train_data(task_name):
                 "data_key": "train",
                 "sequences_key": "input",
                 "labels_key": "dssp3",
-                "mask_key": "disorder",
+                "masks_key": "disorder",
                 "preprocessing_function": preprocess_ssp_rows,
             },
         ),
@@ -147,7 +147,7 @@ def get_train_data(task_name):
                 "data_key": "train",
                 "sequences_key": "input",
                 "labels_key": "dssp3",
-                "mask_key": "disorder",
+                "masks_key": "disorder",
                 "preprocessing_function": preprocess_ssp_rows,
             },
         ),
@@ -179,7 +179,7 @@ def get_train_data(task_name):
                 "data_key": "train",
                 "sequences_key": "primary",
                 "labels_key": "tertiary",
-                "mask_key": "valid_mask",
+                "masks_key": "valid_mask",
                 "preprocessing_function": preprocess_contact_prediction_labels
 
             }
@@ -198,7 +198,7 @@ def get_val_data(task_name):
                 "data_key": "train",
                 "sequences_key": "input",
                 "labels_key": "dssp3",
-                "mask_key": "disorder",
+                "masks_key": "disorder",
                 "preprocessing_function": preprocess_ssp_rows,
             },
         ),
@@ -210,7 +210,7 @@ def get_val_data(task_name):
                 "data_key": "train",
                 "sequences_key": "input",
                 "labels_key": "dssp3",
-                "mask_key": "disorder",
+                "masks_key": "disorder",
                 "preprocessing_function": preprocess_ssp_rows,
             },
         ),
@@ -242,7 +242,7 @@ def get_val_data(task_name):
                 "data_key": "validation",
                 "sequences_key": "primary",
                 "labels_key": "tertiary",
-                "mask_key": "valid_mask",
+                "masks_key": "valid_mask",
                 "preprocessing_function": preprocess_contact_prediction_labels
 
             }
@@ -260,7 +260,7 @@ def get_data(task_name):
                 "data_key": "train",
                 "sequences_key": "input",
                 "labels_key": "dssp3",
-                "mask_key": "disorder",
+                "masks_key": "disorder",
                 "preprocessing_function": preprocess_ssp_rows,
             }
         )
@@ -272,7 +272,7 @@ def get_data(task_name):
                 "data_key": "train",
                 "sequences_key": "input",
                 "labels_key": "dssp3",
-                "mask_key": "disorder",
+                "masks_key": "disorder",
                 "preprocessing_function": preprocess_ssp_rows,
             },
         )
@@ -284,7 +284,7 @@ def get_data(task_name):
                 "data_key": "train",
                 "sequences_key": "input",
                 "labels_key": "dssp3",
-                "mask_key": "disorder",
+                "masks_key": "disorder",
                 "preprocessing_function": preprocess_ssp_rows,
             }
         )
@@ -296,7 +296,7 @@ def get_data(task_name):
                 "data_key": "train",
                 "sequences_key": "input",
                 "labels_key": "dssp3",
-                "mask_key": "disorder",
+                "masks_key": "disorder",
                 "preprocessing_function": preprocess_ssp_rows,
             },
         )
@@ -348,7 +348,7 @@ def get_data(task_name):
                 "data_key": "train",
                 "sequences_key": "primary",
                 "labels_key": "tertiary",
-                "mask_key": "valid_mask",
+                "masks_key": "valid_mask",
                 "preprocessing_function": preprocess_contact_prediction_labels
 
             }
@@ -361,7 +361,7 @@ def get_data(task_name):
                 "data_key": "train",
                 "sequences_key": "primary",
                 "labels_key": "tertiary",
-                "mask_key": "valid_mask",
+                "masks_key": "valid_mask",
                 "preprocessing_function": preprocess_contact_prediction_labels
 
             }
