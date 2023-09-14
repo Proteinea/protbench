@@ -578,11 +578,11 @@ def main():
         # "ankh-v2-45",
     ]
     tasks = [
-        "contact_prediction",
         "ssp-casp14",
         "ssp-casp12",
         "solubility",
         "fluorescence",
+        "contact_prediction",
     ]
 
     for checkpoint in checkpoints:
