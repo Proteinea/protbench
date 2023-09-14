@@ -1,11 +1,9 @@
 import torch
 from torch import nn
 from torch.nn import functional as F
-from transformers.modeling_outputs import (
-    ModelOutput,
-    SequenceClassifierOutput,
-    TokenClassifierOutput,
-)
+from transformers.modeling_outputs import (ModelOutput,
+                                           SequenceClassifierOutput,
+                                           TokenClassifierOutput)
 
 
 class MultiLabelClassifierOutpu(ModelOutput):
@@ -193,9 +191,8 @@ class ContactPredictionHead(torch.nn.Module):
     def compute_loss(self, inputs, labels):
         if labels is None:
             return
-        return F.cross_entropy(
-            inputs.view(-1, 2), labels.view(-1), ignore_index=self.ignore_index
-        )
+        return F.cross_entropy(inputs.view(-1, 2), labels.view(-1),
+                               ignore_index=self.ignore_index)
 
     def forward(self, hidden_states, labels=None):
         prod = hidden_states[:, :, None, :] * hidden_states[:, None, :, :]

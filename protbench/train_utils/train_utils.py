@@ -7,10 +7,7 @@ from transformers import EvalPrediction, TrainingArguments
 
 from protbench.src.tasks import Task, TaskRegistry
 from protbench.src.metrics import MetricRegistry
-from protbench.src.models import (
-    DownstreamModelRegistry,
-    PretrainedModelRegistry,
-)
+from protbench.src.models import DownstreamModelRegistry, PretrainedModelRegistry
 from protbench.src.models.pretrained import BasePretrainedModel
 from protbench.src.train_utils import EmbeddingsDataset
 
@@ -64,9 +61,7 @@ def collate_inputs_and_labels(
     return {"embd": embds, "labels": labels}
 
 
-def preprocess_multi_classification_logits(
-    logits: torch.Tensor, _
-) -> torch.Tensor:
+def preprocess_multi_classification_logits(logits: torch.Tensor, _) -> torch.Tensor:
     """
     Preprocess logits for multiclassification tasks to produce predictions.
 
@@ -80,9 +75,7 @@ def preprocess_multi_classification_logits(
     return logits.argmax(dim=-1)
 
 
-def preprocess_binary_classification_logits(
-    logits: torch.Tensor, _
-) -> torch.Tensor:
+def preprocess_binary_classification_logits(logits: torch.Tensor, _) -> torch.Tensor:
     """
     Preprocess logits for binary classification tasks to produce predictions.
 
@@ -130,8 +123,7 @@ class TrainUtils:
     def get_optimizers(
         self, model: torch.nn.Module
     ) -> Tuple[
-        Optional[torch.optim.Optimizer],
-        Optional[torch.optim.lr_scheduler.LRScheduler],
+        Optional[torch.optim.Optimizer], Optional[torch.optim.lr_scheduler.LRScheduler]
     ]:
         """Get the optimizer and learning rate scheduler (if set in config) from the config.
 
@@ -246,9 +238,7 @@ class TrainUtils:
         )
         print("-" * 100)
         print(f"Downstream Model: {self.config['downstream_model']['name']}")
-        print(
-            f"Number of parameters: {self.get_num_params(self.downstream_model):,}"
-        )
+        print(f"Number of parameters: {self.get_num_params(self.downstream_model):,}")
         print("*" * 100)
 
     def get_num_params(self, model):
@@ -278,9 +268,7 @@ class TrainUtils:
         """
         task_name = self.config["task"]["name"]
         task_config = (
-            self.config["task"]["kwargs"]
-            if "kwargs" in self.config["task"]
-            else {}
+            self.config["task"]["kwargs"] if "kwargs" in self.config["task"] else {}
         )
         return TaskRegistry.task_name_map[task_name](**task_config)
 
@@ -301,9 +289,9 @@ class TrainUtils:
             if "kwargs" in self.config["pretrained_model"]
             else {}
         )
-        return PretrainedModelRegistry.pretrained_model_name_map[
-            pretrained_model_name
-        ](**pretrained_model_config)
+        return PretrainedModelRegistry.pretrained_model_name_map[pretrained_model_name](
+            **pretrained_model_config
+        )
 
     def _get_downstream_model_from_config(self) -> torch.nn.Module:
         """Get the downstream model from the config.
@@ -317,9 +305,9 @@ class TrainUtils:
             if "kwargs" in self.config["downstream_model"]
             else {}
         )
-        return DownstreamModelRegistry.downstream_model_name_map[
-            downstream_model_name
-        ](**downstream_model_config)
+        return DownstreamModelRegistry.downstream_model_name_map[downstream_model_name](
+            **downstream_model_config
+        )
 
     def _get_training_args_from_config(self) -> TrainingArguments:
         """Get the training arguments from the config.
@@ -329,9 +317,7 @@ class TrainUtils:
         """
         return TrainingArguments(**self.config["training_args"])
 
-    def _get_metrics_from_config(
-        self,
-    ) -> Dict[str, Callable[[EvalPrediction], float]]:
+    def _get_metrics_from_config(self) -> Dict[str, Callable[[EvalPrediction], float]]:
         """Get the required metrics from the config.
 
         Returns:
@@ -372,10 +358,7 @@ class TrainUtils:
             )
 
     def _get_logits_preprocessor_fn(self) -> Callable | None:
-        if (
-            self.task.description.task_type["operation"]
-            == "binary_classification"
-        ):
+        if self.task.description.task_type["operation"] == "binary_classification":
             return preprocess_binary_classification_logits
         elif (
             self.task.description.task_type["operation"]

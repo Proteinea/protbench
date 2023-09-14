@@ -1,7 +1,6 @@
 import abc
 from typing import Tuple, List
 
-
 class SequenceToValue(abc.ABC):
     def __init__(
         self,

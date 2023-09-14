@@ -34,9 +34,7 @@ class TorchEmbeddingFunction(EmbeddingFunction):
 
     @staticmethod
     def _remove_padding_from_embeddings(
-        embeddings: torch.Tensor,
-        input_ids: torch.Tensor,
-        padding_value: int = 0,
+        embeddings: torch.Tensor, input_ids: torch.Tensor, padding_value: int = 0
     ) -> List[torch.Tensor]:
         """Remove padding from embeddings.
 

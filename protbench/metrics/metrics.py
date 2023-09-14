@@ -2,12 +2,7 @@ from typing import Optional
 
 from scipy.stats import spearmanr
 from transformers import EvalPrediction
-from sklearn.metrics import (
-    accuracy_score,
-    f1_score,
-    precision_score,
-    recall_score,
-)
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 
 from protbench.metrics.utils import remove_ignored_predictions
 

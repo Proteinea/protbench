@@ -17,9 +17,7 @@ class Embedder(abc.ABC):
     ):
         self.embedding_function = embedding_function
         if low_memory and save_path == None:
-            raise ValueError(
-                "Expected save_path to be set when low_memory is True"
-            )
+            raise ValueError("Expected save_path to be set when low_memory is True")
         self.low_memory = low_memory
         if save_path:
             self.save_path = Path(save_path)

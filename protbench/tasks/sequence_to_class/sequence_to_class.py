@@ -11,8 +11,7 @@ class SequenceToClass(abc.ABC):
         """Generic task of predicting a class for a sequence.
 
         Args:
-            data_file (str): Path to the fasta file containing the sequences
-                             and labels.
+            data_file (str): path to the fasta file containing the sequences and labels.
                 The file must have the following format:
                 >seq_id LABEL=class
                 sequence
@@ -44,6 +43,5 @@ class SequenceToClass(abc.ABC):
     def _check_number_of_classes(self) -> None:
         if self.num_classes < 2:
             raise ValueError(
-                "Number of classes must be at least 2. "
-                f"Received: {self.num_classes}."
+                f"Number of classes must be at least 2 but got {self.num_classes}."
             )

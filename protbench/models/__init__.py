@@ -7,4 +7,3 @@ from protbench.models.pooling import GlobalAvgPooling1D
 from protbench.models.pooling import GlobalMaxPooling1D
 from protbench.models.convbert import ConvBert
 from protbench.models.downstream_model import DownstreamModel
-from protbench.models.heads import ContactPredictionHead

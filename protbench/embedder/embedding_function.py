@@ -1,5 +1,5 @@
 import abc
-from typing import Any, List, Union
+from typing import Any, List, Union, Any
 
 
 class EmbeddingFunction(abc.ABC):
@@ -17,8 +17,7 @@ class EmbeddingFunction(abc.ABC):
     def call(
         self, sequence: Union[str, List[str]], *args, **kwargs
     ) -> Union[Any, List[Any]]:
-        # Embed a sequence or a list of sequences. If a single sequence
-        # is passed, a single embedding is returned.
+        # Embed a sequence or a list of sequences. If a single sequence is passed, a single embedding is returned.
         # If a list of sequences is passed, a list of embeddings is returned.
         raise NotImplementedError
 

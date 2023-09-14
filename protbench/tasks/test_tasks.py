@@ -10,9 +10,7 @@ from Bio.SeqRecord import SeqRecord
 
 from protbench.src.tasks import TaskRegistry, Task
 from protbench.src.tasks.ResidueToClass import ResidueToClass
-from protbench.src.tasks.sequence_to_class.sequence_to_class import (
-    SequenceToClass,
-)
+from protbench.src.tasks.sequence_to_class.sequence_to_class import SequenceToClass
 from protbench.src.tasks.tasks import SequenceToValue
 
 random.seed(42)
@@ -111,9 +109,7 @@ class TestResidueToClass(unittest.TestCase):
             seq = self.generate_random_sequence(
                 length=random.randint(seq_min_length, seq_max_length)
             )
-            label = self.generate_random_labels(
-                labels_set=labels_set, length=len(seq)
-            )
+            label = self.generate_random_labels(labels_set=labels_set, length=len(seq))
             mask = self.generate_random_mask(len(seq))
             set = "train"
             sequences.append(seq)
@@ -125,9 +121,7 @@ class TestResidueToClass(unittest.TestCase):
             seq = self.generate_random_sequence(
                 length=random.randint(seq_min_length, seq_max_length)
             )
-            label = self.generate_random_labels(
-                labels_set=labels_set, length=len(seq)
-            )
+            label = self.generate_random_labels(labels_set=labels_set, length=len(seq))
             mask = self.generate_random_mask(len(seq))
             set = "val"
             sequences.append(seq)
@@ -181,9 +175,7 @@ class TestResidueToClass(unittest.TestCase):
             self.assertEqual(test_seq, seq)
             for j, (class_label, mask_value) in enumerate(zip(label, mask)):
                 if mask_value == "1":
-                    self.assertEqual(
-                        test_label[j], task.class_to_id[class_label]
-                    )
+                    self.assertEqual(test_label[j], task.class_to_id[class_label])
                 else:
                     self.assertEqual(test_label[j], ignore_index)
 
@@ -197,9 +189,7 @@ class TestResidueToClass(unittest.TestCase):
             self.assertEqual(test_seq, seq)
             for j, (class_label, mask_value) in enumerate(zip(label, mask)):
                 if mask_value == "1":
-                    self.assertEqual(
-                        test_label[j], task.class_to_id[class_label]
-                    )
+                    self.assertEqual(test_label[j], task.class_to_id[class_label])
                 else:
                     self.assertEqual(test_label[j], ignore_index)
 
@@ -336,9 +326,7 @@ class TestSequenceToValue(unittest.TestCase):
         samples = []
         for i, (seq, target, set) in enumerate(zip(sequences, targets, sets)):
             sample = SeqRecord(
-                Seq(seq),
-                id=f"seq_{i}",
-                description=f"SET={set} VALUE={target}",
+                Seq(seq), id=f"seq_{i}", description=f"SET={set} VALUE={target}"
             )
             samples.append(sample)
 

@@ -1,5 +1,9 @@
-from typing import List, Dict
+from functools import partial
+from typing import List, Dict, Type, Any, Tuple, Callable, Optional, Union
+
 import torch
+from torch.utils.data import Dataset
+from transformers import EvalPrediction, TrainingArguments
 
 
 def collate_inputs(
@@ -51,9 +55,7 @@ def collate_inputs_and_labels(
     return {"embds": embds, "labels": labels}
 
 
-def preprocess_multi_classification_logits(
-    logits: torch.Tensor, _
-) -> torch.Tensor:
+def preprocess_multi_classification_logits(logits: torch.Tensor, _) -> torch.Tensor:
     """
     Preprocess logits for multiclassification tasks to produce predictions.
 
@@ -67,9 +69,7 @@ def preprocess_multi_classification_logits(
     return logits.argmax(dim=-1)
 
 
-def preprocess_binary_classification_logits(
-    logits: torch.Tensor, _
-) -> torch.Tensor:
+def preprocess_binary_classification_logits(logits: torch.Tensor, _) -> torch.Tensor:
     """
     Preprocess logits for binary classification tasks to produce predictions.
 
