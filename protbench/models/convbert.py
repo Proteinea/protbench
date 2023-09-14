@@ -46,9 +46,9 @@ class ConvBert(nn.Module):
             num_hidden_layers=num_layers,
             hidden_dropout_prob=dropout,
         )
-        self.transformer_encoder = convbert.modeling_convbert.ConvBertModel(
+        self.transformer_encoder = convbert.modeling_convbert.ConvBertEncoder(
             config
-        ).encoder
+        )
 
         if pooling is not None:
             if pooling in {"avg", "mean"}:
@@ -92,11 +92,11 @@ class ConvBert(nn.Module):
     def forward(
         self, embd: torch.Tensor, attention_mask
     ) -> Tuple[torch.Tensor, torch.Tensor]:
-        extended_attention_mask = self.get_extended_attention_mask(
-            attention_mask.to(embd.dtype)
-        )
+        # extended_attention_mask = self.get_extended_attention_mask(
+        #     attention_mask.to(embd.dtype)
+        # )
         hidden_states = self.transformer_encoder(
-            embd, attention_mask=extended_attention_mask
+            embd, attention_mask=attention_mask
         )[0]
         if self.pooling is not None:
             hidden_states = self.pooling(hidden_states, attention_mask)
