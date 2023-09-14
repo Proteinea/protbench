@@ -298,16 +298,17 @@ def compute_embeddings(model, tokenizer, train_seqs, val_seqs):
     embedding_fn = TorchEmbeddingFunction(
         model,
         partial(tokenize, tokenizer=tokenizer),
-        device=None,
+        device="cuda:0",
         embeddings_postprocessing_fn=embeddings_postprocessing_fn,
         pad_token_id=tokenizer.pad_token_id,
+        fp16=False,
     )
     embedder = TorchEmbedder(
         embedding_fn,
         low_memory=False,
         save_path=None,
         devices=None,
-        batch_size=3,
+        batch_size=1,
     )
 
     embeddings = []
@@ -451,17 +452,17 @@ def main():
     checkpoints = [
         # "ankh-base",
         "ankh-large",
-        "ankh-v2-23",
-        "ankh-v2-32",
+        # "ankh-v2-23",
+        # "ankh-v2-32",
         # "ankh-v2-33",
         # "ankh-v2-41",
         # "ankh-v2-45",
     ]
     tasks = [
-        "ssp-casp14",
-        "ssp-casp12",
+        # "ssp-casp14",
+        # "ssp-casp12",
         "solubility",
-        "fluorescence",
+        # "fluorescence",
     ]
 
     for checkpoint in checkpoints:
@@ -484,7 +485,7 @@ def main():
             else:
                 num_classes = None
             for i in range(NUM_TRIALS_PER_CHECKPOINT):
-                run_name = f"{checkpoint}-{task}-{i}"
+                run_name = f"original-{checkpoint}-{task}-{i}"
                 set_seed(SEED)
                 model = get_downstream_model(
                     task,
@@ -494,10 +495,10 @@ def main():
                 training_args = TrainingArguments(
                     output_dir=run_name + "-outdir",
                     run_name=run_name,
-                    num_train_epochs=50,
-                    per_device_train_batch_size=10,
+                    num_train_epochs=5,
+                    per_device_train_batch_size=1,
                     per_device_eval_batch_size=1,
-                    warmup_steps=0,
+                    warmup_steps=1000,
                     learning_rate=1e-03,
                     weight_decay=0.0,
                     logging_dir=f"./logs_{run_name}",
@@ -505,7 +506,7 @@ def main():
                     do_train=True,
                     do_eval=True,
                     evaluation_strategy="epoch",
-                    gradient_accumulation_steps=2,
+                    gradient_accumulation_steps=16,
                     fp16=False,
                     fp16_opt_level="02",
                     seed=SEED,
@@ -522,9 +523,9 @@ def main():
                     train_dataset=train_dataset,
                     eval_dataset=val_dataset,
                     compute_metrics=get_metrics(task),
-                    data_collator=collate_fn,
+                    # data_collator=collate_fn,
                     preprocess_logits_for_metrics=logits_preprocessing_fn,
-                    callbacks=[EarlyStoppingCallback(early_stopping_patience=3)],
+                    # callbacks=[EarlyStoppingCallback(early_stopping_patience=10)],
                 )
                 trainer.train()
                 wandb.finish()
