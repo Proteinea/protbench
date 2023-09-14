@@ -47,8 +47,7 @@ class HuggingFaceResidueToClass(ResidueToClass):
             label_ignore_value=label_ignore_value, class_to_id=class_to_id
         )
 
-        self._data = self._load_and_preprocess_data()
-        self._check_number_of_classes()
+  
         self.dataset_url = dataset_url
         self.data_files = data_files
         self.data_key = data_key
@@ -59,6 +58,8 @@ class HuggingFaceResidueToClass(ResidueToClass):
         self.validate_length_matching = validate_length_matching
         self.encode_labels = encode_labels
         self._mask_labels = mask_labels
+        self._data = self._load_and_preprocess_data()
+        self._check_number_of_classes()
 
     # @cached_property
     # def data(self) -> Tuple[List[str], List[List[int]]]:
