@@ -449,10 +449,10 @@ def main():
     SEED = 7
 
     checkpoints = [
-        # "ankh-base",
-        "ankh-large",
-        "ankh-v2-23",
-        "ankh-v2-32",
+        "ankh-base",
+        # "ankh-large",
+        # "ankh-v2-23",
+        # "ankh-v2-32",
         # "ankh-v2-33",
         # "ankh-v2-41",
         # "ankh-v2-45",
