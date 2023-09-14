@@ -484,7 +484,7 @@ def main():
             else:
                 num_classes = None
             for i in range(NUM_TRIALS_PER_CHECKPOINT):
-                run_name = f"{checkpoint}-{task}-{i}"
+                run_name = f"{checkpoint}-{task}-{i}-v7"
                 set_seed(SEED)
                 model = get_downstream_model(
                     task,
