@@ -11,8 +11,8 @@ class HuggingFaceSequenceToClass(SequenceToClass):
         dataset_url: str,
         data_files: str,
         data_key: str,
-        seqs_col: str,
-        labels_col: str,
+        sequences_key: str,
+        labels_key: str,
         class_to_id: Optional[Dict[str, int]] = None,
         preprocessing_function: Optional[Callable] = None,
     ) -> None:
@@ -34,8 +34,8 @@ class HuggingFaceSequenceToClass(SequenceToClass):
             dataset_url,
             data_files,
             data_key,
-            seqs_col,
-            labels_col,
+            sequences_key,
+            labels_key,
             preprocessing_function,
         )
         self._check_number_of_classes()
