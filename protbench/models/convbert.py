@@ -40,7 +40,7 @@ class ConvBert(nn.Module):
             num_hidden_layers=num_layers,
             hidden_dropout_prob=dropout,
         )
-        self.transformer_encoder = c_bert.ConvBertModel(config).encoder
+        self.transformer_encoder = c_bert.modeling_convbert(config)
 
         if pooling is not None:
             if pooling in {"avg", "mean"}:
