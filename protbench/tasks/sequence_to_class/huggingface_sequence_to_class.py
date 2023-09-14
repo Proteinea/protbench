@@ -11,8 +11,8 @@ class HuggingFaceSequenceToClass(SequenceToClass):
         dataset_url: str,
         data_files: str,
         data_key: str,
-        seqs_col: str,
-        labels_col: str,
+        sequences_key: str,
+        labels_key: str,
         class_to_id: Optional[Dict[str, int]] = None,
         preprocessing_function: Optional[Callable] = None,
     ) -> None:
@@ -34,8 +34,8 @@ class HuggingFaceSequenceToClass(SequenceToClass):
             dataset_url,
             data_files,
             data_key,
-            seqs_col,
-            labels_col,
+            sequences_key,
+            labels_key,
             preprocessing_function,
         )
         self._check_number_of_classes()
@@ -49,14 +49,14 @@ class HuggingFaceSequenceToClass(SequenceToClass):
         dataset_url: str,
         data_files: str,
         data_key: str,
-        seqs_col: str,
-        labels_col: str,
+        sequences_key: str,
+        labels_key: str,
         preprocessing_function: Optional[Callable] = None,
     ) -> Tuple[List[str], List[int]]:
         # load the examples from the dataset
         dataset = load_dataset(dataset_url, data_files=data_files)
-        seqs = dataset[data_key][seqs_col]
-        labels = dataset[data_key][labels_col]
+        seqs = dataset[data_key][sequences_key]
+        labels = dataset[data_key][labels_key]
         for i, (seq, label) in enumerate(zip(seqs, labels)):
             if preprocessing_function is not None:
                 seq, label = preprocessing_function(seq, label)

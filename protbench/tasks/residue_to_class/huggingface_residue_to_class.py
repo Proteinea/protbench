@@ -47,19 +47,6 @@ class HuggingFaceResidueToClass(ResidueToClass):
             label_ignore_value=label_ignore_value, class_to_id=class_to_id
         )
 
-        # self._data = self._load_and_preprocess_data(
-        #     dataset_url,
-        #     data_files,
-        #     data_key,
-        #     seqs_col,
-        #     labels_col,
-        #     mask_key,
-        #     preprocessing_function,
-        #     validate_lengths,
-        #     encode_labels,
-        #     mask_labels,
-        # )
-        # self._check_number_of_classes()
         self.dataset_url = dataset_url
         self.data_files = data_files
         self.data_key = data_key
@@ -70,12 +57,18 @@ class HuggingFaceResidueToClass(ResidueToClass):
         self.validate_length_matching = validate_length_matching
         self.encode_labels = encode_labels
         self._mask_labels = mask_labels
-
-    @cached_property
-    def data(self) -> Tuple[List[str], List[List[int]]]:
-        results = self._load_and_preprocess_data()
+        self._data = self._load_and_preprocess_data()
         self._check_number_of_classes()
-        return results
+
+    # @cached_property
+    # def data(self) -> Tuple[List[str], List[List[int]]]:
+    #     results = self._load_and_preprocess_data()
+    #     self._check_number_of_classes()
+    #     return results
+
+    @property
+    def data(self):
+        return self._data
 
     def _load_and_preprocess_data(self) -> Tuple[List[str], List[List[int]]]:
         # load the examples from the dataset.
