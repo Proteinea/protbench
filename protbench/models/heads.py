@@ -27,6 +27,7 @@ class TokenClassificationHead(torch.nn.Module):
         self.decoder.weight.data.uniform_(-initrange, initrange)
 
     def compute_loss(self, logits, labels):
+        print(logits.shape, labels.shape)
         if labels is not None:
             loss = F.cross_entropy(
                 logits.view(-1, self.output_dim),
