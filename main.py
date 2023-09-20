@@ -75,107 +75,7 @@ def preprocess_ssp_rows(seq, label, mask):
     return seq, label, mask
 
 
-def get_train_data(task_name):
-    task_class_map = {
-        "ssp-casp12": (
-            HuggingFaceResidueToClass,
-            {
-                "dataset_url": "proteinea/secondary_structure_prediction",
-                "data_files": "training_hhblits.csv",
-                "data_key": "train",
-                "seqs_col": "input",
-                "labels_col": "dssp3",
-                "mask_col": "disorder",
-                "preprocessing_function": preprocess_ssp_rows,
-            },
-        ),
-        "ssp-casp14": (
-            HuggingFaceResidueToClass,
-            {
-                "dataset_url": "proteinea/secondary_structure_prediction",
-                "data_files": "training_hhblits.csv",
-                "data_key": "train",
-                "seqs_col": "input",
-                "labels_col": "dssp3",
-                "mask_col": "disorder",
-                "preprocessing_function": preprocess_ssp_rows,
-            },
-        ),
-        "solubility": (
-            HuggingFaceSequenceToClass,
-            {
-                "dataset_url": "proteinea/Solubility",
-                "data_files": None,
-                "data_key": "train",
-                "seqs_col": "sequences",
-                "labels_col": "labels",
-            },
-        ),
-        "fluorescence": (
-            HuggingFaceSequenceToValue,
-            {
-                "dataset_url": "proteinea/Fluorosence",
-                "data_files": None,
-                "data_key": "train",
-                "seqs_col": "primary",
-                "labels_col": "log_fluorescence",
-            },
-        ),
-    }
-    return task_class_map[task_name][0](**task_class_map[task_name][1])
-
-
-def get_val_data(task_name):
-    task_class_map = {
-        "ssp-casp12": (
-            HuggingFaceResidueToClass,
-            {
-                "dataset_url": "proteinea/secondary_structure_prediction",
-                "data_files": "CASP12.csv",
-                "data_key": "train",
-                "seqs_col": "input",
-                "labels_col": "dssp3",
-                "mask_col": "disorder",
-                "preprocessing_function": preprocess_ssp_rows,
-            },
-        ),
-        "ssp-casp14": (
-            HuggingFaceResidueToClass,
-            {
-                "dataset_url": "proteinea/secondary_structure_prediction",
-                "data_files": "CASP14.csv",
-                "data_key": "train",
-                "seqs_col": "input",
-                "labels_col": "dssp3",
-                "mask_col": "disorder",
-                "preprocessing_function": preprocess_ssp_rows,
-            },
-        ),
-        "solubility": (
-            HuggingFaceSequenceToClass,
-            {
-                "dataset_url": "proteinea/Solubility",
-                "data_files": None,
-                "data_key": "validation",
-                "seqs_col": "sequences",
-                "labels_col": "labels",
-            },
-        ),
-        "fluorescence": (
-            HuggingFaceSequenceToValue,
-            {
-                "dataset_url": "proteinea/Fluorosence",
-                "data_files": None,
-                "data_key": "validation",
-                "seqs_col": "primary",
-                "labels_col": "log_fluorescence",
-            },
-        ),
-    }
-    return task_class_map[task_name][0](**task_class_map[task_name][1])
-
-
-def get_data(task_name):
+def get_data(task_name, max_seqs=None):
     if task_name == "ssp-casp12":
         train_data = HuggingFaceResidueToClass(
             **{
@@ -263,7 +163,14 @@ def get_data(task_name):
                 "labels_col": "log_fluorescence",
             }
         )
-    return train_data.data[0], train_data.data[1], val_data.data[0], val_data.data[1]
+
+    return (
+        train_data.data[0][:max_seqs],
+        train_data.data[1][:max_seqs],
+        val_data.data[0][:max_seqs],
+        val_data.data[1][:max_seqs],
+        getattr(train_data, "num_classes", None),
+    )
 
 
 def get_pretrained_model_and_tokenizer(model_name):
@@ -301,7 +208,6 @@ def compute_embeddings(model, tokenizer, train_seqs, val_seqs):
         device="cuda:0",
         embeddings_postprocessing_fn=embeddings_postprocessing_fn,
         pad_token_id=tokenizer.pad_token_id,
-        fp16=False,
     )
     embedder = TorchEmbedder(
         embedding_fn,
@@ -446,8 +352,8 @@ def set_seed(seed):
 
 def main():
     NUM_TRIALS_PER_CHECKPOINT = 1
-    MAX_NUM_SEQS = 10000000
     SEED = 7
+    MAX_SEQS = None
 
     checkpoints = [
         # "ankh-base",
@@ -460,17 +366,23 @@ def main():
     ]
     tasks = [
         # "ssp-casp14",
-        # "ssp-casp12",
-        "solubility",
+        "ssp-casp12",
+        # "solubility",
         # "fluorescence",
     ]
 
     for checkpoint in checkpoints:
-        pretrained_model, tokenizer = get_pretrained_model_and_tokenizer(checkpoint)
+        pretrained_model, tokenizer = get_pretrained_model_and_tokenizer(
+            checkpoint
+        )
         for task in tasks:
-            train_data = get_train_data(task)
-            val_data = get_val_data(task)
-            train_seqs, train_labels, val_seqs, val_labels = get_data(task)
+            (
+                train_seqs,
+                train_labels,
+                val_seqs,
+                val_labels,
+                num_classes,
+            ) = get_data(task, max_seqs=MAX_SEQS)
             train_embds, val_embds = compute_embeddings(
                 pretrained_model, tokenizer, train_seqs, val_seqs
             )
@@ -480,10 +392,7 @@ def main():
             logits_preprocessing_fn = get_logits_preprocessing_fn(task)
             train_dataset = EmbeddingsDataset(train_embds, train_labels)
             val_dataset = EmbeddingsDataset(val_embds, val_labels)
-            if task in ["ssp-casp12", "ssp-casp14"]:
-                num_classes = train_data.num_classes
-            else:
-                num_classes = None
+
             for i in range(NUM_TRIALS_PER_CHECKPOINT):
                 run_name = f"original-{checkpoint}-{task}-{i}"
                 set_seed(SEED)
@@ -493,7 +402,7 @@ def main():
                     num_classes,
                 )
                 training_args = TrainingArguments(
-                    output_dir=run_name + "-outdir",
+                    output_dir=os.path.join("trainer-outputs", run_name),
                     run_name=run_name,
                     num_train_epochs=5,
                     per_device_train_batch_size=1,
@@ -523,7 +432,7 @@ def main():
                     train_dataset=train_dataset,
                     eval_dataset=val_dataset,
                     compute_metrics=get_metrics(task),
-                    # data_collator=collate_fn,
+                    data_collator=collate_fn,
                     preprocess_logits_for_metrics=logits_preprocessing_fn,
                     # callbacks=[EarlyStoppingCallback(early_stopping_patience=10)],
                 )
