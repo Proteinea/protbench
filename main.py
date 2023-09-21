@@ -183,6 +183,7 @@ def get_data(task_name, max_seqs=None):
                 "labels_col": "tertiary",
                 "mask_col": "valid_mask",
                 "preprocessing_function": preprocess_contact_prediction_labels,
+                "num_classes": 2,
             }
         )
         val_data = PickleResidueToClass(
@@ -192,6 +193,7 @@ def get_data(task_name, max_seqs=None):
                 "labels_col": "tertiary",
                 "mask_col": "valid_mask",
                 "preprocessing_function": preprocess_contact_prediction_labels,
+                "num_classes": 2,
             },
         )
 
