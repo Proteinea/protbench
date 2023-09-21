@@ -17,6 +17,7 @@ class PickleResidueToClass(ResidueToClass):
         validate_lengths: Optional[bool] = False,
         encode_labels: Optional[bool] = False,
         mask_labels: Optional[bool] = False,
+        num_classes: Optional[int] = None,
     ):
         """
         A generic class for any task where the goal is to predict a class for each
@@ -48,7 +49,10 @@ class PickleResidueToClass(ResidueToClass):
             encode_labels,
             mask_labels,
         )
-        self._check_number_of_classes()
+        if num_classes is None:
+            self._check_number_of_classes()
+        else:
+            self.num_classes = num_classes
 
     @property
     def data(self) -> Tuple[List[str], List[List[int]]]:
