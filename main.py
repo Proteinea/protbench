@@ -406,8 +406,8 @@ def main():
     MAX_SEQS = None
 
     checkpoints = [
-        # "ankh-base",
-        "ankh-large",
+        "ankh-base",
+        # "ankh-large",
         # "ankh-v2-23",
         # "ankh-v2-32",
         # "ankh-v2-33",
@@ -415,11 +415,11 @@ def main():
         # "ankh-v2-45",
     ]
     tasks = [
+        "contact_prediction",
         "ssp-casp14",
         "ssp-casp12",
         # "solubility",
         # "fluorescence",
-        "contact_prediction",
     ]
 
     for checkpoint in checkpoints:
