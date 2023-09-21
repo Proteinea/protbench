@@ -423,9 +423,10 @@ def main():
     ]
 
     for checkpoint in checkpoints:
-        pretrained_model, tokenizer = get_pretrained_model_and_tokenizer(
-            checkpoint
-        )
+        with torch.device('cuda:0'):
+            pretrained_model, tokenizer = get_pretrained_model_and_tokenizer(
+                checkpoint
+            )
         for task in tasks:
             (
                 train_seqs,
