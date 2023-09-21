@@ -10,6 +10,7 @@ from protbench.tasks import (
     HuggingFaceResidueToClass,
     HuggingFaceSequenceToClass,
     HuggingFaceSequenceToValue,
+    PickleResidueToClass
 )
 from protbench.models import (
     ConvBert,
@@ -17,6 +18,7 @@ from protbench.models import (
     BinaryClassificationHead,
     RegressionHead,
     DownstreamModel,
+    ContactPredictionHead
 )
 from protbench import metrics
 from protbench.utils import (
@@ -38,6 +40,7 @@ from transformers import (
     EarlyStoppingCallback,
 )
 
+from scipy.spatial.distance import pdist, squareform
 
 class EmbeddingsDataset(Dataset):
     def __init__(self, embeddings, labels, shift_left=0, shift_right=1):
@@ -73,6 +76,15 @@ class EmbeddingsDataset(Dataset):
 def preprocess_ssp_rows(seq, label, mask):
     mask = list(map(float, mask.split()))
     return seq, label, mask
+
+
+def preprocess_contact_prediction_labels(seq, label, mask):
+    contact_map = np.less(squareform(pdist(label)), 8.0).astype(np.int64)
+    yind, xind = np.indices(contact_map.shape)
+    invalid_mask = ~(mask[:, None] & mask[None, :])
+    invalid_mask |= np.abs(yind - xind) < 6
+    contact_map[invalid_mask] = -1
+    return seq, contact_map, mask
 
 
 def get_data(task_name, max_seqs=None):
@@ -163,6 +175,26 @@ def get_data(task_name, max_seqs=None):
                 "labels_col": "log_fluorescence",
             }
         )
+    elif task_name == "contact_prediction":
+        train_data = PickleResidueToClass(
+            **{
+                "dataset_path": "contact_prediction/train.pickle",
+                "seqs_col": "primary",
+                "labels_col": "tertiary",
+                "mask_col": "valid_mask",
+                "preprocessing_function": preprocess_contact_prediction_labels,
+            }
+        )
+        val_data = PickleResidueToClass(
+            **{
+                "dataset_path": "contact_prediction/valid.pickle",
+                "seqs_col": "primary",
+                "labels_col": "tertiary",
+                "mask_col": "valid_mask",
+                "preprocessing_function": preprocess_contact_prediction_labels,
+            },
+        )
+
 
     return (
         train_data.data[0][:max_seqs],
@@ -280,6 +312,18 @@ def get_downstream_model(task_name, embedding_dim, num_classes):
                 "input_dim": embedding_dim,
             },
         ),
+        "contact_prediction": (
+            ConvBert,
+            {
+                "pooling": None,
+                **convbert_args,
+            },
+            ContactPredictionHead,
+            {
+                "input_dim": embedding_dim,
+                "output_dim": num_classes,
+            },
+        ),
     }
     return DownstreamModel(
         task_class_map[task_name][0](**task_class_map[task_name][1]),
@@ -310,6 +354,7 @@ def get_metrics(task_name):
         "fluorescence": lambda x: {
             "spearman": metrics.compute_spearman(x),
         },
+        "contact_prediction": None,
     }
     return task_class_map[task_name]
 
@@ -320,6 +365,7 @@ def get_collate_fn(task_name):
         "ssp-casp14": collate_inputs_and_labels,
         "solubility": collate_inputs,
         "fluorescence": collate_inputs,
+        "contact_prediction": collate_inputs_and_labels
     }
     return task_class_map[task_name]
 
@@ -330,6 +376,7 @@ def get_logits_preprocessing_fn(task_name):
         "ssp-casp14": preprocess_multi_classification_logits,
         "solubility": preprocess_binary_classification_logits,
         "fluorescence": None,
+        "contact_prediction": None,
     }
     return task_class_map[task_name]
 
@@ -340,6 +387,7 @@ def get_metric_for_best_model(task_name):
         "ssp-casp14": "accuracy",
         "solubility": "accuracy",
         "fluorescence": "spearman",
+        "contact_prediction": "eval_loss"
     }
     return task_metric_map[task_name]
 
@@ -365,10 +413,11 @@ def main():
         # "ankh-v2-45",
     ]
     tasks = [
-        # "ssp-casp14",
+        "ssp-casp14",
         "ssp-casp12",
         # "solubility",
         # "fluorescence",
+        "contact_prediction",
     ]
 
     for checkpoint in checkpoints:
