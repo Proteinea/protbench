@@ -509,8 +509,8 @@ def main():
     MAX_SEQS = None
 
     checkpoints = [
-        "ankh-base",
-        # "ankh-large",
+        "ankh-large",
+        # "ankh-base",
         # "ankh-v2-23",
         # "ankh-v2-32",
         # "ankh-v2-33",
@@ -523,8 +523,8 @@ def main():
         "contact_prediction",
         "ssp-casp14",
         "ssp-casp12",
-        # "solubility",
-        # "fluorescence",
+        "solubility",
+        "fluorescence",
     ]
 
     for checkpoint in checkpoints:
@@ -543,7 +543,7 @@ def main():
             train_embds, val_embds = compute_embeddings(
                 pretrained_model, tokenizer, train_seqs, val_seqs
             )
-            del pretrained_model
+            pretrained_model.cpu()
             torch.cuda.empty_cache()
             collate_fn = get_collate_fn(task)
             logits_preprocessing_fn = get_logits_preprocessing_fn(task)
