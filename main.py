@@ -214,7 +214,7 @@ def get_data(task_name, max_seqs=None):
     elif task_name == 'deeploc':
         train_data = HuggingFaceSequenceToClass(
             **{
-                "dataset_path": "proteinea/deeploc",
+                "dataset_url": "proteinea/deeploc",
                 "seqs_col": "input",
                 "labels_col": "loc",
                 "data_files": None,
@@ -225,7 +225,7 @@ def get_data(task_name, max_seqs=None):
         val_data = HuggingFaceSequenceToClass(
             class_to_id=train_data.class_to_id
             **{
-                "dataset_path": "proteinea/deeploc",
+                "dataset_url": "proteinea/deeploc",
                 "seqs_col": "input",
                 "labels_col": "loc",
                 "data_files": None,
