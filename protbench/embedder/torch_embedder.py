@@ -121,7 +121,7 @@ class TorchEmbedder(Embedder):
                         i, embedding.numpy(), self.save_path
                     )
                 if not self.low_memory:
-                    embeddings.append(embedding.cpu())
+                    embeddings.append(embedding)
         return embeddings
 
     def _run_multiple_gpus(self, sequences: Iterable[str]) -> List[torch.Tensor]:
