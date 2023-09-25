@@ -491,12 +491,16 @@ def main():
             train_embds, val_embds = compute_embeddings(
                 pretrained_model, tokenizer, train_seqs, val_seqs
             )
-            # pretrained_model.to("cpu")
+            del pretrained_model
             torch.cuda.empty_cache()
             collate_fn = get_collate_fn(task)
             logits_preprocessing_fn = get_logits_preprocessing_fn(task)
+            print("Number of train embeddings: ", len(train_embds))
+            print("Number of validation embeddings: ", len(val_embds))
+            print("Number of classes: ", num_classes)
             train_dataset = EmbeddingsDataset(train_embds, train_labels)
             val_dataset = EmbeddingsDataset(val_embds, val_labels)
+
 
             for i in range(NUM_TRIALS_PER_CHECKPOINT):
                 run_name = f"original-{checkpoint}-{task}-{i}"
