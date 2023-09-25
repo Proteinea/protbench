@@ -520,7 +520,7 @@ def main():
     tasks = [
         "remote_homology",
         "deeploc",
-        "contact_prediction",
+        # "contact_prediction",
         "ssp-casp14",
         "ssp-casp12",
         "solubility",
