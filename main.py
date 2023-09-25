@@ -592,7 +592,7 @@ def main():
                     args=training_args,
                     train_dataset=train_dataset,
                     eval_dataset=val_dataset,
-                    compute_metrics=get_metrics(task),
+                    compute_metrics=get_metrics(task, num_classes),
                     data_collator=collate_fn,
                     preprocess_logits_for_metrics=logits_preprocessing_fn,
                     # callbacks=[EarlyStoppingCallback(early_stopping_patience=10)],
