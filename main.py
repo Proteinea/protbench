@@ -18,7 +18,8 @@ from protbench.models import (
     BinaryClassificationHead,
     RegressionHead,
     DownstreamModel,
-    ContactPredictionHead
+    ContactPredictionHead,
+    MultiClassClassificationHead
 )
 from protbench import metrics
 from protbench.utils import (
@@ -41,6 +42,8 @@ from transformers import (
 )
 
 from scipy.spatial.distance import pdist, squareform
+from sklearn.metrics import precision_recall_fscore_support, accuracy_score
+
 
 class EmbeddingsDataset(Dataset):
     def __init__(self, embeddings, labels, shift_left=0, shift_right=1):
@@ -85,6 +88,17 @@ def preprocess_contact_prediction_labels(seq, label, mask):
     invalid_mask |= np.abs(yind - xind) < 6
     contact_map[invalid_mask] = -1
     return seq, contact_map, mask
+
+
+
+def deeploc_compute_metrics(p):
+    prfs = precision_recall_fscore_support(p.label_ids, p.predictions.argmax(axis=1), average='macro')
+    return {
+        "accuracy": accuracy_score(p.label_ids, p.predictions.argmax(axis=1)),
+        "precision": prfs[0],
+        "recall": prfs[1],
+        "f1": prfs[2],
+    }
 
 
 def get_data(task_name, max_seqs=None):
@@ -197,6 +211,27 @@ def get_data(task_name, max_seqs=None):
             },
         )
 
+    elif task_name == 'deeploc':
+        train_data = HuggingFaceSequenceToClass(
+            **{
+                "dataset_path": "proteinea/deeploc",
+                "seqs_col": "input",
+                "labels_col": "loc",
+                "data_files": None,
+                "data_key": "train",
+            }
+        )
+
+        val_data = HuggingFaceSequenceToClass(
+            class_to_id=train_data.class_to_id
+            **{
+                "dataset_path": "proteinea/deeploc",
+                "seqs_col": "input",
+                "labels_col": "loc",
+                "data_files": None,
+                "data_key": "test",
+            }
+        )
 
     return (
         train_data.data[0][:max_seqs],
@@ -326,6 +361,20 @@ def get_downstream_model(task_name, embedding_dim, num_classes):
                 "output_dim": num_classes,
             },
         ),
+
+        "deeploc": (
+            ConvBert,
+            {
+                "pooling": "max",
+                **convbert_args,
+            },
+            MultiClassClassificationHead,
+            {
+                "input_dim": embedding_dim,
+                "output_dim": num_classes,
+            }
+
+        )
     }
     return DownstreamModel(
         task_class_map[task_name][0](**task_class_map[task_name][1]),
@@ -357,9 +406,9 @@ def get_metrics(task_name):
             "spearman": metrics.compute_spearman(x),
         },
         "contact_prediction": None,
+        "deeploc": lambda x: deeploc_compute_metrics(x),
     }
     return task_class_map[task_name]
-
 
 def get_collate_fn(task_name):
     task_class_map = {
@@ -367,7 +416,8 @@ def get_collate_fn(task_name):
         "ssp-casp14": collate_inputs_and_labels,
         "solubility": collate_inputs,
         "fluorescence": collate_inputs,
-        "contact_prediction": collate_inputs_and_labels
+        "contact_prediction": collate_inputs_and_labels,
+        "deeploc": collate_inputs,
     }
     return task_class_map[task_name]
 
@@ -379,6 +429,7 @@ def get_logits_preprocessing_fn(task_name):
         "solubility": preprocess_binary_classification_logits,
         "fluorescence": None,
         "contact_prediction": None,
+        "deeploc": None,
     }
     return task_class_map[task_name]
 
@@ -415,6 +466,7 @@ def main():
         # "ankh-v2-45",
     ]
     tasks = [
+        "deeploc",
         "contact_prediction",
         "ssp-casp14",
         "ssp-casp12",
@@ -438,7 +490,7 @@ def main():
             train_embds, val_embds = compute_embeddings(
                 pretrained_model, tokenizer, train_seqs, val_seqs
             )
-            pretrained_model.to("cpu")
+            # pretrained_model.to("cpu")
             torch.cuda.empty_cache()
             collate_fn = get_collate_fn(task)
             logits_preprocessing_fn = get_logits_preprocessing_fn(task)
