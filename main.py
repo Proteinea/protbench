@@ -440,7 +440,8 @@ def get_metric_for_best_model(task_name):
         "ssp-casp14": "accuracy",
         "solubility": "accuracy",
         "fluorescence": "spearman",
-        "contact_prediction": "eval_loss"
+        "contact_prediction": "eval_loss",
+        "deeploc": "eval_accuracy",
     }
     return task_metric_map[task_name]
 
