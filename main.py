@@ -510,12 +510,12 @@ def main():
 
     checkpoints = [
         "ankh-large",
-        # "ankh-base",
-        # "ankh-v2-23",
-        # "ankh-v2-32",
-        # "ankh-v2-33",
-        # "ankh-v2-41",
-        # "ankh-v2-45",
+        "ankh-base",
+        "ankh-v2-23",
+        "ankh-v2-32",
+        "ankh-v2-33",
+        "ankh-v2-41",
+        "ankh-v2-45",
     ]
     tasks = [
         "remote_homology",
