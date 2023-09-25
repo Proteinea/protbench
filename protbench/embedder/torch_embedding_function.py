@@ -71,7 +71,7 @@ class TorchEmbeddingFunction(EmbeddingFunction):
         input_ids = self.tokenizer(sequences)
         try:
             model_outputs = self.model(input_ids.to(self.device))
-        except torch.cuda.OutOfMemoryError:
+        except Exception:
             self.model.cpu()
             model_outputs = self.model(input_ids.cpu())
             self.model.to(self.device)
