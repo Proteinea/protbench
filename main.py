@@ -43,7 +43,7 @@ from transformers import (
 
 from scipy.spatial.distance import pdist, squareform
 from sklearn.metrics import precision_recall_fscore_support, accuracy_score, top_k_accuracy_score
-
+import glob
 
 
 class EmbeddingsDataset(Dataset):
@@ -86,7 +86,7 @@ class EmbeddingsDatasetFromDisk(Dataset):
                 where each tensor may have a different seq_len.
             labels (list[Any]): list of labels.
         """
-        embeddings_path = sorted(os.listdir(embeddings_path), key=lambda x: x.split('/')[-1].split('.')[0])
+        embeddings_path = sorted(glob.glob(os.path.join(embeddings_path, '*.npy')), key=lambda x: x.split('/')[-1].split('.')[0])
         if len(embeddings_path) != len(labels):
             raise ValueError(
                 "embeddings and labels must have the same length but got "
