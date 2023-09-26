@@ -45,6 +45,7 @@ from scipy.spatial.distance import pdist, squareform
 from sklearn.metrics import precision_recall_fscore_support, accuracy_score, top_k_accuracy_score
 
 
+
 class EmbeddingsDataset(Dataset):
     def __init__(self, embeddings, labels, shift_left=0, shift_right=1):
         """Dataset for embeddings and corresponding labels of a task.
@@ -69,6 +70,38 @@ class EmbeddingsDataset(Dataset):
 
     def __getitem__(self, idx):
         embds = self.embeddings[idx][self.shift_left : -self.shift_right, :]
+        labels = torch.tensor(self.labels[idx])
+        return {
+            "embds": embds,
+            "labels": labels,
+        }
+
+
+class EmbeddingsDatasetFromDisk(Dataset):
+    def __init__(self, embeddings_path, labels, shift_left=0, shift_right=1):
+        """Dataset for embeddings and corresponding labels of a task.
+
+        Args:
+            embeddings (list[torch.Tensor]): list of tensors of embeddings (batch_size, seq_len, embd_dim)
+                where each tensor may have a different seq_len.
+            labels (list[Any]): list of labels.
+        """
+        embeddings_path = sorted(os.listdir(embeddings_path), key=lambda x: x.split('/')[-1].split('.')[0])
+        if len(embeddings_path) != len(labels):
+            raise ValueError(
+                "embeddings and labels must have the same length but got "
+                f"{len(embeddings_path)} and {len(labels)}"
+            )
+        self.embeddings = embeddings_path
+        self.labels = labels
+        self.shift_left = shift_left
+        self.shift_right = shift_right
+
+    def __len__(self):
+        return len(self.embeddings)
+
+    def __getitem__(self, idx):
+        embds = np.load(self.embeddings[idx])[self.shift_left : -self.shift_right, :]
         labels = torch.tensor(self.labels[idx])
         return {
             "embds": embds,
@@ -328,6 +361,26 @@ def compute_embeddings(model, tokenizer, train_seqs, val_seqs):
     return embeddings
 
 
+def compute_embeddings_and_save_to_disk(model, tokenizer, train_seqs, val_seqs):
+    embedding_fn = TorchEmbeddingFunction(
+        model,
+        partial(tokenize, tokenizer=tokenizer),
+        device="cuda:0",
+        embeddings_postprocessing_fn=embeddings_postprocessing_fn,
+        pad_token_id=tokenizer.pad_token_id,
+    )
+
+    for data, path in [(train_seqs, 'train_embeddings'), (val_seqs, 'val_embeddings')]:
+        embedder = TorchEmbedder(
+            embedding_fn,
+            low_memory=True,
+            save_path=path,
+            devices=None,
+            batch_size=1,
+        )
+        embedder.run(data)
+
+
 def get_downstream_model(task_name, embedding_dim, num_classes):
     convbert_args = {
         "input_dim": embedding_dim,
@@ -507,6 +560,7 @@ def main():
     NUM_TRIALS_PER_CHECKPOINT = 5
     SEED = 7
     MAX_SEQS = None
+    LOW_MEMORY = False
 
     checkpoints = [
         "ankh-large",
@@ -540,9 +594,14 @@ def main():
                 val_labels,
                 num_classes,
             ) = get_data(task, max_seqs=MAX_SEQS)
-            train_embds, val_embds = compute_embeddings(
-                pretrained_model, tokenizer, train_seqs, val_seqs
-            )
+            if not LOW_MEMORY:
+                train_embds, val_embds = compute_embeddings(
+                    pretrained_model, tokenizer, train_seqs, val_seqs
+                )
+            else:
+                compute_embeddings_and_save_to_disk(
+                    pretrained_model, tokenizer, train_seqs, val_seqs
+                )
             pretrained_model.cpu()
             torch.cuda.empty_cache()
             collate_fn = get_collate_fn(task)
@@ -550,8 +609,13 @@ def main():
             print("Number of train embeddings: ", len(train_embds))
             print("Number of validation embeddings: ", len(val_embds))
             print("Number of classes: ", num_classes)
-            train_dataset = EmbeddingsDataset(train_embds, train_labels)
-            val_dataset = EmbeddingsDataset(val_embds, val_labels)
+            
+            if not LOW_MEMORY:
+                train_dataset = EmbeddingsDataset(train_embds, train_labels)
+                val_dataset = EmbeddingsDataset(val_embds, val_labels)
+            else:
+                train_dataset = EmbeddingsDatasetFromDisk('train_embeddings', train_labels)
+                val_dataset = EmbeddingsDatasetFromDisk('val_embeddings', val_labels)
 
 
             for i in range(NUM_TRIALS_PER_CHECKPOINT):
@@ -559,7 +623,7 @@ def main():
                 set_seed(SEED)
                 model = get_downstream_model(
                     task,
-                    train_embds[0].shape[1],
+                    train_dataset[0]['embds'].shape[1],
                     num_classes,
                 )
                 training_args = TrainingArguments(
