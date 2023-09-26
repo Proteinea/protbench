@@ -504,7 +504,7 @@ def set_seed(seed):
 
 
 def main():
-    NUM_TRIALS_PER_CHECKPOINT = 1
+    NUM_TRIALS_PER_CHECKPOINT = 5
     SEED = 7
     MAX_SEQS = None
 
