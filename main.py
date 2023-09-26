@@ -560,7 +560,7 @@ def main():
     NUM_TRIALS_PER_CHECKPOINT = 5
     SEED = 7
     MAX_SEQS = None
-    LOW_MEMORY = False
+    LOW_MEMORY = True
 
     checkpoints = [
         "ankh-base",
