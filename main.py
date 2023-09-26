@@ -563,8 +563,8 @@ def main():
     LOW_MEMORY = False
 
     checkpoints = [
-        "ankh-large",
         "ankh-base",
+        "ankh-large",
         "ankh-v2-23",
         "ankh-v2-32",
         "ankh-v2-33",
