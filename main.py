@@ -572,11 +572,11 @@ def main():
         "ankh-v2-45",
     ]
     tasks = [
-        "remote_homology",
-        "deeploc",
+        # "remote_homology",
+        # "deeploc",
         # "contact_prediction",
-        "ssp-casp14",
-        "ssp-casp12",
+        # "ssp-casp14",
+        # "ssp-casp12",
         "solubility",
         "fluorescence",
     ]
