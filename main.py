@@ -606,17 +606,19 @@ def main():
             torch.cuda.empty_cache()
             collate_fn = get_collate_fn(task)
             logits_preprocessing_fn = get_logits_preprocessing_fn(task)
-            print("Number of train embeddings: ", len(train_embds))
-            print("Number of validation embeddings: ", len(val_embds))
-            print("Number of classes: ", num_classes)
-            
+
             if not LOW_MEMORY:
                 train_dataset = EmbeddingsDataset(train_embds, train_labels)
                 val_dataset = EmbeddingsDataset(val_embds, val_labels)
             else:
-                train_dataset = EmbeddingsDatasetFromDisk('train_embeddings', train_labels)
-                val_dataset = EmbeddingsDatasetFromDisk('val_embeddings', val_labels)
+                train_dataset = EmbeddingsDatasetFromDisk('train_embeddings',
+                                                          train_labels)
+                val_dataset = EmbeddingsDatasetFromDisk('val_embeddings',
+                                                        val_labels)
 
+            print("Number of train embeddings: ", len(train_dataset))
+            print("Number of validation embeddings: ", len(val_dataset))
+            print("Number of classes: ", num_classes)
 
             for i in range(NUM_TRIALS_PER_CHECKPOINT):
                 run_name = f"original-{checkpoint}-{task}-{i}"
