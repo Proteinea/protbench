@@ -563,8 +563,8 @@ def main():
     LOW_MEMORY = True
 
     checkpoints = [
-        "ankh-base",
-        "ankh-large",
+        # "ankh-base",
+        # "ankh-large",
         "ankh-v2-23",
         "ankh-v2-32",
         "ankh-v2-33",
@@ -572,11 +572,11 @@ def main():
         "ankh-v2-45",
     ]
     tasks = [
-        # "remote_homology",
-        # "deeploc",
+        "remote_homology",
+        "deeploc",
         # "contact_prediction",
-        # "ssp-casp14",
-        # "ssp-casp12",
+        "ssp-casp14",
+        "ssp-casp12",
         "solubility",
         "fluorescence",
     ]
@@ -594,14 +594,14 @@ def main():
                 val_labels,
                 num_classes,
             ) = get_data(task, max_seqs=MAX_SEQS)
-            # if not LOW_MEMORY:
-            #     train_embds, val_embds = compute_embeddings(
-            #         pretrained_model, tokenizer, train_seqs, val_seqs
-            #     )
-            # else:
-            #     compute_embeddings_and_save_to_disk(
-            #         pretrained_model, tokenizer, train_seqs, val_seqs
-            #     )
+            if not LOW_MEMORY:
+                train_embds, val_embds = compute_embeddings(
+                    pretrained_model, tokenizer, train_seqs, val_seqs
+                )
+            else:
+                compute_embeddings_and_save_to_disk(
+                    pretrained_model, tokenizer, train_seqs, val_seqs
+                )
             pretrained_model.cpu()
             torch.cuda.empty_cache()
             collate_fn = get_collate_fn(task)
