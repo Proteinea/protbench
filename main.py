@@ -298,7 +298,7 @@ def get_data(task_name, max_seqs=None):
                 "seqs_col": "primary",
                 "labels_col": "fold_label",
                 "data_files": 'test_fold_holdout.csv',
-                "data_key": "test",
+                "data_key": "train",
             }
         )
 
