@@ -1,4 +1,5 @@
 import os
+import shutil
 
 os.environ["WANDB_PROJECT"] = "AnkhV2"
 
@@ -338,6 +339,12 @@ def tokenize(batch, tokenizer):
     )["input_ids"]
 
 
+def delete_directory_contents(directory_path):
+    for root, _, files in os.walk(directory_path, topdown=False):
+        for name in files:
+            os.remove(os.path.join(root, name))
+
+
 def compute_embeddings(model, tokenizer, train_seqs, val_seqs):
     embedding_fn = TorchEmbeddingFunction(
         model,
@@ -369,6 +376,9 @@ def compute_embeddings_and_save_to_disk(model, tokenizer, train_seqs, val_seqs):
         embeddings_postprocessing_fn=embeddings_postprocessing_fn,
         pad_token_id=tokenizer.pad_token_id,
     )
+
+    delete_directory_contents('train_embeddings')
+    delete_directory_contents('val_embeddings')
 
     for data, path in [(train_seqs, 'train_embeddings'), (val_seqs, 'val_embeddings')]:
         embedder = TorchEmbedder(
