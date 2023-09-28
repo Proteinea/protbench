@@ -212,7 +212,7 @@ def get_data(task_name, max_seqs=None):
             **{
                 "dataset_url": "proteinea/Solubility",
                 "data_files": None,
-                "data_key": "validation",
+                "data_key": "test",
                 "seqs_col": "sequences",
                 "labels_col": "labels",
             },
