@@ -87,7 +87,6 @@ class EmbeddingsDatasetFromDisk(Dataset):
                 where each tensor may have a different seq_len.
             labels (list[Any]): list of labels.
         """
-        embeddings_path = sorted(glob.glob(os.path.join(embeddings_path, '*.npy')), key=lambda x: x.split('/')[-1].split('.')[0])
         if len(embeddings_path) != len(labels):
             raise ValueError(
                 "embeddings and labels must have the same length but got "
@@ -102,7 +101,8 @@ class EmbeddingsDatasetFromDisk(Dataset):
         return len(self.embeddings)
 
     def __getitem__(self, idx):
-        embds = torch.from_numpy(np.load(self.embeddings[idx])[self.shift_left : -self.shift_right, :])
+        embedding_path = os.path.join(self.embeddings, f'{idx}.npy')
+        embds = torch.from_numpy(np.load(embedding_path)[self.shift_left : -self.shift_right, :])
         labels = torch.tensor(self.labels[idx])
         return {
             "embds": embds,
