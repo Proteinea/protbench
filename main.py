@@ -297,7 +297,7 @@ def get_data(task_name, max_seqs=None):
                 "dataset_url": "proteinea/remote_homology",
                 "seqs_col": "primary",
                 "labels_col": "fold_label",
-                "data_files": None,
+                "data_files": 'test_fold_holdout_dataset.csv',
                 "data_key": "test",
             }
         )
