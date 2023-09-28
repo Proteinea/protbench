@@ -585,19 +585,19 @@ def main():
     LOW_MEMORY = True
 
     checkpoints = [
-        # "ankh-base",
-        # "ankh-large",
+        "ankh-base",
         "ankh-v2-23",
         "ankh-v2-32",
         "ankh-v2-33",
         "ankh-v2-41",
         "ankh-v2-45",
+        "ankh-large",
     ]
     tasks = [
-        # "remote_homology",
-        # "deeploc",
+        "remote_homology",
+        "deeploc",
         # "contact_prediction",
-        # "ssp-casp14",
+        "ssp-casp14",
         "ssp-casp12",
         "solubility",
         "fluorescence",
