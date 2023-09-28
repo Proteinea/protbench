@@ -98,7 +98,7 @@ class EmbeddingsDatasetFromDisk(Dataset):
         self.shift_right = shift_right
 
     def __len__(self):
-        return len(self.embeddings)
+        return len(os.listdir(self.embeddings))
 
     def __getitem__(self, idx):
         embedding_path = os.path.join(self.embeddings, f'{idx}.npy')
