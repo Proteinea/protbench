@@ -117,9 +117,10 @@ class TorchEmbedder(Embedder):
             )
             for i, embedding in enumerate(batch_embeddings, start=batch_start):
                 if self.save_path is not None:
-                    TorchEmbedder.save_embedding_to_disk(
-                        i, embedding.numpy(), self.save_path
-                    )
+                    with torch.multiprocessing.Lock():
+                        TorchEmbedder.save_embedding_to_disk(
+                            i, embedding.numpy(), self.save_path
+                        )
                 if not self.low_memory:
                     embeddings.append(embedding)
         return embeddings
