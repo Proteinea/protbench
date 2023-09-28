@@ -87,7 +87,7 @@ class EmbeddingsDatasetFromDisk(Dataset):
                 where each tensor may have a different seq_len.
             labels (list[Any]): list of labels.
         """
-        if len(embeddings_path) != len(labels):
+        if len(os.listdir(embeddings_path)) != len(labels):
             raise ValueError(
                 "embeddings and labels must have the same length but got "
                 f"{len(embeddings_path)} and {len(labels)}"
