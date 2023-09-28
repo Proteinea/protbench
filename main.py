@@ -327,7 +327,7 @@ def get_pretrained_model_and_tokenizer(model_name):
 
 
 def embeddings_postprocessing_fn(model_outputs):
-    return model_outputs[0]
+    return model_outputs.last_hidden_state
 
 
 def tokenize(batch, tokenizer):
@@ -377,10 +377,20 @@ def compute_embeddings_and_save_to_disk(model, tokenizer, train_seqs, val_seqs):
         pad_token_id=tokenizer.pad_token_id,
     )
 
-    delete_directory_contents('train_embeddings')
-    delete_directory_contents('val_embeddings')
+    train_embeddings_path = 'train_embeddings'
+    val_embeddings_path = 'val_embeddings'
 
-    for data, path in [(train_seqs, 'train_embeddings'), (val_seqs, 'val_embeddings')]:
+    if not os.path.exists(train_embeddings_path):
+        os.mkdir(train_embeddings_path)
+    else:
+        delete_directory_contents(train_embeddings_path)
+
+    if not os.path.exists(val_embeddings_path):
+        os.mkdir(val_embeddings_path)
+    else:
+        delete_directory_contents(val_embeddings_path)
+
+    for data, path in [(train_seqs, train_embeddings_path), (val_seqs, val_embeddings_path)]:
         embedder = TorchEmbedder(
             embedding_fn,
             low_memory=True,
