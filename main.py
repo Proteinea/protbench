@@ -102,7 +102,7 @@ class EmbeddingsDatasetFromDisk(Dataset):
         return len(self.embeddings)
 
     def __getitem__(self, idx):
-        embds = torch.from_numpy(np.load(self.embeddings[idx]))[self.shift_left : -self.shift_right, :]
+        embds = torch.from_numpy(np.load(self.embeddings[idx])[self.shift_left : -self.shift_right, :])
         labels = torch.tensor(self.labels[idx])
         return {
             "embds": embds,
@@ -400,6 +400,8 @@ def get_downstream_model(task_name, embedding_dim, num_classes):
         "kernel_size": 7,
         "dropout": 0.2,
     }
+
+    
     task_class_map = {
         "ssp-casp12": (
             ConvBert,
