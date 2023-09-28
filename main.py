@@ -597,7 +597,7 @@ def main():
         # "remote_homology",
         # "deeploc",
         # "contact_prediction",
-        "ssp-casp14",
+        # "ssp-casp14",
         "ssp-casp12",
         "solubility",
         "fluorescence",
