@@ -585,7 +585,7 @@ def main():
     ]
     tasks = [
         # "remote_homology",
-        "deeploc",
+        # "deeploc",
         # "contact_prediction",
         "ssp-casp14",
         "ssp-casp12",
