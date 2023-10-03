@@ -45,6 +45,8 @@ from transformers import (
 from scipy.spatial.distance import pdist, squareform
 from sklearn.metrics import precision_recall_fscore_support, accuracy_score, top_k_accuracy_score
 import glob
+from transformers import EvalPrediction
+
 
 
 class EmbeddingsDataset(Dataset):
@@ -147,7 +149,6 @@ def compute_remote_homology_metrics(p, num_classes):
     }
 
 
-
 def get_data(task_name, max_seqs=None):
     if task_name == "ssp-casp12":
         train_data = HuggingFaceResidueToClass(
@@ -197,10 +198,160 @@ def get_data(task_name, max_seqs=None):
                 "preprocessing_function": preprocess_ssp_rows,
             },
         )
+
+    elif task_name == "ssp-cb513":
+        train_data = HuggingFaceResidueToClass(
+            **{
+                "dataset_url": "proteinea/secondary_structure_prediction",
+                "data_files": "training_hhblits.csv",
+                "data_key": "train",
+                "seqs_col": "input",
+                "labels_col": "dssp3",
+                "mask_col": "disorder",
+                "preprocessing_function": preprocess_ssp_rows,
+            }
+        )
+        val_data = HuggingFaceResidueToClass(
+            class_to_id=train_data.class_to_id,
+            **{
+                "dataset_url": "proteinea/secondary_structure_prediction",
+                "data_files": "CB513.csv",
+                "data_key": "train",
+                "seqs_col": "input",
+                "labels_col": "dssp3",
+                "mask_col": "disorder",
+                "preprocessing_function": preprocess_ssp_rows,
+            },
+        )
+    
+    elif task_name == 'ssp-ts115':
+        train_data = HuggingFaceResidueToClass(
+            **{
+                "dataset_url": "proteinea/secondary_structure_prediction",
+                "data_files": "training_hhblits.csv",
+                "data_key": "train",
+                "seqs_col": "input",
+                "labels_col": "dssp3",
+                "mask_col": "disorder",
+                "preprocessing_function": preprocess_ssp_rows,
+            }
+        )
+        val_data = HuggingFaceResidueToClass(
+            class_to_id=train_data.class_to_id,
+            **{
+                "dataset_url": "proteinea/secondary_structure_prediction",
+                "data_files": "TS115.csv",
+                "data_key": "train",
+                "seqs_col": "input",
+                "labels_col": "dssp3",
+                "mask_col": "disorder",
+                "preprocessing_function": preprocess_ssp_rows,
+            },
+        )
+
+    elif task_name == "ssp8-casp12":
+        train_data = HuggingFaceResidueToClass(
+            **{
+                "dataset_url": "proteinea/secondary_structure_prediction",
+                "data_files": "training_hhblits.csv",
+                "data_key": "train",
+                "seqs_col": "input",
+                "labels_col": "dssp8",
+                "mask_col": "disorder",
+                "preprocessing_function": preprocess_ssp_rows,
+            }
+        )
+        val_data = HuggingFaceResidueToClass(
+            class_to_id=train_data.class_to_id,
+            **{
+                "dataset_url": "proteinea/secondary_structure_prediction",
+                "data_files": "CASP12.csv",
+                "data_key": "train",
+                "seqs_col": "input",
+                "labels_col": "dssp8",
+                "mask_col": "disorder",
+                "preprocessing_function": preprocess_ssp_rows,
+            },
+        )
+    elif task_name == "ssp8-casp14":
+        train_data = HuggingFaceResidueToClass(
+            **{
+                "dataset_url": "proteinea/secondary_structure_prediction",
+                "data_files": "training_hhblits.csv",
+                "data_key": "train",
+                "seqs_col": "input",
+                "labels_col": "dssp8",
+                "mask_col": "disorder",
+                "preprocessing_function": preprocess_ssp_rows,
+            }
+        )
+        val_data = HuggingFaceResidueToClass(
+            class_to_id=train_data.class_to_id,
+            **{
+                "dataset_url": "proteinea/secondary_structure_prediction",
+                "data_files": "CASP14.csv",
+                "data_key": "train",
+                "seqs_col": "input",
+                "labels_col": "dssp8",
+                "mask_col": "disorder",
+                "preprocessing_function": preprocess_ssp_rows,
+            },
+        )
+
+    elif task_name == "ssp8-cb513":
+        train_data = HuggingFaceResidueToClass(
+            **{
+                "dataset_url": "proteinea/secondary_structure_prediction",
+                "data_files": "training_hhblits.csv",
+                "data_key": "train",
+                "seqs_col": "input",
+                "labels_col": "dssp8",
+                "mask_col": "disorder",
+                "preprocessing_function": preprocess_ssp_rows,
+            }
+        )
+        val_data = HuggingFaceResidueToClass(
+            class_to_id=train_data.class_to_id,
+            **{
+                "dataset_url": "proteinea/secondary_structure_prediction",
+                "data_files": "CB513.csv",
+                "data_key": "train",
+                "seqs_col": "input",
+                "labels_col": "dssp8",
+                "mask_col": "disorder",
+                "preprocessing_function": preprocess_ssp_rows,
+            },
+        )
+    
+    elif task_name == 'ssp8-ts115':
+        train_data = HuggingFaceResidueToClass(
+            **{
+                "dataset_url": "proteinea/secondary_structure_prediction",
+                "data_files": "training_hhblits.csv",
+                "data_key": "train",
+                "seqs_col": "input",
+                "labels_col": "dssp8",
+                "mask_col": "disorder",
+                "preprocessing_function": preprocess_ssp_rows,
+            }
+        )
+        val_data = HuggingFaceResidueToClass(
+            class_to_id=train_data.class_to_id,
+            **{
+                "dataset_url": "proteinea/secondary_structure_prediction",
+                "data_files": "TS115.csv",
+                "data_key": "train",
+                "seqs_col": "input",
+                "labels_col": "dssp8",
+                "mask_col": "disorder",
+                "preprocessing_function": preprocess_ssp_rows,
+            },
+        )
+
     elif task_name == "solubility":
         train_data = HuggingFaceSequenceToClass(
             **{
-                "dataset_url": "proteinea/Solubility",
+                "dataset_url": "proteinea/solubility",
                 "data_files": None,
                 "data_key": "train",
                 "seqs_col": "sequences",
@@ -210,7 +361,7 @@ def get_data(task_name, max_seqs=None):
         val_data = HuggingFaceSequenceToClass(
             class_to_id=train_data.class_to_id,
             **{
-                "dataset_url": "proteinea/Solubility",
+                "dataset_url": "proteinea/solubility",
                 "data_files": None,
                 "data_key": "test",
                 "seqs_col": "sequences",
@@ -220,7 +371,7 @@ def get_data(task_name, max_seqs=None):
     elif task_name == "fluorescence":
         train_data = HuggingFaceSequenceToValue(
             **{
-                "dataset_url": "proteinea/Fluorosence",
+                "dataset_url": "proteinea/fluorosence",
                 "data_files": None,
                 "data_key": "train",
                 "seqs_col": "primary",
@@ -229,7 +380,7 @@ def get_data(task_name, max_seqs=None):
         )
         val_data = HuggingFaceSequenceToValue(
             **{
-                "dataset_url": "proteinea/Fluorosence",
+                "dataset_url": "proteinea/fluorosence",
                 "data_files": None,
                 "data_key": "test",
                 "seqs_col": "primary",
@@ -411,7 +562,6 @@ def get_downstream_model(task_name, embedding_dim, num_classes):
         "dropout": 0.2,
     }
 
-    
     task_class_map = {
         "ssp-casp12": (
             ConvBert,
@@ -426,6 +576,78 @@ def get_downstream_model(task_name, embedding_dim, num_classes):
             },
         ),
         "ssp-casp14": (
+            ConvBert,
+            {
+                "pooling": None,
+                **convbert_args,
+            },
+            TokenClassificationHead,
+            {
+                "input_dim": embedding_dim,
+                "output_dim": num_classes,
+            },
+        ),
+        "ssp-cb513": (
+            ConvBert,
+            {
+                "pooling": None,
+                **convbert_args,
+            },
+            TokenClassificationHead,
+            {
+                "input_dim": embedding_dim,
+                "output_dim": num_classes,
+            },
+        ),
+        "ssp-ts115": (
+            ConvBert,
+            {
+                "pooling": None,
+                **convbert_args,
+            },
+            TokenClassificationHead,
+            {
+                "input_dim": embedding_dim,
+                "output_dim": num_classes,
+            },
+        ),
+        "ssp8-casp12": (
+            ConvBert,
+            {
+                "pooling": None,
+                **convbert_args,
+            },
+            TokenClassificationHead,
+            {
+                "input_dim": embedding_dim,
+                "output_dim": num_classes,
+            },
+        ),
+        "ssp8-casp14": (
+            ConvBert,
+            {
+                "pooling": None,
+                **convbert_args,
+            },
+            TokenClassificationHead,
+            {
+                "input_dim": embedding_dim,
+                "output_dim": num_classes,
+            },
+        ),
+        "ssp8-cb513": (
+            ConvBert,
+            {
+                "pooling": None,
+                **convbert_args,
+            },
+            TokenClassificationHead,
+            {
+                "input_dim": embedding_dim,
+                "output_dim": num_classes,
+            },
+        ),
+        "ssp8-ts115": (
             ConvBert,
             {
                 "pooling": None,
@@ -518,6 +740,43 @@ def get_metrics(task_name, num_classes=None):
             "recall": metrics.compute_recall(x, average="macro"),
             "f1": metrics.compute_f1(x, average="macro"),
         },
+        "ssp-cb513": lambda x: {
+            "accuracy": metrics.compute_accuracy(x),
+            "precision": metrics.compute_precision(x, average="macro"),
+            "recall": metrics.compute_recall(x, average="macro"),
+            "f1": metrics.compute_f1(x, average="macro"),
+        },
+        "ssp-ts115": lambda x: {
+            "accuracy": metrics.compute_accuracy(x),
+            "precision": metrics.compute_precision(x, average="macro"),
+            "recall": metrics.compute_recall(x, average="macro"),
+            "f1": metrics.compute_f1(x, average="macro"),
+        },
+
+        "ssp8-casp12": lambda x: {
+            "accuracy": metrics.compute_accuracy(x),
+            "precision": metrics.compute_precision(x, average="macro"),
+            "recall": metrics.compute_recall(x, average="macro"),
+            "f1": metrics.compute_f1(x, average="macro"),
+        },
+        "ssp8-casp14": lambda x: {
+            "accuracy": metrics.compute_accuracy(x),
+            "precision": metrics.compute_precision(x, average="macro"),
+            "recall": metrics.compute_recall(x, average="macro"),
+            "f1": metrics.compute_f1(x, average="macro"),
+        },
+        "ssp8-cb513": lambda x: {
+            "accuracy": metrics.compute_accuracy(x),
+            "precision": metrics.compute_precision(x, average="macro"),
+            "recall": metrics.compute_recall(x, average="macro"),
+            "f1": metrics.compute_f1(x, average="macro"),
+        },
+        "ssp8-ts115": lambda x: {
+            "accuracy": metrics.compute_accuracy(x),
+            "precision": metrics.compute_precision(x, average="macro"),
+            "recall": metrics.compute_recall(x, average="macro"),
+            "f1": metrics.compute_f1(x, average="macro"),
+        },
         "solubility": lambda x: {
             "accuracy": metrics.compute_accuracy(x),
             "precision": metrics.compute_precision(x, average="binary"),
@@ -537,6 +796,12 @@ def get_collate_fn(task_name):
     task_class_map = {
         "ssp-casp12": collate_inputs_and_labels,
         "ssp-casp14": collate_inputs_and_labels,
+        "ssp-cb513": collate_inputs_and_labels,
+        "ssp-ts115": collate_inputs_and_labels,
+        "ssp8-casp12": collate_inputs_and_labels,
+        "ssp8-casp14": collate_inputs_and_labels,
+        "ssp8-cb513": collate_inputs_and_labels,
+        "ssp8-ts115": collate_inputs_and_labels,
         "solubility": collate_inputs,
         "fluorescence": collate_inputs,
         "contact_prediction": collate_inputs_and_labels,
@@ -550,6 +815,12 @@ def get_logits_preprocessing_fn(task_name):
     task_class_map = {
         "ssp-casp12": preprocess_multi_classification_logits,
         "ssp-casp14": preprocess_multi_classification_logits,
+        "ssp-cb513": preprocess_multi_classification_logits,
+        "ssp-ts115": preprocess_multi_classification_logits,
+        "ssp8-casp12": preprocess_multi_classification_logits,
+        "ssp8-casp14": preprocess_multi_classification_logits,
+        "ssp8-cb513": preprocess_multi_classification_logits,
+        "ssp8-ts115": preprocess_multi_classification_logits,
         "solubility": preprocess_binary_classification_logits,
         "fluorescence": None,
         "contact_prediction": None,
@@ -563,6 +834,12 @@ def get_metric_for_best_model(task_name):
     task_metric_map = {
         "ssp-casp12": "accuracy",
         "ssp-casp14": "accuracy",
+        "ssp-cb513": "accuracy",
+        "ssp-ts115": "accuracy",
+        "ssp8-casp12": "accuracy",
+        "ssp8-casp14": "accuracy",
+        "ssp8-cb513": "accuracy",
+        "ssp8-ts115": "accuracy",
         "solubility": "accuracy",
         "fluorescence": "spearman",
         "contact_prediction": "eval_loss",
@@ -572,6 +849,26 @@ def get_metric_for_best_model(task_name):
     return task_metric_map[task_name]
 
 
+def compute_error_bar(task_name):
+    task_map = {
+        "ssp-casp12": metrics.compute_error_bar_for_token_classification,
+        "ssp-casp14": metrics.compute_error_bar_for_token_classification,
+        "ssp-cb513": metrics.compute_error_bar_for_token_classification,
+        "ssp-ts115": metrics.compute_error_bar_for_token_classification,
+        "ssp8-casp12": metrics.compute_error_bar_for_token_classification,
+        "ssp8-casp14": metrics.compute_error_bar_for_token_classification,
+        "ssp8-cb513": metrics.compute_error_bar_for_token_classification,
+        "ssp8-ts115": metrics.compute_error_bar_for_token_classification,
+        "solubility": metrics.compute_error_bar_for_binary_classification,
+        "fluorescence": metrics.compute_error_bar_for_regression,
+        # "contact_prediction": 
+        "deeploc": metrics.compute_error_bar_for_token_classification,
+        "remote_homology": metrics.compute_error_bar_for_token_classification,
+    }
+    return task_map[task_name]
+
+
+
 def set_seed(seed):
     torch.manual_seed(seed)
     np.random.seed(seed)
@@ -579,7 +876,7 @@ def set_seed(seed):
 
 
 def main():
-    NUM_TRIALS_PER_CHECKPOINT = 5
+    NUM_TRIALS_PER_CHECKPOINT = 3
     SEED = 7
     MAX_SEQS = None
     LOW_MEMORY = True
@@ -591,14 +888,20 @@ def main():
         "ankh-v2-33",
         "ankh-v2-41",
         "ankh-v2-45",
-        "ankh-large",
+        # "ankh-large",
     ]
     tasks = [
+        "ssp-casp14",
+        "ssp-casp12",
+        "ssp-cb513",
+        "ssp-ts115",
+        "ssp8-casp14",
+        "ssp8-casp12",
+        "ssp8-cb513",
+        "ssp8-ts115",
         "remote_homology",
         "deeploc",
         # "contact_prediction",
-        "ssp-casp14",
-        "ssp-casp12",
         "solubility",
         "fluorescence",
     ]
@@ -686,6 +989,13 @@ def main():
                     # callbacks=[EarlyStoppingCallback(early_stopping_patience=10)],
                 )
                 trainer.train()
+
+                predictions, label_ids, _ = trainer.predict(val_dataset)
+                eval_pred_instance = EvalPrediction(predictions=predictions,
+                                                    label_ids=label_ids)
+                error_bar = compute_error_bar(task_name=task)(eval_pred_instance)
+                trainer.log({'error_bar': error_bar})
+
                 wandb.finish()
 
 

@@ -5,6 +5,8 @@ from transformers import EvalPrediction
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 
 from protbench.metrics.utils import remove_ignored_predictions
+import numpy as np
+import torch
 
 
 def compute_accuracy(
@@ -101,3 +103,34 @@ def compute_spearman(
             predictions, labels, ignore_value=ignore_index
         )
     return spearmanr(predictions, labels, **kwargs).correlation
+
+
+def compute_error_bar_for_token_classification(p: EvalPrediction,
+                                               ignore_index=-100):
+    accuracies = []
+    for i in range(p.predictions.shape[0]):
+        current_pred = p.predictions[None, i, :, :]
+        current_labels = p.label_ids[None, i, :]
+        ep = EvalPrediction(current_pred, current_labels)
+        accuracies.append(compute_accuracy(ep, ignore_index=ignore_index))
+    accuracy_std = np.std(accuracies)
+    accs_std_error = accuracy_std / (len(accuracies)**0.5)
+    # 1.96 is the z score for 95% confidence interval
+    error_bar = 1.96 * accs_std_error
+    return error_bar
+
+
+def compute_error_bar_for_binary_classification(p: EvalPrediction):
+    preds = (torch.sigmoid(torch.tensor(p.predictions)) > 0.5).type(torch.float32)
+    accuracies = (preds.numpy() == p.label_ids).astype('float32')
+    accs_std = np.std(accuracies)
+    accs_std_error = accs_std / (len(accs_std)) ** 0.5
+    error_bar = 1.96 * accs_std_error
+    return error_bar
+
+
+def compute_error_bar_for_regression(p: EvalPrediction):
+    spearman_corr = compute_spearman(p)
+    n = p.shape[0]
+    error = ((1 - spearman_corr ** 2) ** 2 * (1 + spearman_corr **2 / 2) / (n - 3)) ** 0.5
+    return error
