@@ -1,7 +1,6 @@
 import os
-import shutil
 
-os.environ["WANDB_PROJECT"] = "AnkhV2"
+os.environ["WANDB_PROJECT"] = "AnkhV2-Run2"
 
 import wandb
 from functools import partial
@@ -39,12 +38,10 @@ from transformers import (
     AutoTokenizer,
     Trainer,
     TrainingArguments,
-    EarlyStoppingCallback,
 )
 
 from scipy.spatial.distance import pdist, squareform
 from sklearn.metrics import precision_recall_fscore_support, accuracy_score, top_k_accuracy_score
-import glob
 from transformers import EvalPrediction
 
 
@@ -662,7 +659,7 @@ def get_downstream_model(task_name, embedding_dim, num_classes):
         "solubility": (
             ConvBert,
             {
-                "pooling": "max",
+                "pooling": "avg",
                 **convbert_args,
             },
             BinaryClassificationHead,
@@ -673,7 +670,7 @@ def get_downstream_model(task_name, embedding_dim, num_classes):
         "fluorescence": (
             ConvBert,
             {
-                "pooling": "max",
+                "pooling": "avg",
                 **convbert_args,
             },
             RegressionHead,
@@ -697,7 +694,7 @@ def get_downstream_model(task_name, embedding_dim, num_classes):
         "deeploc": (
             ConvBert,
             {
-                "pooling": "max",
+                "pooling": "avg",
                 **convbert_args,
             },
             MultiClassClassificationHead,
@@ -709,7 +706,7 @@ def get_downstream_model(task_name, embedding_dim, num_classes):
         "remote_homology": (
             ConvBert,
             {
-                "pooling": "max",
+                "pooling": "avg",
                 **convbert_args,
             },
             MultiClassClassificationHead,
@@ -861,7 +858,7 @@ def compute_error_bar(task_name):
         "ssp8-ts115": metrics.compute_error_bar_for_token_classification,
         "solubility": metrics.compute_error_bar_for_binary_classification,
         "fluorescence": metrics.compute_error_bar_for_regression,
-        # "contact_prediction": 
+        # "contact_prediction": metrics.compute_error_bar_for_token_classification
         "deeploc": metrics.compute_error_bar_for_token_classification,
         "remote_homology": metrics.compute_error_bar_for_token_classification,
     }
