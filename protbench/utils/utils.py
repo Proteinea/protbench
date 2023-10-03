@@ -69,7 +69,7 @@ def preprocess_multi_classification_logits(logits: torch.Tensor, _) -> torch.Ten
     return logits.argmax(dim=-1)
 
 
-def preprocess_binary_classification_logits(logits: torch.Tensor, _) -> torch.Tensor:
+def preprocess_binary_classification_logits(logits: torch.Tensor, threshold: float = 0.5) -> torch.Tensor:
     """
     Preprocess logits for binary classification tasks to produce predictions.
 
@@ -77,4 +77,4 @@ def preprocess_binary_classification_logits(logits: torch.Tensor, _) -> torch.Te
         logits (torch.Tensor): logits from the model (batch_size, seq_len, 1)
             for token classification tasks or (batch_size, 1) for sequence classification tasks.
     """
-    return (torch.sigmoid_(logits) > 0.5).to(int)
+    return (torch.sigmoid_(logits) > threshold).to(int)
