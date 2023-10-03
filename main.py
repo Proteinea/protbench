@@ -987,11 +987,11 @@ def main():
                 )
                 trainer.train()
 
-                predictions, label_ids, _ = trainer.predict(val_dataset)
-                eval_pred_instance = EvalPrediction(predictions=predictions,
-                                                    label_ids=label_ids)
-                error_bar = compute_error_bar(task_name=task)(eval_pred_instance)
-                trainer.log({'error_bar': error_bar})
+                # predictions, label_ids, _ = trainer.predict(val_dataset)
+                # eval_pred_instance = EvalPrediction(predictions=predictions,
+                #                                     label_ids=label_ids)
+                # error_bar = compute_error_bar(task_name=task)(eval_pred_instance)
+                # trainer.log({'error_bar': error_bar})
 
                 wandb.finish()
 
