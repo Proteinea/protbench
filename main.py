@@ -124,9 +124,9 @@ def preprocess_contact_prediction_labels(seq, label, mask):
 
 
 def compute_deep_localization_metrics(p):
-    prfs = precision_recall_fscore_support(p.label_ids, p.predictions, average='macro')
+    prfs = precision_recall_fscore_support(p.label_ids, p.predictions.argmax(axis=1), average='macro')
     return {
-        "accuracy": accuracy_score(p.label_ids, p.predictions),
+        "accuracy": accuracy_score(p.label_ids, p.predictions.argmax(axis=1)),
         "precision": prfs[0],
         "recall": prfs[1],
         "f1": prfs[2],
@@ -134,10 +134,10 @@ def compute_deep_localization_metrics(p):
 
 
 def compute_remote_homology_metrics(p, num_classes):
-    prfs = precision_recall_fscore_support(p.label_ids, p.predictions, average='macro')
+    prfs = precision_recall_fscore_support(p.label_ids, p.predictions.argmax(axis=1), average='macro')
 
     return {
-        "accuracy": accuracy_score(p.label_ids, p.predictions),
+        "accuracy": accuracy_score(p.label_ids, p.predictions.argmax(axis=1)),
         "precision": prfs[0],
         "recall": prfs[1],
         "f1": prfs[2],
@@ -821,8 +821,8 @@ def get_logits_preprocessing_fn(task_name):
         "solubility": preprocess_binary_classification_logits,
         "fluorescence": None,
         "contact_prediction": None,
-        "deeploc": preprocess_multi_classification_logits,
-        "remote_homology": preprocess_multi_classification_logits,
+        "deeploc": None,
+        "remote_homology": None,
     }
     return task_class_map[task_name]
 
