@@ -109,8 +109,8 @@ def compute_error_bar_for_token_classification(p: EvalPrediction,
                                                ignore_index=-100):
     accuracies = []
     for i in range(p.predictions.shape[0]):
-        current_pred = p.predictions[None, i, :, :]
-        current_labels = p.label_ids[None, i, :]
+        current_pred = torch.argmax(p.predictions[None, i], dim=-1)
+        current_labels = p.label_ids[None, i]
         ep = EvalPrediction(current_pred, current_labels)
         accuracies.append(compute_accuracy(ep, ignore_index=ignore_index))
     accuracy_std = np.std(accuracies)
