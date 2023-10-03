@@ -1,6 +1,6 @@
 import os
 
-os.environ["WANDB_PROJECT"] = "AnkhV2-Run2"
+os.environ["WANDB_PROJECT"] = "AnkhV2-Run2-AvgPooling"
 
 import wandb
 from functools import partial
