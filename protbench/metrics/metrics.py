@@ -110,12 +110,11 @@ def compute_error_bar_for_token_classification(p: EvalPrediction,
 
     if len(p.predictions.shape) > 2:
         p.predictions = p.predictions.argmax(-1)
-        p.label_ids.astype(p.label_ids.dtype)
 
     accuracies = []
     for i in range(p.predictions.shape[0]):
         current_pred = p.predictions[None, i]
-        current_labels = p.label_ids[None, i]
+        current_labels = p.label_ids[None, i].astype(current_pred.dtype)
         ep = EvalPrediction(current_pred, current_labels)
         accuracies.append(compute_accuracy(ep, ignore_index=ignore_index))
     accuracy_std = np.std(accuracies)
