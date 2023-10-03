@@ -873,7 +873,7 @@ def set_seed(seed):
 
 
 def main():
-    NUM_TRIALS_PER_CHECKPOINT = 3
+    NUM_TRIALS_PER_CHECKPOINT = 1
     SEED = 7
     MAX_SEQS = None
     LOW_MEMORY = True
@@ -888,6 +888,8 @@ def main():
         # "ankh-large",
     ]
     tasks = [
+        "remote_homology",
+        "deeploc",
         "ssp-casp14",
         "ssp-casp12",
         "ssp-cb513",
@@ -896,8 +898,6 @@ def main():
         "ssp8-casp12",
         "ssp8-cb513",
         "ssp8-ts115",
-        "remote_homology",
-        "deeploc",
         # "contact_prediction",
         "solubility",
         "fluorescence",
