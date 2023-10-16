@@ -69,7 +69,7 @@ def preprocess_multi_classification_logits(logits: torch.Tensor, _) -> torch.Ten
     return logits.argmax(dim=-1)
 
 
-def preprocess_binary_classification_logits(logits: torch.Tensor) -> torch.Tensor:
+def preprocess_binary_classification_logits(logits: torch.Tensor, _) -> torch.Tensor:
     """
     Preprocess logits for binary classification tasks to produce predictions.
 
