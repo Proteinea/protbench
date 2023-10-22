@@ -15,7 +15,9 @@ class GlobalMaxPooling1D(nn.Module):
         super().__init__()
         self.global_max_pool1d = partial(torch.amax, dim=1)
 
-    def forward(self, x: torch.Tensor, attention_mask: Optional[torch.Tensor] = None):
+    def forward(
+        self, x: torch.Tensor, attention_mask: Optional[torch.Tensor] = None
+    ):
         """Forward pass of the global max pooling layer.
 
         Args:

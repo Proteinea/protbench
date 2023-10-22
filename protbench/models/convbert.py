@@ -54,7 +54,9 @@ class ConvBert(nn.Module):
         else:
             self.pooling = None
 
-    def get_extended_attention_mask(self, attention_mask: torch.Tensor) -> torch.Tensor:
+    def get_extended_attention_mask(
+        self, attention_mask: torch.Tensor
+    ) -> torch.Tensor:
         """
         This function is taken from the `ConvBertModel` implementation in the transformers library.
         See: https://github.com/huggingface/transformers/blob/fe861e578f50dc9c06de33cd361d2f625017e624/src/transformers/modeling_utils.py#L863
@@ -69,9 +71,9 @@ class ConvBert(nn.Module):
             Tensor of extended attention mask that can be fed to the ConvBert model.
         """
         extended_attention_mask = attention_mask[:, None, None, :]
-        extended_attention_mask = (1.0 - extended_attention_mask) * torch.finfo(
-            attention_mask.dtype
-        ).min
+        extended_attention_mask = (
+            1.0 - extended_attention_mask
+        ) * torch.finfo(attention_mask.dtype).min
         return extended_attention_mask
 
     def forward(

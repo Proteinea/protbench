@@ -17,7 +17,7 @@ from protbench.models import (
     TokenClassificationHead,
     BinaryClassificationHead,
     RegressionHead,
-    DownstreamModel,
+    DownstreamModelFromEmbedding,
     ContactPredictionHead,
     MultiClassClassificationHead
 )
@@ -220,7 +220,7 @@ def get_data(task_name, max_seqs=None):
                 "preprocessing_function": preprocess_ssp_rows,
             },
         )
-    
+
     elif task_name == 'ssp-ts115':
         train_data = HuggingFaceResidueToClass(
             **{
@@ -319,7 +319,7 @@ def get_data(task_name, max_seqs=None):
                 "preprocessing_function": preprocess_ssp_rows,
             },
         )
-    
+
     elif task_name == 'ssp8-ts115':
         train_data = HuggingFaceResidueToClass(
             **{
@@ -717,7 +717,7 @@ def get_downstream_model(task_name, embedding_dim, num_classes):
         ),
 
     }
-    return DownstreamModel(
+    return DownstreamModelFromEmbedding(
         task_class_map[task_name][0](**task_class_map[task_name][1]),
         task_class_map[task_name][2](**task_class_map[task_name][3]),
     )
@@ -865,7 +865,6 @@ def compute_error_bar(task_name):
     return task_map[task_name]
 
 
-
 def set_seed(seed):
     torch.manual_seed(seed)
     np.random.seed(seed)
@@ -986,12 +985,6 @@ def main():
                     # callbacks=[EarlyStoppingCallback(early_stopping_patience=10)],
                 )
                 trainer.train()
-
-                # predictions, label_ids, _ = trainer.predict(val_dataset)
-                # eval_pred_instance = EvalPrediction(predictions=predictions,
-                #                                     label_ids=label_ids)
-                # error_bar = compute_error_bar(task_name=task)(eval_pred_instance)
-                # trainer.log({'error_bar': error_bar})
 
                 wandb.finish()
 

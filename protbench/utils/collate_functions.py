@@ -1,9 +1,7 @@
-from functools import partial
-from typing import List, Dict, Type, Any, Tuple, Callable, Optional, Union
+from typing import Dict, List, Callable
 
 import torch
-from torch.utils.data import Dataset
-from transformers import EvalPrediction, TrainingArguments
+from transformers import AutoTokenizer
 
 
 def collate_inputs(
@@ -55,26 +53,13 @@ def collate_inputs_and_labels(
     return {"embds": embds, "labels": labels}
 
 
-def preprocess_multi_classification_logits(logits: torch.Tensor, _) -> torch.Tensor:
-    """
-    Preprocess logits for multiclassification tasks to produce predictions.
+def collate_sequence_and_labels(tokenizer: AutoTokenizer) -> Callable:
+    def _collate_sequence_and_labels(batch: List[Dict]) -> Dict:
+        sequences = [example["sequences"] for example in batch]
+        labels = [example["labels"] for example in batch]
 
-    Args:
-        logits (torch.Tensor): logits from the model (batch_size, seq_len, num_classes)
-            for token classification tasks or (batch_size, num_classes) for sequence classification tasks.
-    Returns:
-        torch.Tensor: predictions with shape (batch_size, seq_len) for token classification
-            tasks or (batch_size,) for sequence classification tasks.
-    """
-    return logits.argmax(dim=-1)
-
-
-def preprocess_binary_classification_logits(logits: torch.Tensor, _) -> torch.Tensor:
-    """
-    Preprocess logits for binary classification tasks to produce predictions.
-
-    Args:
-        logits (torch.Tensor): logits from the model (batch_size, seq_len, 1)
-            for token classification tasks or (batch_size, 1) for sequence classification tasks.
-    """
-    return (torch.sigmoid_(logits) > 0.5).to(int)
+        sequences_encoded = tokenizer(sequences)
+        labels = torch.tensor(labels)
+        sequences_encoded['labels'] = labels
+        return sequences_encoded
+    return _collate_sequence_and_labels

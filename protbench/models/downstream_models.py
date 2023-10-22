@@ -3,7 +3,7 @@ from typing import Optional
 import torch
 
 
-class DownstreamModel(torch.nn.Module):
+class DownstreamModelFromEmbedding(torch.nn.Module):
     def __init__(
         self,
         downstream_backbone: torch.nn.Module,
@@ -22,12 +22,14 @@ class DownstreamModel(torch.nn.Module):
             pad_token_id (int, optional): padding token id used to pad the input embeddings. Defaults to 0.
                 If None, the padding mask passed to the backbone will be None.
         """
-        super(DownstreamModel, self).__init__()
+        super(DownstreamModelFromEmbedding, self).__init__()
         self.downstream_backbone = downstream_backbone
         self.head = head
         self.pad_token_id = pad_token_id
 
-    def forward(self, embds: torch.Tensor, labels: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(
+        self, embds: torch.Tensor, labels: Optional[torch.Tensor] = None
+    ) -> torch.Tensor:
         """Embed a batch of sequences.
 
         Args:
@@ -43,3 +45,19 @@ class DownstreamModel(torch.nn.Module):
             attention_mask = None
         hidden_states = self.downstream_backbone(embds, attention_mask)
         return self.head(hidden_states, labels=labels)
+
+
+class DownstreamModelWithPretrainedBackbone(torch.nn.Module):
+    def __init__(self, backbone, head, pooling=None) -> None:
+        super(DownstreamModelWithPretrainedBackbone, self).__init__()
+        self.backbone = backbone
+        self.head = head
+        self.pooling = pooling
+
+    def forward(self, input_ids, attention_mask=None, labels=None):
+        embeddings = self.backbone(
+            input_ids=input_ids, attention_mask=attention_mask
+        )
+        if self.pooling is not None:
+            embeddings = self.pooling(embeddings, attention_mask)
+        return self.head(embeddings, labels)
