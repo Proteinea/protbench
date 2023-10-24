@@ -34,7 +34,7 @@ from protbench.utils import SequenceAndLabelsDataset, EmbeddingsDataset, Embeddi
 
 from scipy.spatial.distance import pdist, squareform
 
-os.environ["WANDB_PROJECT"] = "AnkhV2-Run2-AvgPooling"
+os.environ["WANDB_PROJECT"] = "AnkhV2-LoRA"
 
 
 def preprocess_contact_prediction_labels(seq, label, mask):
