@@ -58,7 +58,8 @@ def collate_sequence_and_labels(tokenizer: AutoTokenizer) -> Callable:
         sequences = [example["sequences"] for example in batch]
         labels = [example["labels"] for example in batch]
 
-        sequences_encoded = tokenizer(sequences)
+        sequences_encoded = tokenizer(sequences, add_special_tokens=True,
+                                      padding='longest', return_tensors="pt")
         labels = torch.tensor(labels)
         sequences_encoded['labels'] = labels
         return sequences_encoded
