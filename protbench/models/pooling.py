@@ -25,6 +25,7 @@ class GlobalMaxPooling1D(nn.Module):
             attention_mask (torch.Tensor, optional): Attention mask of shape (batch_size, seq_len). Defaults to None.
         """
         if attention_mask is not None:
+            attention_mask = attention_mask.bool()
             # fill masked valBinaryClassificationHeadues with -inf so that they are not selected by max pooling
             x = x.masked_fill(~attention_mask.unsqueeze(-1), float("-inf"))
         out = self.global_max_pool1d(x)
