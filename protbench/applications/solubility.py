@@ -43,12 +43,14 @@ def get_metrics():
 
 class Solubility(BenchmarkingTask):
     def __init__(self, dataset="solubility", from_embeddings=False, tokenizer=None):
-        train_dataset, eval_dataset = dataset[dataset]()
+        train_dataset, eval_dataset = supported_datasets[dataset]()
         metrics_fn = get_metrics()
         if not from_embeddings:
             collate_fn = collate_sequence_and_labels(tokenizer=tokenizer)
         else:
             collate_fn = collate_inputs
+
+        self.requires_pooling = True
 
         super().__init__(
             train_dataset,

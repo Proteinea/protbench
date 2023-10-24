@@ -54,7 +54,7 @@ def compute_remote_homology_metrics(p, num_classes):
 
 class RemoteHomology(BenchmarkingTask):
     def __init__(self, dataset="remote_homology", from_embeddings=False, tokenizer=None):
-        train_dataset, eval_dataset = dataset[dataset]()
+        train_dataset, eval_dataset = supported_datasets[dataset]()
         metrics_fn = partial(compute_remote_homology_metrics,
                              num_classes=self.train_dataset.num_classes)
         if not from_embeddings:

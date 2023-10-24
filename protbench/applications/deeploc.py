@@ -47,7 +47,7 @@ def compute_deep_localization_metrics(p):
 
 class DeepLoc(BenchmarkingTask):
     def __init__(self, dataset="deeploc", from_embeddings=False, tokenizer=None):
-        train_dataset, eval_dataset = dataset[dataset]()
+        train_dataset, eval_dataset = supported_datasets[dataset]()
         metrics_fn = compute_deep_localization_metrics
         if not from_embeddings:
             collate_fn = collate_sequence_and_labels(tokenizer=tokenizer)

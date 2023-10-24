@@ -38,7 +38,7 @@ def get_metrics():
 
 class Fluorescence(BenchmarkingTask):
     def __init__(self, dataset="fluorescence", from_embeddings=False, tokenizer=None):
-        train_dataset, eval_dataset = dataset[dataset]()
+        train_dataset, eval_dataset = supported_datasets[dataset]()
         metrics_fn = get_metrics()
         if not from_embeddings:
             collate_fn = collate_sequence_and_labels(tokenizer=tokenizer)
