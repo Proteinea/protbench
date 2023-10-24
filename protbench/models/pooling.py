@@ -54,6 +54,7 @@ class GlobalAvgPooling1D(nn.Module):
                 out = self.global_avg_pool1d(x)
             else:
                 # fill masked values with nan so that they don't affect torch.nanmean
+                attention_mask = attention_mask.bool()
                 x = x.masked_fill(~attention_mask.unsqueeze(-1), torch.nan)
                 out = self.global_avg_pool1d_with_nan(x)
         else:
