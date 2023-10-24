@@ -1,7 +1,5 @@
 import os
 
-os.environ["WANDB_PROJECT"] = "AnkhV2-Run2-AvgPooling"
-
 import wandb
 from functools import partial
 
@@ -24,15 +22,19 @@ import numpy as np
 import random
 from transformers import (
     T5EncoderModel,
+    T5ForConditionalGeneration,
     AutoTokenizer,
     Trainer,
     TrainingArguments,
 )
 
-from protbench.utils import SequenceAndLabelsDataset, EmbeddingsDataset, EmbeddingsDatasetFromDisk
+from peft import get_peft_config, PeftModel, PeftConfig, get_peft_model, LoraConfig, TaskType
+
+from protbench.utils import SequenceAndLabelsDataset, EmbeddingsDataset, EmbeddingsDatasetFromDisk # noqa
 
 from scipy.spatial.distance import pdist, squareform
 
+os.environ["WANDB_PROJECT"] = "AnkhV2-Run2-AvgPooling"
 
 
 def preprocess_contact_prediction_labels(seq, label, mask):
@@ -42,7 +44,6 @@ def preprocess_contact_prediction_labels(seq, label, mask):
     invalid_mask |= np.abs(yind - xind) < 6
     contact_map[invalid_mask] = -1
     return seq, contact_map, mask
-
 
 
 def get_data(task_name, max_seqs=None):
@@ -77,7 +78,7 @@ def get_data(task_name, max_seqs=None):
     )
 
 
-def get_pretrained_model_and_tokenizer(model_name):
+def get_pretrained_model_and_tokenizer(model_name, initialize_with_lora=False, task_type=None):
     model_url_map = {
         "ankh-base": "ElnaggarLab/ankh-base",
         "ankh-large": "ElnaggarLab/ankh-large",
@@ -87,9 +88,20 @@ def get_pretrained_model_and_tokenizer(model_name):
         "ankh-v2-41": "proteinea-ea/ankh-v2-large-41epochs-e4a2c3615ff005e5e7b5bbd33ec0654106b64f1a",
         "ankh-v2-45": "proteinea-ea/ankh-v2-large-45epochs-62fe367d20d957efdf6e8afe6ae1c724f5bc6775",
     }
-    return T5EncoderModel.from_pretrained(
-        model_url_map[model_name]
-    ), AutoTokenizer.from_pretrained(model_url_map[model_name])
+    tokenizer = AutoTokenizer.from_pretrained(model_url_map[model_name])
+    if initialize_with_lora:
+        model = T5ForConditionalGeneration.from_pretrained(model_url_map[model_name])
+        peft_config = LoraConfig(task_type=task_type,
+                                 inference_mode=False,
+                                 r=16,
+                                 lora_alpha=16,
+                                 lora_dropout=0.1,
+                                 bias="none")
+        model = get_peft_model(model, peft_config).encoder
+    else:
+        model = T5EncoderModel.from_pretrained(model_url_map[model_name])
+
+    return model, tokenizer
 
 
 def embeddings_postprocessing_fn(model_outputs):
@@ -249,12 +261,47 @@ def set_seed(seed):
     random.seed(seed)
 
 
+def available_tasks(tokenizer):
+    tasks = [
+            partial(applications.SSP3, dataset='ssp3_casp14', from_embeddings=False, tokenizer=tokenizer),
+            partial(applications.SSP3, dataset='ssp3_casp12', from_embeddings=False, tokenizer=tokenizer),
+            partial(applications.SSP3, dataset='ssp3_cb513', from_embeddings=False, tokenizer=tokenizer),
+            partial(applications.SSP3, dataset='ssp3_ts115', from_embeddings=False, tokenizer=tokenizer),
+            partial(applications.SSP8, dataset="ssp8_casp14", from_embeddings=False, tokenizer=tokenizer),
+            partial(applications.SSP8, dataset="ssp8_casp12", from_embeddings=False, tokenizer=tokenizer),
+            partial(applications.SSP8, dataset="ssp8_cb513", from_embeddings=False, tokenizer=tokenizer),
+            partial(applications.SSP8, dataset="ssp8_ts115", from_embeddings=False, tokenizer=tokenizer),
+            partial(applications.RemoteHomology, from_embeddings=False, tokenizer=tokenizer),
+            partial(applications.DeepLoc, dataset="deeploc", from_embeddings=False, tokenizer=tokenizer),
+            partial(applications.Fluorescence, from_embeddings=False, tokenizer=tokenizer),
+            partial(applications.Solubility, from_embeddings=False, tokenizer=tokenizer),
+        ]
+    task_type = [TaskType.TOKEN_CLS,
+                 TaskType.TOKEN_CLS,
+                 TaskType.TOKEN_CLS,
+                 TaskType.TOKEN_CLS,
+                 TaskType.TOKEN_CLS,
+                 TaskType.TOKEN_CLS,
+                 TaskType.TOKEN_CLS,
+                 TaskType.TOKEN_CLS,
+                 TaskType.SEQ_CLS,
+                 TaskType.SEQ_CLS,
+                 TaskType.SEQ_CLS,
+                 TaskType.SEQ_CLS]
+    for task, task_type in zip(tasks, task_type):
+        yield task(), task_type
+
+
+
 def main():
     NUM_TRIALS_PER_CHECKPOINT = 1
     SEED = 7
     MAX_SEQS = None
     LOW_MEMORY = True
     POOLING = 'max'
+    USE_LORA = True
+
+
 
     checkpoints = [
         "ankh-base",
@@ -267,27 +314,13 @@ def main():
     ]
 
     for checkpoint in checkpoints:
-        with torch.device('cuda:0'):
-            pretrained_model, tokenizer = get_pretrained_model_and_tokenizer(
-                checkpoint
-            )
-        embedding_dim = pretrained_model.config.d_model
-        tasks = [
-            partial(applications.RemoteHomology, from_embeddings=False, tokenizer-tokenizer),
-            partial(applications.DeepLoc, from_embeddings=False, tokenizer-tokenizer),
-            partial(applications.SSP3, dataset='ssp3_casp14', from_embeddings=False, tokenizer-tokenizer),
-            partial(applications.SSP3, dataset='ssp3_casp12', from_embeddings=False, tokenizer-tokenizer),
-            partial(applications.SSP3, dataset='ssp3_cb513', from_embeddings=False, tokenizer-tokenizer),
-            partial(applications.SSP3, dataset='ssp3_ts115', from_embeddings=False, tokenizer-tokenizer),
-            partial(applications.SSP8, dataset="ssp8_casp14", from_embeddings=False, tokenizer-tokenizer),
-            partial(applications.SSP8, dataset="ssp8_casp12", from_embeddings=False, tokenizer-tokenizer),
-            partial(applications.SSP8, dataset="ssp8_cb513", from_embeddings=False, tokenizer-tokenizer),
-            partial(applications.SSP8, dataset="ssp8_ts115", from_embeddings=False, tokenizer-tokenizer),
-            partial(applications.Solubility, from_embeddings=False, tokenizer-tokenizer),
-            partial(applications.Fluorescence, from_embeddings=False, tokenizer-tokenizer),
-        ]
-        for task in tasks:
-            task = task()
+        for task, task_type in available_tasks():
+            with torch.device('cuda:0'):
+                pretrained_model, tokenizer = get_pretrained_model_and_tokenizer(
+                    checkpoint, initialize_with_lora=True, task_type=task_type,
+                )
+                embedding_dim = pretrained_model.config.d_model
+
             task: applications.BenchmarkingTask
             train_seqs, train_labels = task.get_train_data()
             val_seqs, val_labels = task.get_eval_data()
@@ -303,7 +336,7 @@ def main():
             if task.from_embeddings:
                 pretrained_model.cpu()
                 torch.cuda.empty_cache()
-            
+
             collate_fn = task.collate_fn
             logits_preprocessing_fn = task.preprocessing_fn
 
@@ -350,7 +383,7 @@ def main():
                     seed=SEED,
                     load_best_model_at_end=True,
                     save_total_limit=1,
-                    metric_for_best_model=get_metric_for_best_model(task),
+                    metric_for_best_model=task.metric_for_best_model,
                     greater_is_better=True,
                     save_strategy="epoch",
                     report_to="wandb",
@@ -360,7 +393,7 @@ def main():
                     args=training_args,
                     train_dataset=train_dataset,
                     eval_dataset=val_dataset,
-                    compute_metrics=get_metrics(task, num_classes),
+                    compute_metrics=task.metrics_fn,
                     data_collator=collate_fn,
                     preprocess_logits_for_metrics=logits_preprocessing_fn,
                     # callbacks=[EarlyStoppingCallback(early_stopping_patience=10)],
