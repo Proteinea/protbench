@@ -261,20 +261,20 @@ def set_seed(seed):
     random.seed(seed)
 
 
-def available_tasks(tokenizer):
+def available_tasks():
     tasks = [
-            partial(applications.SSP3, dataset='ssp3_casp14', from_embeddings=False, tokenizer=tokenizer),
-            partial(applications.SSP3, dataset='ssp3_casp12', from_embeddings=False, tokenizer=tokenizer),
-            partial(applications.SSP3, dataset='ssp3_cb513', from_embeddings=False, tokenizer=tokenizer),
-            partial(applications.SSP3, dataset='ssp3_ts115', from_embeddings=False, tokenizer=tokenizer),
-            partial(applications.SSP8, dataset="ssp8_casp14", from_embeddings=False, tokenizer=tokenizer),
-            partial(applications.SSP8, dataset="ssp8_casp12", from_embeddings=False, tokenizer=tokenizer),
-            partial(applications.SSP8, dataset="ssp8_cb513", from_embeddings=False, tokenizer=tokenizer),
-            partial(applications.SSP8, dataset="ssp8_ts115", from_embeddings=False, tokenizer=tokenizer),
-            partial(applications.RemoteHomology, from_embeddings=False, tokenizer=tokenizer),
-            partial(applications.DeepLoc, dataset="deeploc", from_embeddings=False, tokenizer=tokenizer),
-            partial(applications.Fluorescence, from_embeddings=False, tokenizer=tokenizer),
-            partial(applications.Solubility, from_embeddings=False, tokenizer=tokenizer),
+            partial(applications.SSP3, dataset='ssp3_casp14', from_embeddings=False),
+            partial(applications.SSP3, dataset='ssp3_casp12', from_embeddings=False),
+            partial(applications.SSP3, dataset='ssp3_cb513', from_embeddings=False),
+            partial(applications.SSP3, dataset='ssp3_ts115', from_embeddings=False),
+            partial(applications.SSP8, dataset="ssp8_casp14", from_embeddings=False),
+            partial(applications.SSP8, dataset="ssp8_casp12", from_embeddings=False),
+            partial(applications.SSP8, dataset="ssp8_cb513", from_embeddings=False),
+            partial(applications.SSP8, dataset="ssp8_ts115", from_embeddings=False),
+            partial(applications.RemoteHomology, from_embeddings=False),
+            partial(applications.DeepLoc, dataset="deeploc", from_embeddings=False),
+            partial(applications.Fluorescence, from_embeddings=False),
+            partial(applications.Solubility, from_embeddings=False),
         ]
     task_type = [TaskType.TOKEN_CLS,
                  TaskType.TOKEN_CLS,
@@ -289,7 +289,7 @@ def available_tasks(tokenizer):
                  TaskType.SEQ_CLS,
                  TaskType.SEQ_CLS]
     for task, task_type in zip(tasks, task_type):
-        yield task(), task_type
+        yield task, task_type
 
 
 
@@ -321,6 +321,7 @@ def main():
                 )
                 embedding_dim = pretrained_model.config.d_model
 
+            task = task(tokenizer=tokenizer)
             task: applications.BenchmarkingTask
             train_seqs, train_labels = task.get_train_data()
             val_seqs, val_labels = task.get_eval_data()
