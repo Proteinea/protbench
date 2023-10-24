@@ -21,6 +21,7 @@ class BenchmarkingTask(abc.ABC):
         self.metric_for_best_model = metric_for_best_model
         self.from_embeddings = from_embeddings
         self.tokenizer = tokenizer
+        self.requires_pooling = False
 
     def get_train_data(self):
         raise NotImplementedError("Should be implemented in a subclass.")

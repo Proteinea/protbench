@@ -53,6 +53,8 @@ class DeepLoc(BenchmarkingTask):
             collate_fn = collate_sequence_and_labels(tokenizer=tokenizer)
         else:
             collate_fn = collate_inputs
+        self.requires_pooling = True
+
         super().__init__(
             train_dataset,
             eval_dataset,

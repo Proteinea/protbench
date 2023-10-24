@@ -261,7 +261,7 @@ def set_seed(seed):
     random.seed(seed)
 
 
-def available_tasks():
+def available_tasks(pooling='max'):
     tasks = [
             partial(applications.SSP3, dataset='ssp3_casp14', from_embeddings=False),
             partial(applications.SSP3, dataset='ssp3_casp12', from_embeddings=False),
@@ -361,7 +361,7 @@ def main():
                 run_name = f"original-{checkpoint}-{task}-{i}"
                 set_seed(SEED)
                 model = task.get_downstream_model(
-                    pretrained_model, embedding_dim, pooling=POOLING
+                    pretrained_model, embedding_dim, pooling=POOLING if task.requires_pooling else None
                 )
 
                 training_args = TrainingArguments(

@@ -137,6 +137,8 @@ class SSP8(BenchmarkingTask):
             collate_fn = collate_sequence_and_labels(tokenizer)
         else:
             collate_fn = collate_inputs_and_labels
+        
+        self.requires_pooling = False
 
         super().__init__(
             train_dataset,

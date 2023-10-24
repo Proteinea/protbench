@@ -62,6 +62,8 @@ class RemoteHomology(BenchmarkingTask):
         else:
             collate_fn = collate_inputs
 
+        self.requires_pooling = True
+
         super().__init__(
             train_dataset,
             eval_dataset,
