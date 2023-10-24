@@ -66,7 +66,7 @@ def collate_sequence_and_align_labels(tokenizer: AutoTokenizer, ignore_index=-10
         if labels.shape[-1] < sequences_encoded.shape[-1]:
             diff = sequences_encoded.shape[-1] - labels.shape[-1]
             padding_tokens = torch.tensor([[-100] * diff] * sequences_encoded.shape[0])
-            labels = torch.cat((labels, padding_tokens))
+            labels = torch.cat((labels, padding_tokens), dim=1)
         sequences_encoded['labels'] = labels
         return sequences_encoded
     return _collate_sequence_and_align_labels
