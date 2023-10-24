@@ -317,7 +317,7 @@ def main():
         for task, task_type in available_tasks():
             with torch.device('cuda:0'):
                 pretrained_model, tokenizer = get_pretrained_model_and_tokenizer(
-                    checkpoint, initialize_with_lora=True, task_type=task_type,
+                    checkpoint, initialize_with_lora=USE_LORA, task_type=task_type,
                 )
                 embedding_dim = pretrained_model.config.d_model
 
@@ -388,6 +388,7 @@ def main():
                     greater_is_better=True,
                     save_strategy="epoch",
                     report_to="wandb",
+                    remove_unused_columns=False,
                 )
                 trainer = Trainer(
                     model=model,
