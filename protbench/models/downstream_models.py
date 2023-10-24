@@ -57,7 +57,7 @@ class DownstreamModelWithPretrainedBackbone(torch.nn.Module):
     def forward(self, input_ids, attention_mask=None, labels=None):
         embeddings = self.backbone(
             input_ids=input_ids, attention_mask=attention_mask
-        )
+        ).last_hidden_state
         if self.pooling is not None:
             embeddings = self.pooling(embeddings, attention_mask)
         return self.head(embeddings, labels)
