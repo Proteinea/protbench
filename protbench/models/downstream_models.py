@@ -57,6 +57,8 @@ class DownstreamModelWithPretrainedBackbone(torch.nn.Module):
             self.pooling = GlobalMaxPooling1D()
         elif pooling == 'avg':
             self.pooling = GlobalAvgPooling1D()
+        else:
+            self.pooling = None
 
     def forward(self, input_ids, attention_mask=None, labels=None):
         embeddings = self.backbone(
