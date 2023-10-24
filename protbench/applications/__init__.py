@@ -5,4 +5,3 @@ from protbench.applications.remote_homology import RemoteHomology
 from protbench.applications.ssp3 import SSP3
 from protbench.applications.ssp8 import SSP8
 from protbench.applications.solubility import Solubility
-from protbench.applications.default_models import initialize_default_model_with_pretrained_backbone
