@@ -60,7 +60,8 @@ class Solubility(BenchmarkingTask):
             metrics_fn,
             "accuracy",
             from_embeddings,
-            tokenizer
+            tokenizer=tokenizer,
+            requires_pooling=True,
         )
 
     def get_train_data(self):

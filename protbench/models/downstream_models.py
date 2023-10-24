@@ -1,6 +1,7 @@
 from typing import Optional
 
 import torch
+from protbench.models.pooling import GlobalAvgPooling1D, GlobalMaxPooling1D
 
 
 class DownstreamModelFromEmbedding(torch.nn.Module):
@@ -52,7 +53,10 @@ class DownstreamModelWithPretrainedBackbone(torch.nn.Module):
         super(DownstreamModelWithPretrainedBackbone, self).__init__()
         self.backbone = backbone
         self.head = head
-        self.pooling = pooling
+        if pooling == 'max':
+            self.pooling = GlobalMaxPooling1D()
+        elif pooling == 'avg':
+            self.pooling = GlobalAvgPooling1D()
 
     def forward(self, input_ids, attention_mask=None, labels=None):
         embeddings = self.backbone(

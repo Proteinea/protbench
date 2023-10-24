@@ -140,8 +140,6 @@ class SSP3(BenchmarkingTask):
             collate_fn = collate_sequence_and_align_labels(tokenizer)
         else:
             collate_fn = collate_inputs_and_labels
-        
-        self.requires_pooling = False
 
         super().__init__(
             train_dataset,
@@ -151,7 +149,8 @@ class SSP3(BenchmarkingTask):
             metrics_fn,
             "accuracy",
             from_embeddings,
-            tokenizer,
+            tokenizer=tokenizer,
+            requires_pooling=False,
         )
 
     def get_train_data(self):

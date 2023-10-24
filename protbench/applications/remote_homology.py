@@ -72,7 +72,8 @@ class RemoteHomology(BenchmarkingTask):
             metrics_fn,
             "eval_hits10",
             from_embeddings,
-            tokenizer,
+            tokenizer=tokenizer,
+            requires_pooling=True,
         )
 
     def get_train_data(self):
