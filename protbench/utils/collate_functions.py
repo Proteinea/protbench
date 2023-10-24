@@ -61,7 +61,7 @@ def collate_sequence_and_align_labels(tokenizer: AutoTokenizer, ignore_index=-10
         sequences_encoded = tokenizer(sequences, add_special_tokens=True,
                                       padding='longest', return_tensors="pt")
         labels = torch.tensor(labels)
-        if labels.shape[-1] < sequences_encoded.shape[-1]:
+        if labels.shape[-1] < sequences_encoded['input_ids'].shape[-1]:
             diff = sequences_encoded.shape[-1] - labels.shape[-1]
             padding_tokens = torch.tensor([[-100] * diff] * sequences_encoded.shape[0])
             labels = torch.cat((labels, padding_tokens), dim=1)
