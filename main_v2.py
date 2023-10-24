@@ -263,6 +263,8 @@ def set_seed(seed):
 
 def available_tasks(pooling='max'):
     tasks = [
+            partial(applications.Fluorescence, from_embeddings=False),
+            partial(applications.RemoteHomology, from_embeddings=False),
             partial(applications.SSP3, dataset='ssp3_casp14', from_embeddings=False),
             partial(applications.SSP3, dataset='ssp3_casp12', from_embeddings=False),
             partial(applications.SSP3, dataset='ssp3_cb513', from_embeddings=False),
@@ -271,9 +273,7 @@ def available_tasks(pooling='max'):
             partial(applications.SSP8, dataset="ssp8_casp12", from_embeddings=False),
             partial(applications.SSP8, dataset="ssp8_cb513", from_embeddings=False),
             partial(applications.SSP8, dataset="ssp8_ts115", from_embeddings=False),
-            partial(applications.RemoteHomology, from_embeddings=False),
             partial(applications.DeepLoc, dataset="deeploc", from_embeddings=False),
-            partial(applications.Fluorescence, from_embeddings=False),
             partial(applications.Solubility, from_embeddings=False),
         ]
     task_type = [TaskType.TOKEN_CLS,

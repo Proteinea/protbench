@@ -69,6 +69,7 @@ def collate_sequence_and_align_labels(tokenizer: AutoTokenizer, ignore_index=-10
         return sequences_encoded
     return _collate_sequence_and_align_labels
 
+
 def collate_sequence_and_labels(tokenizer: AutoTokenizer) -> Callable:
     def _collate_sequence_and_labels(batch: List[Dict]) -> Dict:
         sequences = [example["sequences"] for example in batch]
