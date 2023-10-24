@@ -9,7 +9,7 @@ from protbench.utils.preprocessing_utils import (
     preprocess_multi_classification_logits,
 )
 from protbench import metrics
-from protbench.utils import collate_inputs_and_labels, collate_sequence_and_labels
+from protbench.utils import collate_inputs_and_labels, collate_sequence_and_align_labels
 
 
 def preprocess_ssp_rows(seq, label, mask):
@@ -133,10 +133,10 @@ class SSP8(BenchmarkingTask):
         train_dataset, eval_dataset = available_datasets[dataset]()
         metrics_fn = get_metrics_function()
 
-        if not from_embeddings:
-            collate_fn = collate_sequence_and_labels(tokenizer)
-        else:
+        if from_embeddings:
             collate_fn = collate_inputs_and_labels
+        else:
+            collate_fn = collate_sequence_and_align_labels(tokenizer)
         
         self.requires_pooling = False
 
