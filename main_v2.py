@@ -28,7 +28,7 @@ from transformers import (
     TrainingArguments,
 )
 
-from peft import get_peft_config, PeftModel, PeftConfig, get_peft_model, LoraConfig, TaskType
+from peft import get_peft_model, LoraConfig, TaskType
 
 from protbench.utils import SequenceAndLabelsDataset, EmbeddingsDataset, EmbeddingsDatasetFromDisk # noqa
 
@@ -262,20 +262,20 @@ def set_seed(seed):
 
 
 def available_tasks(pooling='max'):
-    tasks = [
-            partial(applications.SSP3, dataset='ssp3_casp12', from_embeddings=False),
-            partial(applications.SSP3, dataset='ssp3_casp14', from_embeddings=False),
-            partial(applications.SSP3, dataset='ssp3_cb513', from_embeddings=False),
-            partial(applications.SSP3, dataset='ssp3_ts115', from_embeddings=False),
-            partial(applications.SSP8, dataset="ssp8_casp12", from_embeddings=False),
-            partial(applications.SSP8, dataset="ssp8_casp14", from_embeddings=False),
-            partial(applications.SSP8, dataset="ssp8_cb513", from_embeddings=False),
-            partial(applications.SSP8, dataset="ssp8_ts115", from_embeddings=False),
-            partial(applications.DeepLoc, dataset="deeploc", from_embeddings=False),
-            partial(applications.Solubility, from_embeddings=False),
-            partial(applications.RemoteHomology, from_embeddings=False),
-            partial(applications.Fluorescence, from_embeddings=False),
-        ]
+    tasks = {
+        'ssp3_casp12': partial(applications.SSP3, dataset='ssp3_casp12', from_embeddings=False),
+        'ssp3_casp14': partial(applications.SSP3, dataset='ssp3_casp14', from_embeddings=False),
+        'ssp3_cb513': partial(applications.SSP3, dataset='ssp3_cb513', from_embeddings=False),
+        'ssp3_ts115': partial(applications.SSP3, dataset='ssp3_ts115', from_embeddings=False),
+        "ssp8_casp12": partial(applications.SSP8, dataset="ssp8_casp12", from_embeddings=False),
+        "ssp8_casp14": partial(applications.SSP8, dataset="ssp8_casp14", from_embeddings=False),
+        "ssp8_cb513": partial(applications.SSP8, dataset="ssp8_cb513", from_embeddings=False),
+        "ssp8_ts115": partial(applications.SSP8, dataset="ssp8_ts115", from_embeddings=False),
+        "deeploc": partial(applications.DeepLoc, dataset="deeploc", from_embeddings=False),
+        "solubility": partial(applications.Solubility, from_embeddings=False),
+        "remote_homology": partial(applications.RemoteHomology, from_embeddings=False),
+        "fluorescence": partial(applications.Fluorescence, from_embeddings=False),
+    }
     task_type = [TaskType.TOKEN_CLS,
                  TaskType.TOKEN_CLS,
                  TaskType.TOKEN_CLS,
@@ -288,8 +288,8 @@ def available_tasks(pooling='max'):
                  TaskType.SEQ_CLS,
                  TaskType.SEQ_CLS,
                  TaskType.SEQ_CLS]
-    for task, task_type in zip(tasks, task_type):
-        yield task, task_type
+    for (task_name, task), task_type in zip(tasks.items(), task_type):
+        yield task_name, task, task_type
 
 
 
@@ -314,7 +314,7 @@ def main():
     ]
 
     for checkpoint in checkpoints:
-        for task, task_type in available_tasks():
+        for task_name, task, task_type in available_tasks():
             with torch.device('cuda:0'):
                 pretrained_model, tokenizer = get_pretrained_model_and_tokenizer(
                     checkpoint, initialize_with_lora=USE_LORA, task_type=task_type,
@@ -358,7 +358,7 @@ def main():
             print("Number of classes: ", num_classes)
 
             for i in range(NUM_TRIALS_PER_CHECKPOINT):
-                run_name = f"original-{checkpoint}-{task}-{i}"
+                run_name = f"original-{checkpoint}-{task_name}-{i}"
                 set_seed(SEED)
                 model = task.get_downstream_model(
                     pretrained_model, embedding_dim, pooling=POOLING if task.requires_pooling else None
