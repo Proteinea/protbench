@@ -245,8 +245,21 @@ def available_tasks(pooling='max'):
         "remote_homology": partial(applications.RemoteHomology, from_embeddings=False, task_type=TaskType.SEQ_CLS),
         "fluorescence": partial(applications.Fluorescence, from_embeddings=False, task_type=TaskType.SEQ_CLS),
     }
-    for task_name, task in tasks.items():
-        yield task_name, task
+    task_types = [TaskType.TOKEN_CLS,
+                  TaskType.TOKEN_CLS,
+                  TaskType.TOKEN_CLS,
+                  TaskType.TOKEN_CLS,
+                  TaskType.TOKEN_CLS,
+                  TaskType.TOKEN_CLS,
+                  TaskType.TOKEN_CLS,
+                  TaskType.TOKEN_CLS,
+                  TaskType.SEQ_CLS,
+                  TaskType.SEQ_CLS,
+                  TaskType.SEQ_CLS,
+                  TaskType.SEQ_CLS,
+                  ]
+    for (task_name, task), task_type in enumerate(tasks.items(), task_types):
+        yield task_name, task, task_type
 
 
 
@@ -270,10 +283,10 @@ def main():
     ]
 
     for checkpoint in checkpoints:
-        for task_name, task in available_tasks():
+        for task_name, task, task_type in available_tasks():
             with torch.device('cuda:0'):
                 pretrained_model, tokenizer = applications.models.ankh.initialize_model_from_checkpoint(
-                    checkpoint, initialize_with_lora=USE_LORA, task_type=task.task_type,
+                    checkpoint, initialize_with_lora=USE_LORA, task_type=task_type,
                 )
                 if GRADIENT_CHECKPOINTING:
                     pretrained_model.gradient_checkpointing_enable()
