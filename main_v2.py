@@ -258,7 +258,7 @@ def available_tasks(pooling='max'):
                   TaskType.SEQ_CLS,
                   TaskType.SEQ_CLS,
                   ]
-    for (task_name, task), task_type in enumerate(tasks.items(), task_types):
+    for (task_name, task), task_type in zip(tasks.items(), task_types):
         yield task_name, task, task_type
 
 
