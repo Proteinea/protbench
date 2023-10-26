@@ -1,15 +1,15 @@
-from protbench.applications.benchmarking_task import BenchmarkingTask
-from protbench.tasks import HuggingFaceSequenceToValue
-from protbench.utils import collate_inputs, collate_sequence_and_labels
 from protbench import metrics
-from protbench.models.heads import RegressionHead
-from protbench.models.downstream_models import DownstreamModelFromEmbedding
+from protbench.applications.benchmarking_task import BenchmarkingTask
 from protbench.models.downstream_models import (
+    DownstreamModelFromEmbedding,
     DownstreamModelWithPretrainedBackbone,
 )
+from protbench.models.heads import RegressionHead
+from protbench.tasks import HuggingFaceSequenceToValue
+from protbench.utils import collate_inputs, collate_sequence_and_labels
 
 
-def get_proteinea_fluorescence_dataset():
+def get_fluorescence_dataset():
     train_data = HuggingFaceSequenceToValue(
         dataset_url="proteinea/fluorosence",
         data_files=None,
@@ -27,34 +27,41 @@ def get_proteinea_fluorescence_dataset():
     return train_data, val_data
 
 
-supported_datasets = {"fluorescence": get_proteinea_fluorescence_dataset}
+supported_datasets = {"fluorescence": get_fluorescence_dataset}
 
 
-def get_metrics():
-    return lambda x: {
-        "spearman": metrics.compute_spearman(x),
+def compute_fluoresscence_metrics(p):
+    return {
+        "spearman": metrics.compute_spearman(p),
     }
 
 
 class Fluorescence(BenchmarkingTask):
-    def __init__(self, dataset="fluorescence", from_embeddings=False, tokenizer=None):
+    def __init__(
+        self,
+        dataset="fluorescence",
+        from_embeddings=False,
+        tokenizer=None,
+        task_type=None,
+    ):
         train_dataset, eval_dataset = supported_datasets[dataset]()
-        metrics_fn = get_metrics()
-        if not from_embeddings:
-            collate_fn = collate_sequence_and_labels(tokenizer=tokenizer)
-        else:
-            collate_fn = collate_inputs
+        collate_fn = (
+            collate_inputs
+            if from_embeddings
+            else collate_sequence_and_labels(tokenizer=tokenizer)
+        )
 
         super().__init__(
-            train_dataset,
-            eval_dataset,
-            None,
-            collate_fn,
-            metrics_fn,
-            "spearman",
-            from_embeddings,
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            preprocessing_fn=None,
+            collate_fn=collate_fn,
+            metrics_fn=compute_fluoresscence_metrics,
+            metric_for_best_model="spearman",
+            from_embeddings=from_embeddings,
             tokenizer=tokenizer,
             requires_pooling=True,
+            task_type=task_type,
         )
 
     def get_train_data(self):

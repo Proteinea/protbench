@@ -8,9 +8,12 @@ from protbench.models.downstream_models import (
 )  # noqa
 from sklearn.metrics import precision_recall_fscore_support
 from sklearn.metrics import accuracy_score
+from protbench.utils.preprocessing_utils import (
+    preprocess_multi_classification_logits,
+)
 
 
-def get_proteinea_deeploc_dataset():
+def get_deeploc_dataset():
     train_data = HuggingFaceSequenceToClass(
         dataset_url="proteinea/deeploc",
         seqs_col="input",
@@ -30,15 +33,15 @@ def get_proteinea_deeploc_dataset():
     return train_data, val_data
 
 
-supported_datasets = {"deeploc": get_proteinea_deeploc_dataset}
+supported_datasets = {"deeploc": get_deeploc_dataset}
 
 
 def compute_deep_localization_metrics(p):
     prfs = precision_recall_fscore_support(
-        p.label_ids, p.predictions.argmax(axis=1), average="macro"
+        p.label_ids, p.predictions, average="macro"
     )
     return {
-        "accuracy": accuracy_score(p.label_ids, p.predictions.argmax(axis=1)),
+        "accuracy": accuracy_score(p.label_ids, p.predictions),
         "precision": prfs[0],
         "recall": prfs[1],
         "f1": prfs[2],
@@ -46,24 +49,30 @@ def compute_deep_localization_metrics(p):
 
 
 class DeepLoc(BenchmarkingTask):
-    def __init__(self, dataset="deeploc", from_embeddings=False, tokenizer=None):
+    def __init__(
+        self,
+        dataset="deeploc",
+        from_embeddings=False,
+        tokenizer=None,
+        task_type=None,
+    ):
         train_dataset, eval_dataset = supported_datasets[dataset]()
-        metrics_fn = compute_deep_localization_metrics
-        if not from_embeddings:
-            collate_fn = collate_sequence_and_labels(tokenizer=tokenizer)
-        else:
-            collate_fn = collate_inputs
-
+        collate_fn = (
+            collate_inputs
+            if from_embeddings
+            else collate_sequence_and_labels(tokenizer=tokenizer)
+        )
         super().__init__(
-            train_dataset,
-            eval_dataset,
-            None,
-            collate_fn,
-            metrics_fn,
-            "eval_accuracy",
-            from_embeddings,
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            preprocessing_fn=preprocess_multi_classification_logits,
+            collate_fn=collate_fn,
+            metrics_fn=compute_deep_localization_metrics,
+            metric_for_best_model="eval_accuracy",
+            from_embeddings=from_embeddings,
             tokenizer=tokenizer,
             requires_pooling=True,
+            task_type=task_type,
         )
 
     def get_train_data(self):

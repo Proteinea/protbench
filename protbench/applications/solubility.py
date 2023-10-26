@@ -1,16 +1,19 @@
-from protbench.applications.benchmarking_task import BenchmarkingTask
-from protbench.tasks import HuggingFaceSequenceToClass
-from protbench.utils import preprocess_binary_classification_logits
-from protbench.utils import collate_inputs, collate_sequence_and_labels
 from protbench import metrics
-from protbench.models.heads import BinaryClassificationHead
-from protbench.models.downstream_models import DownstreamModelFromEmbedding
+from protbench.applications.benchmarking_task import BenchmarkingTask
 from protbench.models.downstream_models import (
+    DownstreamModelFromEmbedding,
     DownstreamModelWithPretrainedBackbone,
+)
+from protbench.models.heads import BinaryClassificationHead
+from protbench.tasks import HuggingFaceSequenceToClass
+from protbench.utils import (
+    collate_inputs,
+    collate_sequence_and_labels,
+    preprocess_binary_classification_logits,
 )
 
 
-def get_proteinea_solubility_dataset():
+def get_solubility_dataset():
     train_data = HuggingFaceSequenceToClass(
         dataset_url="proteinea/solubility",
         data_files=None,
@@ -29,39 +32,43 @@ def get_proteinea_solubility_dataset():
     return train_data, test_data
 
 
-supported_datasets = {"solubility": get_proteinea_solubility_dataset}
+supported_datasets = {"solubility": get_solubility_dataset}
 
 
-def get_metrics():
-    return lambda x: {
-        "accuracy": metrics.compute_accuracy(x),
-        "precision": metrics.compute_precision(x, average="binary"),
-        "recall": metrics.compute_recall(x, average="binary"),
-        "f1": metrics.compute_f1(x, average="binary"),
+def compute_solubility_metrics(p):
+    return {
+        "accuracy": metrics.compute_accuracy(p),
+        "precision": metrics.compute_precision(p, average="binary"),
+        "recall": metrics.compute_recall(p, average="binary"),
+        "f1": metrics.compute_f1(p, average="binary"),
     }
 
 
 class Solubility(BenchmarkingTask):
-    def __init__(self, dataset="solubility", from_embeddings=False, tokenizer=None):
+    def __init__(
+        self,
+        dataset="solubility",
+        from_embeddings=False,
+        tokenizer=None,
+        task_type=None,
+    ):
         train_dataset, eval_dataset = supported_datasets[dataset]()
-        metrics_fn = get_metrics()
-        if not from_embeddings:
-            collate_fn = collate_sequence_and_labels(tokenizer=tokenizer)
-        else:
-            collate_fn = collate_inputs
-
-        self.requires_pooling = True
-
+        collate_fn = (
+            collate_inputs
+            if from_embeddings
+            else collate_sequence_and_labels(tokenizer=tokenizer)
+        )
         super().__init__(
-            train_dataset,
-            eval_dataset,
-            preprocess_binary_classification_logits,
-            collate_fn,
-            metrics_fn,
-            "accuracy",
-            from_embeddings,
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            preprocessing_fn=preprocess_binary_classification_logits,
+            collate_fn=collate_fn,
+            metrics_fn=compute_solubility_metrics,
+            metric_for_best_model="accuracy",
+            from_embeddings=from_embeddings,
             tokenizer=tokenizer,
             requires_pooling=True,
+            task_type=task_type,
         )
 
     def get_train_data(self):

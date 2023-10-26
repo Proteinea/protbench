@@ -1,12 +1,12 @@
 from protbench.models.convbert import ConvBert
-from protbench.models.downstream_models import DownstreamModelFromEmbedding
 from protbench.models.downstream_models import (
+    DownstreamModelFromEmbedding,
     DownstreamModelWithPretrainedBackbone,
 )
 
 
 def initialize_convbert_model_from_embedding_with_default_hyperparameters(
-    embedding_dim, head, pooling='max'
+    embedding_dim, head, pooling="max"
 ):
     downstream_model = ConvBert(
         input_dim=embedding_dim,
@@ -23,7 +23,9 @@ def initialize_convbert_model_from_embedding_with_default_hyperparameters(
     return model
 
 
-def initialize_convbert_model_with_default_hyperparameters(embedding_dim, head, pooling='max'):
+def initialize_convbert_model_with_default_hyperparameters(
+    embedding_dim, head, pooling="max"
+):
     downstream_model = ConvBert(
         input_dim=embedding_dim,
         nhead=4,
@@ -38,4 +40,3 @@ def initialize_convbert_model_with_default_hyperparameters(embedding_dim, head, 
         downstream_backbone=downstream_model, head=head
     )
     return model
-

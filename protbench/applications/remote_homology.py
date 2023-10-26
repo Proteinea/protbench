@@ -1,19 +1,23 @@
-from protbench.applications.benchmarking_task import BenchmarkingTask
-from protbench.tasks import HuggingFaceSequenceToClass
-from protbench.utils import collate_inputs, collate_sequence_and_labels
-from protbench.models.heads import MultiClassClassificationHead
-from protbench.models.downstream_models import DownstreamModelFromEmbedding
-from protbench.models.downstream_models import (
-    DownstreamModelWithPretrainedBackbone,
-)
-from sklearn.metrics import precision_recall_fscore_support
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import top_k_accuracy_score
-import numpy as np
 from functools import partial
 
+import numpy as np
+from sklearn.metrics import (
+    accuracy_score,
+    precision_recall_fscore_support,
+    top_k_accuracy_score,
+)
 
-def get_proteinea_remote_homology_dataset():
+from protbench.applications.benchmarking_task import BenchmarkingTask
+from protbench.models.downstream_models import (
+    DownstreamModelFromEmbedding,
+    DownstreamModelWithPretrainedBackbone,
+)
+from protbench.models.heads import MultiClassClassificationHead
+from protbench.tasks import HuggingFaceSequenceToClass
+from protbench.utils import collate_inputs, collate_sequence_and_labels
+
+
+def get_remote_homology_dataset():
     train_data = HuggingFaceSequenceToClass(
         dataset_url="proteinea/remote_homology",
         seqs_col="primary",
@@ -33,7 +37,7 @@ def get_proteinea_remote_homology_dataset():
     return train_data, val_data
 
 
-supported_datasets = {"remote_homology": get_proteinea_remote_homology_dataset}
+supported_datasets = {"remote_homology": get_remote_homology_dataset}
 
 
 def compute_remote_homology_metrics(p, num_classes):
@@ -53,27 +57,33 @@ def compute_remote_homology_metrics(p, num_classes):
 
 
 class RemoteHomology(BenchmarkingTask):
-    def __init__(self, dataset="remote_homology", from_embeddings=False, tokenizer=None):
+    def __init__(
+        self,
+        dataset="remote_homology",
+        from_embeddings=False,
+        tokenizer=None,
+        task_type=None,
+    ):
         train_dataset, eval_dataset = supported_datasets[dataset]()
-        metrics_fn = partial(compute_remote_homology_metrics,
-                             num_classes=self.train_dataset.num_classes)
-        if not from_embeddings:
-            collate_fn = collate_sequence_and_labels(tokenizer=tokenizer)
-        else:
-            collate_fn = collate_inputs
-
-        self.requires_pooling = True
-
+        collate_fn = (
+            collate_inputs
+            if from_embeddings
+            else collate_sequence_and_labels(tokenizer=tokenizer)
+        )
         super().__init__(
-            train_dataset,
-            eval_dataset,
-            None,
-            collate_fn,
-            metrics_fn,
-            "eval_hits10",
-            from_embeddings,
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            preprocessing_fn=None,
+            collate_fn=collate_fn,
+            metrics_fn=partial(
+                compute_remote_homology_metrics,
+                num_classes=self.get_num_classes(),
+            ),
+            metric_for_best_model="eval_hits10",
+            from_embeddings=from_embeddings,
             tokenizer=tokenizer,
             requires_pooling=True,
+            task_type=task_type,
         )
 
     def get_train_data(self):

@@ -1,15 +1,18 @@
+from protbench import metrics
 from protbench.applications.benchmarking_task import BenchmarkingTask
-from protbench.models.downstream_models import DownstreamModelFromEmbedding
 from protbench.models.downstream_models import (
+    DownstreamModelFromEmbedding,
     DownstreamModelWithPretrainedBackbone,
 )
 from protbench.models.heads import TokenClassificationHead
 from protbench.tasks import HuggingFaceResidueToClass
+from protbench.utils import (
+    collate_inputs_and_labels,
+    collate_sequence_and_align_labels,
+)
 from protbench.utils.preprocessing_utils import (
     preprocess_multi_classification_logits,
 )
-from protbench import metrics
-from protbench.utils import collate_inputs_and_labels, collate_sequence_and_align_labels
 
 
 def preprocess_ssp_rows(seq, label, mask):
@@ -17,7 +20,7 @@ def preprocess_ssp_rows(seq, label, mask):
     return seq, label, mask
 
 
-def get_ssp8_casp12():
+def get_ssp8_casp12_dataset():
     train_data = HuggingFaceResidueToClass(
         dataset_url="proteinea/secondary_structure_prediction",
         data_files="training_hhblits.csv",
@@ -41,7 +44,7 @@ def get_ssp8_casp12():
     return train_data, val_data
 
 
-def get_ssp8_casp14():
+def get_ssp8_casp14_dataset():
     train_data = HuggingFaceResidueToClass(
         dataset_url="proteinea/secondary_structure_prediction",
         data_files="training_hhblits.csv",
@@ -65,7 +68,7 @@ def get_ssp8_casp14():
     return train_data, val_data
 
 
-def get_ssp8_cb513():
+def get_ssp8_cb513_dataset():
     train_data = HuggingFaceResidueToClass(
         dataset_url="proteinea/secondary_structure_prediction",
         data_files="training_hhblits.csv",
@@ -88,7 +91,7 @@ def get_ssp8_cb513():
     return train_data, val_data
 
 
-def get_ssp8_ts115():
+def get_ssp8_ts115_dataset():
     train_data = HuggingFaceResidueToClass(
         dataset_url="proteinea/secondary_structure_prediction",
         data_files="training_hhblits.csv",
@@ -111,43 +114,44 @@ def get_ssp8_ts115():
     return train_data, val_data
 
 
-available_datasets = {
-    "ssp8_casp12": get_ssp8_casp12,
-    "ssp8_casp14": get_ssp8_casp14,
-    "ssp8_ts115": get_ssp8_ts115,
-    "ssp8_cb513": get_ssp8_cb513,
+supported_datasets = {
+    "ssp8_casp12": get_ssp8_casp12_dataset,
+    "ssp8_casp14": get_ssp8_casp14_dataset,
+    "ssp8_ts115": get_ssp8_ts115_dataset,
+    "ssp8_cb513": get_ssp8_cb513_dataset,
 }
 
 
-def get_metrics_function():
-    return lambda x: {
-        "accuracy": metrics.compute_accuracy(x),
-        "precision": metrics.compute_precision(x, average="macro"),
-        "recall": metrics.compute_recall(x, average="macro"),
-        "f1": metrics.compute_f1(x, average="macro"),
+def compute_secondary_structure_metrics(p):
+    return {
+        "accuracy": metrics.compute_accuracy(p),
+        "precision": metrics.compute_precision(p, average="macro"),
+        "recall": metrics.compute_recall(p, average="macro"),
+        "f1": metrics.compute_f1(p, average="macro"),
     }
 
 
 class SSP8(BenchmarkingTask):
-    def __init__(self, dataset, from_embeddings=False, tokenizer=None):
-        train_dataset, eval_dataset = available_datasets[dataset]()
-        metrics_fn = get_metrics_function()
-
-        if from_embeddings:
-            collate_fn = collate_inputs_and_labels
-        else:
-            collate_fn = collate_sequence_and_align_labels(tokenizer)
-
+    def __init__(
+        self, dataset, from_embeddings=False, tokenizer=None, task_type=None
+    ):
+        train_dataset, eval_dataset = supported_datasets[dataset]()
+        collate_fn = (
+            collate_inputs_and_labels
+            if from_embeddings
+            else collate_sequence_and_align_labels(tokenizer)
+        )
         super().__init__(
-            train_dataset,
-            eval_dataset,
-            preprocess_multi_classification_logits,
-            collate_fn,
-            metrics_fn,
-            "accuracy",
-            from_embeddings,
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            preprocessing_fn=preprocess_multi_classification_logits,
+            collate_fn=collate_fn,
+            metrics_fn=compute_secondary_structure_metrics,
+            metric_for_best_model="accuracy",
+            from_embeddings=from_embeddings,
             tokenizer=tokenizer,
             requires_pooling=False,
+            task_type=task_type,
         )
 
     def get_train_data(self):
@@ -156,7 +160,9 @@ class SSP8(BenchmarkingTask):
     def get_eval_data(self):
         return self.eval_dataset.data[0], self.eval_dataset.data[1]
 
-    def get_downstream_model(self, backbone_model, embedding_dim, pooling=None):
+    def get_downstream_model(
+        self, backbone_model, embedding_dim, pooling=None
+    ):
         head = TokenClassificationHead(
             input_dim=embedding_dim, output_dim=self.get_num_classes()
         )
@@ -165,3 +171,11 @@ class SSP8(BenchmarkingTask):
         else:
             model = DownstreamModelWithPretrainedBackbone(backbone_model, head)
         return model
+
+    def initialize_metrics(self):
+        return lambda x: {
+            "accuracy": metrics.compute_accuracy(x),
+            "precision": metrics.compute_precision(x, average="macro"),
+            "recall": metrics.compute_recall(x, average="macro"),
+            "f1": metrics.compute_f1(x, average="macro"),
+        }

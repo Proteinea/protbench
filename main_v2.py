@@ -21,15 +21,10 @@ import torch
 import numpy as np
 import random
 from transformers import (
-    T5EncoderModel,
-    T5ForConditionalGeneration,
-    AutoTokenizer,
     Trainer,
     TrainingArguments,
 )
-
-from peft import get_peft_model, LoraConfig, TaskType
-
+from peft import TaskType
 from protbench.utils import SequenceAndLabelsDataset, EmbeddingsDataset, EmbeddingsDatasetFromDisk # noqa
 
 from scipy.spatial.distance import pdist, squareform
@@ -76,32 +71,6 @@ def get_data(task_name, max_seqs=None):
         val_data.data[1][:max_seqs],
         getattr(train_data, "num_classes", None),
     )
-
-
-def get_pretrained_model_and_tokenizer(model_name, initialize_with_lora=False, task_type=None):
-    model_url_map = {
-        "ankh-base": "ElnaggarLab/ankh-base",
-        "ankh-large": "ElnaggarLab/ankh-large",
-        "ankh-v2-23": "proteinea-ea/ankh-v2-large-23epochs-a3ee1d6115a726fe83f96d96f76489ff2788143c",
-        "ankh-v2-32": "proteinea-ea/ankh-v2-large-32epochs-f60c3a7c8e07fe26bdba04670ab1997f4b679969",
-        "ankh-v2-33": "proteinea-ea/ankh-v2-large-33epochs-218254e2e0546838d1427f7f6c32c0cb4664da72",
-        "ankh-v2-41": "proteinea-ea/ankh-v2-large-41epochs-e4a2c3615ff005e5e7b5bbd33ec0654106b64f1a",
-        "ankh-v2-45": "proteinea-ea/ankh-v2-large-45epochs-62fe367d20d957efdf6e8afe6ae1c724f5bc6775",
-    }
-    tokenizer = AutoTokenizer.from_pretrained(model_url_map[model_name])
-    if initialize_with_lora:
-        model = T5ForConditionalGeneration.from_pretrained(model_url_map[model_name])
-        peft_config = LoraConfig(task_type=task_type,
-                                 inference_mode=False,
-                                 r=16,
-                                 lora_alpha=16,
-                                 lora_dropout=0.1,
-                                 bias="none")
-        model = get_peft_model(model, peft_config).encoder
-    else:
-        model = T5EncoderModel.from_pretrained(model_url_map[model_name])
-
-    return model, tokenizer
 
 
 def embeddings_postprocessing_fn(model_outputs):
@@ -263,33 +232,21 @@ def set_seed(seed):
 
 def available_tasks(pooling='max'):
     tasks = {
-        'ssp3_casp12': partial(applications.SSP3, dataset='ssp3_casp12', from_embeddings=False),
-        'ssp3_casp14': partial(applications.SSP3, dataset='ssp3_casp14', from_embeddings=False),
-        'ssp3_cb513': partial(applications.SSP3, dataset='ssp3_cb513', from_embeddings=False),
-        'ssp3_ts115': partial(applications.SSP3, dataset='ssp3_ts115', from_embeddings=False),
-        "ssp8_casp12": partial(applications.SSP8, dataset="ssp8_casp12", from_embeddings=False),
-        "ssp8_casp14": partial(applications.SSP8, dataset="ssp8_casp14", from_embeddings=False),
-        "ssp8_cb513": partial(applications.SSP8, dataset="ssp8_cb513", from_embeddings=False),
-        "ssp8_ts115": partial(applications.SSP8, dataset="ssp8_ts115", from_embeddings=False),
-        "deeploc": partial(applications.DeepLoc, dataset="deeploc", from_embeddings=False),
-        "solubility": partial(applications.Solubility, from_embeddings=False),
-        "remote_homology": partial(applications.RemoteHomology, from_embeddings=False),
-        "fluorescence": partial(applications.Fluorescence, from_embeddings=False),
+        'ssp3_casp12': partial(applications.SSP3, dataset='ssp3_casp12', from_embeddings=False, task_type=TaskType.TOKEN_CLS),
+        'ssp3_casp14': partial(applications.SSP3, dataset='ssp3_casp14', from_embeddings=False, task_type=TaskType.TOKEN_CLS),
+        'ssp3_cb513': partial(applications.SSP3, dataset='ssp3_cb513', from_embeddings=False, task_type=TaskType.TOKEN_CLS),
+        'ssp3_ts115': partial(applications.SSP3, dataset='ssp3_ts115', from_embeddings=False, task_type=TaskType.TOKEN_CLS),
+        "ssp8_casp12": partial(applications.SSP8, dataset="ssp8_casp12", from_embeddings=False, task_type=TaskType.TOKEN_CLS),
+        "ssp8_casp14": partial(applications.SSP8, dataset="ssp8_casp14", from_embeddings=False, task_type=TaskType.TOKEN_CLS),
+        "ssp8_cb513": partial(applications.SSP8, dataset="ssp8_cb513", from_embeddings=False, task_type=TaskType.TOKEN_CLS),
+        "ssp8_ts115": partial(applications.SSP8, dataset="ssp8_ts115", from_embeddings=False, task_type=TaskType.TOKEN_CLS),
+        "deeploc": partial(applications.DeepLoc, dataset="deeploc", from_embeddings=False, task_type=TaskType.SEQ_CLS),
+        "solubility": partial(applications.Solubility, from_embeddings=False, task_type=TaskType.SEQ_CLS),
+        "remote_homology": partial(applications.RemoteHomology, from_embeddings=False, task_type=TaskType.SEQ_CLS),
+        "fluorescence": partial(applications.Fluorescence, from_embeddings=False, task_type=TaskType.SEQ_CLS),
     }
-    task_type = [TaskType.TOKEN_CLS,
-                 TaskType.TOKEN_CLS,
-                 TaskType.TOKEN_CLS,
-                 TaskType.TOKEN_CLS,
-                 TaskType.TOKEN_CLS,
-                 TaskType.TOKEN_CLS,
-                 TaskType.TOKEN_CLS,
-                 TaskType.TOKEN_CLS,
-                 TaskType.SEQ_CLS,
-                 TaskType.SEQ_CLS,
-                 TaskType.SEQ_CLS,
-                 TaskType.SEQ_CLS]
-    for (task_name, task), task_type in zip(tasks.items(), task_type):
-        yield task_name, task, task_type
+    for task_name, task in tasks.items():
+        yield task_name, task
 
 
 
@@ -300,8 +257,7 @@ def main():
     LOW_MEMORY = True
     POOLING = 'max'
     USE_LORA = True
-
-
+    GRADIENT_CHECKPOINTING = True
 
     checkpoints = [
         "ankh-base",
@@ -314,12 +270,17 @@ def main():
     ]
 
     for checkpoint in checkpoints:
-        for task_name, task, task_type in available_tasks():
+        for task_name, task in available_tasks():
             with torch.device('cuda:0'):
-                pretrained_model, tokenizer = get_pretrained_model_and_tokenizer(
-                    checkpoint, initialize_with_lora=USE_LORA, task_type=task_type,
+                pretrained_model, tokenizer = applications.models.ankh.initialize_model_from_checkpoint(
+                    checkpoint, initialize_with_lora=USE_LORA, task_type=task.task_type,
                 )
+                if GRADIENT_CHECKPOINTING:
+                    pretrained_model.gradient_checkpointing_enable()
                 embedding_dim = pretrained_model.config.d_model
+                tokenizer = partial(tokenizer, add_special_tokens=True,
+                                    padding='longest',
+                                    return_tensors="pt")
 
             task = task(tokenizer=tokenizer)
             task: applications.BenchmarkingTask

@@ -1,15 +1,18 @@
+from protbench import metrics
 from protbench.applications.benchmarking_task import BenchmarkingTask
-from protbench.models.downstream_models import DownstreamModelFromEmbedding
 from protbench.models.downstream_models import (
+    DownstreamModelFromEmbedding,
     DownstreamModelWithPretrainedBackbone,
 )
 from protbench.models.heads import TokenClassificationHead
 from protbench.tasks import HuggingFaceResidueToClass
+from protbench.utils import (
+    collate_inputs_and_labels,
+    collate_sequence_and_align_labels,
+)
 from protbench.utils.preprocessing_utils import (
     preprocess_multi_classification_logits,
 )
-from protbench import metrics
-from protbench.utils import collate_inputs_and_labels, collate_sequence_and_align_labels
 
 
 def preprocess_ssp_rows(seq, label, mask):
@@ -17,7 +20,7 @@ def preprocess_ssp_rows(seq, label, mask):
     return seq, label, mask
 
 
-def get_ssp3_casp12():
+def get_ssp3_casp12_dataset():
     train_data = HuggingFaceResidueToClass(
         dataset_url="proteinea/secondary_structure_prediction",
         data_files="training_hhblits.csv",
@@ -41,7 +44,7 @@ def get_ssp3_casp12():
     return train_data, val_data
 
 
-def get_ssp3_casp14():
+def get_ssp3_casp14_dataset():
     train_data = HuggingFaceResidueToClass(
         dataset_url="proteinea/secondary_structure_prediction",
         data_files="training_hhblits.csv",
@@ -65,7 +68,7 @@ def get_ssp3_casp14():
     return train_data, val_data
 
 
-def get_ssp3_cb513():
+def get_ssp3_cb513_dataset():
     train_data = HuggingFaceResidueToClass(
         dataset_url="proteinea/secondary_structure_prediction",
         data_files="training_hhblits.csv",
@@ -88,7 +91,7 @@ def get_ssp3_cb513():
     return train_data, val_data
 
 
-def get_ssp3_ts115():
+def get_ssp3_ts115_dataset():
     train_data = HuggingFaceResidueToClass(
         dataset_url="proteinea/secondary_structure_prediction",
         data_files="training_hhblits.csv",
@@ -111,46 +114,44 @@ def get_ssp3_ts115():
     return train_data, val_data
 
 
-available_datasets = {
-    "ssp3_casp12": get_ssp3_casp12,
-    "ssp3_casp14": get_ssp3_casp14,
-    "ssp3_ts115": get_ssp3_ts115,
-    "ssp3_cb513": get_ssp3_cb513,
+supported_datasets = {
+    "ssp3_casp12": get_ssp3_casp12_dataset,
+    "ssp3_casp14": get_ssp3_casp14_dataset,
+    "ssp3_ts115": get_ssp3_ts115_dataset,
+    "ssp3_cb513": get_ssp3_cb513_dataset,
 }
 
 
-def get_metrics_function():
-    return lambda x: {
-        "accuracy": metrics.compute_accuracy(x),
-        "precision": metrics.compute_precision(x, average="macro"),
-        "recall": metrics.compute_recall(x, average="macro"),
-        "f1": metrics.compute_f1(x, average="macro"),
+def compute_secondary_structure_metrics(p):
+    return {
+        "accuracy": metrics.compute_accuracy(p),
+        "precision": metrics.compute_precision(p, average="macro"),
+        "recall": metrics.compute_recall(p, average="macro"),
+        "f1": metrics.compute_f1(p, average="macro"),
     }
 
 
 class SSP3(BenchmarkingTask):
-    def __init__(self, dataset, from_embeddings=False, tokenizer=None):
-        train_dataset, eval_dataset = available_datasets[dataset]()
-        metrics_fn = get_metrics_function()
-        if not from_embeddings and tokenizer is None:
-            raise ValueError('Expected a `tokenizer`  when `from_embeddings` '
-                             f'is set to `False`. Received: {tokenizer}.')
-
-        if not from_embeddings:
-            collate_fn = collate_sequence_and_align_labels(tokenizer)
-        else:
-            collate_fn = collate_inputs_and_labels
-
+    def __init__(
+        self, dataset, from_embeddings=False, tokenizer=None, task_type=None
+    ):
+        train_dataset, eval_dataset = supported_datasets[dataset]()
+        collate_fn = (
+            collate_inputs_and_labels
+            if from_embeddings
+            else collate_sequence_and_align_labels(tokenizer)
+        )
         super().__init__(
-            train_dataset,
-            eval_dataset,
-            preprocess_multi_classification_logits,
-            collate_fn,
-            metrics_fn,
-            "accuracy",
-            from_embeddings,
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            preprocessing_fn=preprocess_multi_classification_logits,
+            collate_fn=collate_fn,
+            metrics_fn=compute_secondary_structure_metrics,
+            metric_for_best_model="accuracy",
+            from_embeddings=from_embeddings,
             tokenizer=tokenizer,
             requires_pooling=False,
+            task_type=task_type,
         )
 
     def get_train_data(self):

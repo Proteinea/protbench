@@ -4,6 +4,12 @@ import torch
 from transformers import AutoTokenizer
 
 
+def to_torch_tensor(x, dtype=None, device=None):
+    if not isinstance(x, torch.Tensor):
+        x = torch.tensor(x, dtype=dtype, device=device)
+    return x
+
+
 def collate_inputs(
     features: List[Dict[str, torch.Tensor]], padding_value: int = 0
 ) -> Dict[str, torch.Tensor]:
@@ -53,31 +59,32 @@ def collate_inputs_and_labels(
     return {"embds": embds, "labels": labels}
 
 
-def collate_sequence_and_align_labels(tokenizer: AutoTokenizer, ignore_index=-100) -> Callable:
+
+def collate_sequence_and_align_labels(tokenizer: Callable, ignore_index: int = -100) -> Callable:
     def _collate_sequence_and_align_labels(batch: List[Dict]) -> Dict:
         sequences = [example["sequences"] for example in batch]
         labels = [example["labels"] for example in batch]
+        sequences_encoded = tokenizer(sequences)
+        labels = to_torch_tensor(labels)
 
-        sequences_encoded = tokenizer(sequences, add_special_tokens=True,
-                                      padding='longest', return_tensors="pt")
-        labels = torch.tensor(labels)
-        if labels.shape[-1] < sequences_encoded['input_ids'].shape[-1]:
-            diff = sequences_encoded['input_ids'].shape[-1] - labels.shape[-1]
-            padding_tokens = torch.tensor([[-100] * diff] * sequences_encoded['input_ids'].shape[0])
+        batch_size, inputs_sequence_length = sequences_encoded['input_ids'].shape
+        labels_sequence_length = labels.shape[-1]
+        if labels_sequence_length < inputs_sequence_length:
+            length_difference = inputs_sequence_length - labels_sequence_length
+            padding_tokens = torch.tensor([[ignore_index] * length_difference] * batch_size)
             labels = torch.cat((labels, padding_tokens), dim=1)
         sequences_encoded['labels'] = labels
         return sequences_encoded
     return _collate_sequence_and_align_labels
 
 
-def collate_sequence_and_labels(tokenizer: AutoTokenizer) -> Callable:
+def collate_sequence_and_labels(tokenizer: Callable) -> Callable:
     def _collate_sequence_and_labels(batch: List[Dict]) -> Dict:
         sequences = [example["sequences"] for example in batch]
         labels = [example["labels"] for example in batch]
 
-        sequences_encoded = tokenizer(sequences, add_special_tokens=True,
-                                      padding='longest', return_tensors="pt")
-        labels = torch.tensor(labels)
+        sequences_encoded = tokenizer(sequences)
+        labels = to_torch_tensor(labels)
         sequences_encoded['labels'] = labels
         return sequences_encoded
     return _collate_sequence_and_labels
