@@ -50,8 +50,7 @@ def generate_config() -> Dict:
                   "solubility",
                   "remote_homology",
                   "fluorescence"],
-        'convbert_config':
-        {
+        'convbert_config': {
             'nhead': 4,
             'hidden_dim': 768,
             'num_layers': 1,
@@ -71,7 +70,6 @@ def save_yaml(config: Dict):
         os.mkdir('config')
 
     with open('config/config.yaml', 'w') as f:
-        yaml.dump(config, f, yaml.SafeDumper)
         yaml.dump(config, f)
 
 
