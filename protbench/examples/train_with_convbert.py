@@ -325,7 +325,7 @@ def main(config_args: omegaconf.DictConfig):
         os.environ[env_variable] = value
     LOW_MEMORY = True
 
-    for checkpoint in config_args.checkpoints:
+    for checkpoint in config_args.model_checkpoints:
         for task_name, task, task_type in available_tasks(
             tasks_to_run=config_args.tasks
         ):

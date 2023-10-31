@@ -34,9 +34,6 @@ import omegaconf
 from typing import List, Optional
 
 
-os.environ["WANDB_PROJECT"] = "AnkhV2-LoRA"
-
-
 def preprocess_contact_prediction_labels(seq, label, mask):
     contact_map = np.less(squareform(pdist(label)), 8.0).astype(np.int64)
     yind, xind = np.indices(contact_map.shape)
@@ -324,9 +321,11 @@ def available_tasks(tasks_to_run: Optional[List] = None):
 
 @hydra.main(config_name="config", config_path="config", version_base=None)
 def main(config_args: omegaconf.DictConfig):
+    for env_variable, value in config_args.env_variables.items():
+        os.environ[env_variable] = value
     LOW_MEMORY = True
 
-    for checkpoint in config_args.checkpoints:
+    for checkpoint in config_args.model_checkpoints:
         for task_name, task, task_type in available_tasks(
             tasks_to_run=config_args.tasks
         ):
