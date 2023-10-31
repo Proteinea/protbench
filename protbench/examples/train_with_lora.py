@@ -336,7 +336,7 @@ def main(config_args: omegaconf.DictConfig):
                 ) = applications.models.ankh.initialize_model_from_checkpoint(
                     checkpoint,
                     initialize_with_lora=config_args.model_with_lora_config.use_lora, # noqa
-                    task_type=task_type,
+                    lora_task_type=task_type,
                     lora_r=config_args.model_with_lora_config.lora_r,
                     lora_alpha=config_args.model_with_lora_config.lora_alpha,
                     lora_dropout=config_args.model_with_lora_config.lora_dropout, # noqa
