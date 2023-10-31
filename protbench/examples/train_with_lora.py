@@ -32,6 +32,7 @@ from scipy.spatial.distance import pdist, squareform
 import hydra
 import omegaconf
 from typing import List, Optional
+import gc
 
 
 def preprocess_contact_prediction_labels(seq, label, mask):
@@ -221,54 +222,54 @@ def set_seed(seed):
 
 def available_tasks(tasks_to_run: Optional[List] = None):
     tasks = {
-        "ssp3_casp12": partial(
-            applications.SSP3,
-            dataset="ssp3_casp12",
-            from_embeddings=False,
-            task_type=TaskType.TOKEN_CLS,
-        ),
-        "ssp3_casp14": partial(
-            applications.SSP3,
-            dataset="ssp3_casp14",
-            from_embeddings=False,
-            task_type=TaskType.TOKEN_CLS,
-        ),
-        "ssp3_cb513": partial(
-            applications.SSP3,
-            dataset="ssp3_cb513",
-            from_embeddings=False,
-            task_type=TaskType.TOKEN_CLS,
-        ),
-        "ssp3_ts115": partial(
-            applications.SSP3,
-            dataset="ssp3_ts115",
-            from_embeddings=False,
-            task_type=TaskType.TOKEN_CLS,
-        ),
-        "ssp8_casp12": partial(
-            applications.SSP8,
-            dataset="ssp8_casp12",
-            from_embeddings=False,
-            task_type=TaskType.TOKEN_CLS,
-        ),
-        "ssp8_casp14": partial(
-            applications.SSP8,
-            dataset="ssp8_casp14",
-            from_embeddings=False,
-            task_type=TaskType.TOKEN_CLS,
-        ),
-        "ssp8_cb513": partial(
-            applications.SSP8,
-            dataset="ssp8_cb513",
-            from_embeddings=False,
-            task_type=TaskType.TOKEN_CLS,
-        ),
-        "ssp8_ts115": partial(
-            applications.SSP8,
-            dataset="ssp8_ts115",
-            from_embeddings=False,
-            task_type=TaskType.TOKEN_CLS,
-        ),
+        # "ssp3_casp12": partial(
+        #     applications.SSP3,
+        #     dataset="ssp3_casp12",
+        #     from_embeddings=False,
+        #     task_type=TaskType.TOKEN_CLS,
+        # ),
+        # "ssp3_casp14": partial(
+        #     applications.SSP3,
+        #     dataset="ssp3_casp14",
+        #     from_embeddings=False,
+        #     task_type=TaskType.TOKEN_CLS,
+        # ),
+        # "ssp3_cb513": partial(
+        #     applications.SSP3,
+        #     dataset="ssp3_cb513",
+        #     from_embeddings=False,
+        #     task_type=TaskType.TOKEN_CLS,
+        # ),
+        # "ssp3_ts115": partial(
+        #     applications.SSP3,
+        #     dataset="ssp3_ts115",
+        #     from_embeddings=False,
+        #     task_type=TaskType.TOKEN_CLS,
+        # ),
+        # "ssp8_casp12": partial(
+        #     applications.SSP8,
+        #     dataset="ssp8_casp12",
+        #     from_embeddings=False,
+        #     task_type=TaskType.TOKEN_CLS,
+        # ),
+        # "ssp8_casp14": partial(
+        #     applications.SSP8,
+        #     dataset="ssp8_casp14",
+        #     from_embeddings=False,
+        #     task_type=TaskType.TOKEN_CLS,
+        # ),
+        # "ssp8_cb513": partial(
+        #     applications.SSP8,
+        #     dataset="ssp8_cb513",
+        #     from_embeddings=False,
+        #     task_type=TaskType.TOKEN_CLS,
+        # ),
+        # "ssp8_ts115": partial(
+        #     applications.SSP8,
+        #     dataset="ssp8_ts115",
+        #     from_embeddings=False,
+        #     task_type=TaskType.TOKEN_CLS,
+        # ),
         "deeploc": partial(
             applications.DeepLoc,
             dataset="deeploc",
@@ -442,6 +443,9 @@ def main(config_args: omegaconf.DictConfig):
                 )
                 trainer.train()
                 wandb.finish()
+                gc.collect()
+                torch.cuda.empty_cache()
+                
 
 
 if __name__ == "__main__":
