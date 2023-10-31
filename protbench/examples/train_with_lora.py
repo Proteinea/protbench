@@ -372,7 +372,7 @@ def main(config_args: omegaconf.DictConfig):
             collate_fn = task.collate_fn
             logits_preprocessing_fn = task.preprocessing_fn
 
-            if not LOW_MEMORY and task.from_embeddings:
+            if not config_args.train_config.low_memory and task.from_embeddings:
                 train_dataset = EmbeddingsDataset(train_embds, train_labels)
                 val_dataset = EmbeddingsDataset(val_embds, val_labels)
             elif task.from_embeddings:
