@@ -335,12 +335,7 @@ def main(config_args: omegaconf.DictConfig):
                     tokenizer,
                 ) = applications.models.ankh.initialize_model_from_checkpoint(
                     checkpoint,
-                    initialize_with_lora=config_args.model_config.use_lora,
-                    task_type=task_type,
-                    lora_r=config_args.model_config.lora_r,
-                    lora_alpha=config_args.model_config.lora_alpha,
-                    lora_dropout=config_args.model_config.lora_dropout,
-                    lora_bias=config_args.model_config.lora_bias,
+                    initialize_with_lora=False
                 )
                 if config_args.train_config.gradient_checkpointing:
                     pretrained_model.gradient_checkpointing_enable()
