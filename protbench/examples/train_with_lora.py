@@ -222,17 +222,22 @@ def set_seed(seed):
 
 def available_tasks(tasks_to_run: Optional[List] = None):
     tasks = {
+        "solubility": partial(
+            applications.Solubility,
+            from_embeddings=False,
+            task_type=TaskType.SEQ_CLS,
+        ),
         "deeploc": partial(
             applications.DeepLoc,
             dataset="deeploc",
             from_embeddings=False,
             task_type=TaskType.SEQ_CLS,
         ),
-        "solubility": partial(
-            applications.Solubility,
-            from_embeddings=False,
-            task_type=TaskType.SEQ_CLS,
-        ),
+        # "solubility": partial(
+        #     applications.Solubility,
+        #     from_embeddings=False,
+        #     task_type=TaskType.SEQ_CLS,
+        # ),
         "remote_homology": partial(
             applications.RemoteHomology,
             from_embeddings=False,
@@ -443,6 +448,7 @@ def main(config_args: omegaconf.DictConfig):
                 )
                 trainer.train()
                 wandb.finish()
+                del pretrained_model
                 gc.collect()
                 torch.cuda.empty_cache()
 
