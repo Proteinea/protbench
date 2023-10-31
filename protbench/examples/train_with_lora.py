@@ -222,8 +222,13 @@ def set_seed(seed):
 
 def available_tasks(tasks_to_run: Optional[List] = None):
     tasks = {
-        "solubility": partial(
-            applications.Solubility,
+        "remote_homology": partial(
+            applications.RemoteHomology,
+            from_embeddings=False,
+            task_type=TaskType.SEQ_CLS,
+        ),
+        "fluorescence": partial(
+            applications.Fluorescence,
             from_embeddings=False,
             task_type=TaskType.SEQ_CLS,
         ),
@@ -233,18 +238,8 @@ def available_tasks(tasks_to_run: Optional[List] = None):
             from_embeddings=False,
             task_type=TaskType.SEQ_CLS,
         ),
-        # "solubility": partial(
-        #     applications.Solubility,
-        #     from_embeddings=False,
-        #     task_type=TaskType.SEQ_CLS,
-        # ),
-        "remote_homology": partial(
-            applications.RemoteHomology,
-            from_embeddings=False,
-            task_type=TaskType.SEQ_CLS,
-        ),
-        "fluorescence": partial(
-            applications.Fluorescence,
+        "solubility": partial(
+            applications.Solubility,
             from_embeddings=False,
             task_type=TaskType.SEQ_CLS,
         ),
