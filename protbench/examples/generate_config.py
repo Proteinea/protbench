@@ -20,6 +20,7 @@ def generate_config() -> Dict:
             'gradient_accumulation_steps': 16,
             'save_strategy': "epoch",
             'report_to': "wandb",
+            'low_memory': True,
         },
         'model_with_lora_config': {
             'pooling': 'max',
