@@ -324,7 +324,6 @@ def available_tasks(tasks_to_run: Optional[List] = None):
 def main(config_args: omegaconf.DictConfig):
     for env_variable, value in config_args.env_variables.items():
         os.environ[env_variable] = value
-    LOW_MEMORY = True
 
     for checkpoint in config_args.model_checkpoints:
         for task_name, task, task_type in available_tasks(
@@ -358,7 +357,7 @@ def main(config_args: omegaconf.DictConfig):
             train_seqs, train_labels = task.get_train_data()
             val_seqs, val_labels = task.get_eval_data()
             num_classes = task.get_num_classes()
-            if not LOW_MEMORY and task.from_embeddings:
+            if not config_args.train_config.low_memory and task.from_embeddings:
                 train_embds, val_embds = compute_embeddings(
                     pretrained_model, tokenizer, train_seqs, val_seqs
                 )
