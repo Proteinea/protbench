@@ -222,13 +222,13 @@ def set_seed(seed):
 
 def available_tasks(tasks_to_run: Optional[List] = None):
     tasks = {
-        "remote_homology": partial(
-            applications.RemoteHomology,
+        "fluorescence": partial(
+            applications.Fluorescence,
             from_embeddings=False,
             task_type=TaskType.SEQ_CLS,
         ),
-        "fluorescence": partial(
-            applications.Fluorescence,
+        "remote_homology": partial(
+            applications.RemoteHomology,
             from_embeddings=False,
             task_type=TaskType.SEQ_CLS,
         ),
