@@ -222,27 +222,6 @@ def set_seed(seed):
 
 def available_tasks(tasks_to_run: Optional[List] = None):
     tasks = {
-        "fluorescence": partial(
-            applications.Fluorescence,
-            from_embeddings=False,
-            task_type=TaskType.SEQ_CLS,
-        ),
-        "remote_homology": partial(
-            applications.RemoteHomology,
-            from_embeddings=False,
-            task_type=TaskType.SEQ_CLS,
-        ),
-        "deeploc": partial(
-            applications.DeepLoc,
-            dataset="deeploc",
-            from_embeddings=False,
-            task_type=TaskType.SEQ_CLS,
-        ),
-        "solubility": partial(
-            applications.Solubility,
-            from_embeddings=False,
-            task_type=TaskType.SEQ_CLS,
-        ),
         "ssp3_casp12": partial(
             applications.SSP3,
             dataset="ssp3_casp12",
@@ -290,6 +269,27 @@ def available_tasks(tasks_to_run: Optional[List] = None):
             dataset="ssp8_ts115",
             from_embeddings=False,
             task_type=TaskType.TOKEN_CLS,
+        ),
+        "deeploc": partial(
+            applications.DeepLoc,
+            dataset="deeploc",
+            from_embeddings=False,
+            task_type=TaskType.SEQ_CLS,
+        ),
+        "solubility": partial(
+            applications.Solubility,
+            from_embeddings=False,
+            task_type=TaskType.SEQ_CLS,
+        ),
+        "remote_homology": partial(
+            applications.RemoteHomology,
+            from_embeddings=False,
+            task_type=TaskType.SEQ_CLS,
+        ),
+        "fluorescence": partial(
+            applications.Fluorescence,
+            from_embeddings=False,
+            task_type=TaskType.SEQ_CLS,
         ),
     }
     task_types = [
