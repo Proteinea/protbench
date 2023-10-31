@@ -341,15 +341,7 @@ def main(config_args: omegaconf.DictConfig):
                     pretrained_model.gradient_checkpointing_enable()
                 embedding_dim = pretrained_model.config.d_model
 
-                if not task.from_embeddings:
-                    tokenizer = partial(
-                        tokenizer,
-                        add_special_tokens=True,
-                        padding="longest",
-                        return_tensors="pt",
-                    )
-
-            task = task(tokenizer=tokenizer)
+            task = task(tokenizer=partial(tokenizer, add_special_tokens=True, padding="longest", return_tensors="pt",))
             task: applications.BenchmarkingTask
             train_seqs, train_labels = task.get_train_data()
             val_seqs, val_labels = task.get_eval_data()
