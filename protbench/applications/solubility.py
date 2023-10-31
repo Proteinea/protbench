@@ -81,7 +81,7 @@ class Solubility(BenchmarkingTask):
         self, backbone_model, embedding_dim, pooling=None
     ):
         head = BinaryClassificationHead(
-            input_dim=embedding_dim, output_dim=self.get_num_classes()
+            input_dim=embedding_dim
         )
         if self.from_embeddings:
             model = DownstreamModelFromEmbedding(backbone_model, head)
