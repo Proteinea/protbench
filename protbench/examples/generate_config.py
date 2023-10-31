@@ -62,14 +62,16 @@ def generate_config() -> Dict:
         'env_variables': {
             'WANDB_PROJECT': 'AnkhV2-LoRA',
         }
-    },
+    }
     return config
 
 
 def save_yaml(config: Dict):
     if not os.path.exists('config'):
         os.mkdir('config')
+
     with open('config/config.yaml', 'w') as f:
+        yaml.dump(config, f, yaml.SafeDumper)
         yaml.dump(config, f)
 
 
