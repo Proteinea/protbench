@@ -21,11 +21,16 @@ model_url_map = {
 def get_available_checkpoints():
     return list(model_url_map.keys())
 
+# lora_task_type instead of task_type.
 
 def initialize_model_from_checkpoint(
     model_name: str,
     initialize_with_lora: bool = False,
-    task_type: TaskType = None,
+    lora_task_type: TaskType = None,
+    lora_r: int = 16,
+    lora_alpha: int = 16,
+    lora_dropout: float = 0.1,
+    lora_bias: str = 'none'
 ) -> Tuple[T5EncoderModel, AutoTokenizer]:
     tokenizer = AutoTokenizer.from_pretrained(model_url_map[model_name])
     if initialize_with_lora:
@@ -33,12 +38,12 @@ def initialize_model_from_checkpoint(
             model_url_map[model_name]
         )
         peft_config = LoraConfig(
-            task_type=task_type,
+            task_type=lora_task_type,
             inference_mode=False,
-            r=16,
-            lora_alpha=16,
-            lora_dropout=0.1,
-            bias="none",
+            r=lora_r,
+            lora_alpha=lora_alpha,
+            lora_dropout=lora_dropout,
+            bias=lora_bias,
         )
         model = get_peft_model(model, peft_config).encoder
     else:

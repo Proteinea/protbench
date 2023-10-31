@@ -4,15 +4,12 @@ import wandb
 from functools import partial
 
 from protbench.embedder import TorchEmbedder, TorchEmbeddingFunction
-from protbench.tasks import (
-    PickleResidueToClass
-)
+from protbench.tasks import PickleResidueToClass
 from protbench.models import (
     ConvBert,
     DownstreamModelFromEmbedding,
     ContactPredictionHead,
 )
-from protbench import metrics
 from protbench.utils import (
     collate_inputs_and_labels,
 )
@@ -25,11 +22,16 @@ from transformers import (
     TrainingArguments,
 )
 from peft import TaskType
-from protbench.utils import SequenceAndLabelsDataset, EmbeddingsDataset, EmbeddingsDatasetFromDisk # noqa
+from protbench.utils import (
+    SequenceAndLabelsDataset,
+    EmbeddingsDataset,
+    EmbeddingsDatasetFromDisk,
+)  # noqa
 
 from scipy.spatial.distance import pdist, squareform
-
-os.environ["WANDB_PROJECT"] = "AnkhV2-LoRA"
+import hydra
+import omegaconf
+from typing import List, Optional
 
 
 def preprocess_contact_prediction_labels(seq, label, mask):
@@ -115,7 +117,9 @@ def compute_embeddings(model, tokenizer, train_seqs, val_seqs):
     return embeddings
 
 
-def compute_embeddings_and_save_to_disk(model, tokenizer, train_seqs, val_seqs):
+def compute_embeddings_and_save_to_disk(
+    model, tokenizer, train_seqs, val_seqs
+):
     embedding_fn = TorchEmbeddingFunction(
         model,
         partial(tokenize, tokenizer=tokenizer),
@@ -124,8 +128,8 @@ def compute_embeddings_and_save_to_disk(model, tokenizer, train_seqs, val_seqs):
         pad_token_id=tokenizer.pad_token_id,
     )
 
-    train_embeddings_path = 'train_embeddings'
-    val_embeddings_path = 'val_embeddings'
+    train_embeddings_path = "train_embeddings"
+    val_embeddings_path = "val_embeddings"
 
     if not os.path.exists(train_embeddings_path):
         os.mkdir(train_embeddings_path)
@@ -137,7 +141,10 @@ def compute_embeddings_and_save_to_disk(model, tokenizer, train_seqs, val_seqs):
     else:
         delete_directory_contents(val_embeddings_path)
 
-    for data, path in [(train_seqs, train_embeddings_path), (val_seqs, val_embeddings_path)]:
+    for data, path in [
+        (train_seqs, train_embeddings_path),
+        (val_seqs, val_embeddings_path),
+    ]:
         embedder = TorchEmbedder(
             embedding_fn,
             low_memory=True,
@@ -184,6 +191,7 @@ def get_metrics(task_name, num_classes=None):
     }
     return task_class_map[task_name]
 
+
 def get_collate_fn(task_name):
     task_class_map = {
         "contact_prediction": collate_inputs_and_labels,
@@ -205,95 +213,144 @@ def get_metric_for_best_model(task_name):
     return task_metric_map[task_name]
 
 
-def compute_error_bar(task_name):
-    task_map = {
-        "ssp-casp12": metrics.compute_error_bar_for_token_classification,
-        "ssp-casp14": metrics.compute_error_bar_for_token_classification,
-        "ssp-cb513": metrics.compute_error_bar_for_token_classification,
-        "ssp-ts115": metrics.compute_error_bar_for_token_classification,
-        "ssp8-casp12": metrics.compute_error_bar_for_token_classification,
-        "ssp8-casp14": metrics.compute_error_bar_for_token_classification,
-        "ssp8-cb513": metrics.compute_error_bar_for_token_classification,
-        "ssp8-ts115": metrics.compute_error_bar_for_token_classification,
-        "solubility": metrics.compute_error_bar_for_binary_classification,
-        "fluorescence": metrics.compute_error_bar_for_regression,
-        # "contact_prediction": metrics.compute_error_bar_for_token_classification
-        "deeploc": metrics.compute_error_bar_for_token_classification,
-        "remote_homology": metrics.compute_error_bar_for_token_classification,
-    }
-    return task_map[task_name]
-
-
 def set_seed(seed):
     torch.manual_seed(seed)
     np.random.seed(seed)
     random.seed(seed)
 
 
-def available_tasks(pooling='max'):
+def available_tasks(tasks_to_run: Optional[List] = None):
     tasks = {
-        'ssp3_casp12': partial(applications.SSP3, dataset='ssp3_casp12', from_embeddings=False, task_type=TaskType.TOKEN_CLS),
-        'ssp3_casp14': partial(applications.SSP3, dataset='ssp3_casp14', from_embeddings=False, task_type=TaskType.TOKEN_CLS),
-        'ssp3_cb513': partial(applications.SSP3, dataset='ssp3_cb513', from_embeddings=False, task_type=TaskType.TOKEN_CLS),
-        'ssp3_ts115': partial(applications.SSP3, dataset='ssp3_ts115', from_embeddings=False, task_type=TaskType.TOKEN_CLS),
-        "ssp8_casp12": partial(applications.SSP8, dataset="ssp8_casp12", from_embeddings=False, task_type=TaskType.TOKEN_CLS),
-        "ssp8_casp14": partial(applications.SSP8, dataset="ssp8_casp14", from_embeddings=False, task_type=TaskType.TOKEN_CLS),
-        "ssp8_cb513": partial(applications.SSP8, dataset="ssp8_cb513", from_embeddings=False, task_type=TaskType.TOKEN_CLS),
-        "ssp8_ts115": partial(applications.SSP8, dataset="ssp8_ts115", from_embeddings=False, task_type=TaskType.TOKEN_CLS),
-        "deeploc": partial(applications.DeepLoc, dataset="deeploc", from_embeddings=False, task_type=TaskType.SEQ_CLS),
-        "solubility": partial(applications.Solubility, from_embeddings=False, task_type=TaskType.SEQ_CLS),
-        "remote_homology": partial(applications.RemoteHomology, from_embeddings=False, task_type=TaskType.SEQ_CLS),
-        "fluorescence": partial(applications.Fluorescence, from_embeddings=False, task_type=TaskType.SEQ_CLS),
+        "ssp3_casp12": partial(
+            applications.SSP3,
+            dataset="ssp3_casp12",
+            from_embeddings=True,
+            task_type=TaskType.TOKEN_CLS,
+        ),
+        "ssp3_casp14": partial(
+            applications.SSP3,
+            dataset="ssp3_casp14",
+            from_embeddings=True,
+            task_type=TaskType.TOKEN_CLS,
+        ),
+        "ssp3_cb513": partial(
+            applications.SSP3,
+            dataset="ssp3_cb513",
+            from_embeddings=True,
+            task_type=TaskType.TOKEN_CLS,
+        ),
+        "ssp3_ts115": partial(
+            applications.SSP3,
+            dataset="ssp3_ts115",
+            from_embeddings=True,
+            task_type=TaskType.TOKEN_CLS,
+        ),
+        "ssp8_casp12": partial(
+            applications.SSP8,
+            dataset="ssp8_casp12",
+            from_embeddings=True,
+            task_type=TaskType.TOKEN_CLS,
+        ),
+        "ssp8_casp14": partial(
+            applications.SSP8,
+            dataset="ssp8_casp14",
+            from_embeddings=True,
+            task_type=TaskType.TOKEN_CLS,
+        ),
+        "ssp8_cb513": partial(
+            applications.SSP8,
+            dataset="ssp8_cb513",
+            from_embeddings=True,
+            task_type=TaskType.TOKEN_CLS,
+        ),
+        "ssp8_ts115": partial(
+            applications.SSP8,
+            dataset="ssp8_ts115",
+            from_embeddings=True,
+            task_type=TaskType.TOKEN_CLS,
+        ),
+        "deeploc": partial(
+            applications.DeepLoc,
+            dataset="deeploc",
+            from_embeddings=True,
+            task_type=TaskType.SEQ_CLS,
+        ),
+        "solubility": partial(
+            applications.Solubility,
+            from_embeddings=True,
+            task_type=TaskType.SEQ_CLS,
+        ),
+        "remote_homology": partial(
+            applications.RemoteHomology,
+            from_embeddings=True,
+            task_type=TaskType.SEQ_CLS,
+        ),
+        "fluorescence": partial(
+            applications.Fluorescence,
+            from_embeddings=True,
+            task_type=TaskType.SEQ_CLS,
+        ),
     }
-    task_types = [TaskType.TOKEN_CLS,
-                  TaskType.TOKEN_CLS,
-                  TaskType.TOKEN_CLS,
-                  TaskType.TOKEN_CLS,
-                  TaskType.TOKEN_CLS,
-                  TaskType.TOKEN_CLS,
-                  TaskType.TOKEN_CLS,
-                  TaskType.TOKEN_CLS,
-                  TaskType.SEQ_CLS,
-                  TaskType.SEQ_CLS,
-                  TaskType.SEQ_CLS,
-                  TaskType.SEQ_CLS,
-                  ]
+    task_types = [
+        TaskType.TOKEN_CLS,
+        TaskType.TOKEN_CLS,
+        TaskType.TOKEN_CLS,
+        TaskType.TOKEN_CLS,
+        TaskType.TOKEN_CLS,
+        TaskType.TOKEN_CLS,
+        TaskType.TOKEN_CLS,
+        TaskType.TOKEN_CLS,
+        TaskType.SEQ_CLS,
+        TaskType.SEQ_CLS,
+        TaskType.SEQ_CLS,
+        TaskType.SEQ_CLS,
+    ]
+
+    for task in tasks_to_run:
+        if task not in tasks:
+            raise ValueError(
+                f"Task {task} is not supported, "
+                f"supported tasks are {list(tasks.keys())}."
+            )
+
     for (task_name, task), task_type in zip(tasks.items(), task_types):
+        if task_name not in tasks_to_run:
+            continue
         yield task_name, task, task_type
 
 
-
-def main():
-    NUM_TRIALS_PER_CHECKPOINT = 1
-    SEED = 7
-    MAX_SEQS = None
+@hydra.main(config_name="config", config_path="config", version_base=None)
+def main(config_args: omegaconf.DictConfig):
+    for env_variable, value in config_args.env_variables.items():
+        os.environ[env_variable] = value
     LOW_MEMORY = True
-    POOLING = 'max'
-    USE_LORA = True
-    GRADIENT_CHECKPOINTING = True
 
-    checkpoints = [
-        "ankh-base",
-        "ankh-v2-23",
-        "ankh-v2-32",
-        "ankh-v2-33",
-        "ankh-v2-41",
-        "ankh-v2-45",
-        "ankh-large",
-    ]
-
-    for checkpoint in checkpoints:
-        for task_name, task, task_type in available_tasks():
-            with torch.device('cuda:0'):
-                pretrained_model, tokenizer = applications.models.ankh.initialize_model_from_checkpoint(
-                    checkpoint, initialize_with_lora=USE_LORA, task_type=task_type,
+    for checkpoint in config_args.checkpoints:
+        for task_name, task, task_type in available_tasks(
+            tasks_to_run=config_args.tasks
+        ):
+            with torch.device("cuda:0"):
+                (
+                    pretrained_model,
+                    tokenizer,
+                ) = applications.models.ankh.initialize_model_from_checkpoint(
+                    checkpoint,
+                    initialize_with_lora=config_args.model_config.use_lora,
+                    task_type=task_type,
+                    lora_r=config_args.model_config.lora_r,
+                    lora_alpha=config_args.model_config.lora_alpha,
+                    lora_dropout=config_args.model_config.lora_dropout,
+                    lora_bias=config_args.model_config.lora_bias,
                 )
-                if GRADIENT_CHECKPOINTING:
+                if config_args.train_config.gradient_checkpointing:
                     pretrained_model.gradient_checkpointing_enable()
                 embedding_dim = pretrained_model.config.d_model
-                tokenizer = partial(tokenizer, add_special_tokens=True,
-                                    padding='longest',
-                                    return_tensors="pt")
+                tokenizer = partial(
+                    tokenizer,
+                    add_special_tokens=True,
+                    padding="longest",
+                    return_tensors="pt",
+                )
 
             task = task(tokenizer=tokenizer)
             task: applications.BenchmarkingTask
@@ -319,49 +376,69 @@ def main():
                 train_dataset = EmbeddingsDataset(train_embds, train_labels)
                 val_dataset = EmbeddingsDataset(val_embds, val_labels)
             elif task.from_embeddings:
-                train_dataset = EmbeddingsDatasetFromDisk('train_embeddings',
-                                                          train_labels)
-                val_dataset = EmbeddingsDatasetFromDisk('val_embeddings',
-                                                        val_labels)
+                train_dataset = EmbeddingsDatasetFromDisk(
+                    "train_embeddings", train_labels
+                )
+                val_dataset = EmbeddingsDatasetFromDisk(
+                    "val_embeddings", val_labels
+                )
             else:
-                train_dataset = SequenceAndLabelsDataset(train_seqs, train_labels)
+                train_dataset = SequenceAndLabelsDataset(
+                    train_seqs, train_labels
+                )
                 val_dataset = SequenceAndLabelsDataset(val_seqs, val_labels)
 
             print("Number of train embeddings: ", len(train_dataset))
             print("Number of validation embeddings: ", len(val_dataset))
             print("Number of classes: ", num_classes)
 
-            for i in range(NUM_TRIALS_PER_CHECKPOINT):
+            for i in range(config_args.train_config.num_trials_per_checkpoint):
                 run_name = f"original-{checkpoint}-{task_name}-{i}"
-                set_seed(SEED)
+
+                set_seed(config_args.train_config.seed)
+
+                downstream_model = ConvBert(
+                    input_dim=embedding_dim,
+                    nhead=config_args.convbert_config.nhead,
+                    hidden_dim=config_args.convbert_config.hidden_dim or int(embedding_dim / 2), # noqa
+                    num_layers=config_args.convbert_config.num_layers,
+                    kernel_size=config_args.convbert_config.kernel_size,
+                    dropout=config_args.convbert_config.dropout,
+                    pooling=config_args.convbert_config.pooling
+                    if task.requires_pooling
+                    else None,
+                )
+
                 model = task.get_downstream_model(
-                    pretrained_model, embedding_dim, pooling=POOLING if task.requires_pooling else None
+                    downstream_model,
+                    embedding_dim,
+                    pooling=config_args.model_config.pooling,
                 )
 
                 training_args = TrainingArguments(
                     output_dir=os.path.join("trainer-outputs", run_name),
                     run_name=run_name,
-                    num_train_epochs=5,
-                    per_device_train_batch_size=1,
-                    per_device_eval_batch_size=1,
-                    warmup_steps=1000,
-                    learning_rate=1e-03,
-                    weight_decay=0.0,
+                    num_train_epochs=config_args.train_config.num_train_epochs,
+                    per_device_train_batch_size=config_args.train_config.per_device_train_batch_size, # noqa
+                    per_device_eval_batch_size=config_args.train_config.per_device_eval_batch_size, # noqa
+                    warmup_steps=config_args.train_config.warmup_steps,
+                    learning_rate=config_args.train_config.learning_rate,
+                    weight_decay=config_args.train_config.weight_decay,
                     logging_dir=f"./logs_{run_name}",
-                    logging_steps=10,
+                    logging_steps=config_args.train_config.logging_steps,
                     do_train=True,
                     do_eval=True,
-                    evaluation_strategy="epoch",
-                    gradient_accumulation_steps=16,
+                    evaluation_strategy=config_args.train_config.evaluation_strategy, # noqa
+                    gradient_accumulation_steps=config_args.train_config.gradient_accumulation_steps, # noqa
                     fp16=False,
                     fp16_opt_level="02",
-                    seed=SEED,
+                    seed=config_args.train_config.seed,
                     load_best_model_at_end=True,
                     save_total_limit=1,
                     metric_for_best_model=task.metric_for_best_model,
                     greater_is_better=True,
-                    save_strategy="epoch",
-                    report_to="wandb",
+                    save_strategy=config_args.train_config.save_strategy,
+                    report_to=config_args.train_config.report_to,
                     remove_unused_columns=False,
                 )
                 trainer = Trainer(
@@ -372,10 +449,8 @@ def main():
                     compute_metrics=task.metrics_fn,
                     data_collator=collate_fn,
                     preprocess_logits_for_metrics=logits_preprocessing_fn,
-                    # callbacks=[EarlyStoppingCallback(early_stopping_patience=10)],
                 )
                 trainer.train()
-
                 wandb.finish()
 
 

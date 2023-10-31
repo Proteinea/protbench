@@ -24,7 +24,7 @@ def initialize_convbert_model_from_embedding_with_default_hyperparameters(
 
 
 def initialize_convbert_model_with_default_hyperparameters(
-    embedding_dim, head, pooling="max"
+    embedding_dim, head, pooling="max", return_downstream_model_only=False,
 ):
     downstream_model = ConvBert(
         input_dim=embedding_dim,
@@ -35,6 +35,9 @@ def initialize_convbert_model_with_default_hyperparameters(
         dropout=0.1,
         pooling=pooling,
     )
+
+    if return_downstream_model_only:
+        return downstream_model
 
     model = DownstreamModelWithPretrainedBackbone(
         downstream_backbone=downstream_model, head=head
