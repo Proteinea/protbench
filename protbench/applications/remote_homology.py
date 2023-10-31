@@ -77,7 +77,7 @@ class RemoteHomology(BenchmarkingTask):
             collate_fn=collate_fn,
             metrics_fn=partial(
                 compute_remote_homology_metrics,
-                num_classes=self.get_num_classes(),
+                num_classes=train_dataset.num_classes,
             ),
             metric_for_best_model="eval_hits10",
             from_embeddings=from_embeddings,
