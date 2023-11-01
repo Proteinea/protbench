@@ -64,7 +64,7 @@ def generate_config() -> Dict:
         },
         'tokenizer_config': {
             'max_length': None,
-            'padding': 'longest',
+            'padding': False,
             'truncation': False,
         },
     }
