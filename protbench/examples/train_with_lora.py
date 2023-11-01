@@ -348,7 +348,9 @@ def main(config_args: omegaconf.DictConfig):
                 tokenizer = partial(
                     tokenizer,
                     add_special_tokens=True,
-                    padding="longest",
+                    padding=config_args.tokenizer_config.padding,
+                    max_length=config_args.tokenizer_config.max_length,
+                    truncation=config_args.tokenizer_config.truncation,
                     return_tensors="pt",
                 )
 

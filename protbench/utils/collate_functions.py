@@ -65,8 +65,9 @@ def collate_sequence_and_align_labels(tokenizer: Callable, ignore_index: int = -
         sequences = [example["sequences"] for example in batch]
         labels = [to_torch_tensor(example["labels"], dtype=torch.long) for example in batch]
         sequences_encoded = tokenizer(sequences)
-        # labels = to_torch_tensor(labels)
-        labels = torch.nn.utils.rnn.pad_sequence(labels, batch_first=True, padding_value=ignore_index)
+        labels = torch.nn.utils.rnn.pad_sequence(labels,
+                                                 batch_first=True,
+                                                 padding_value=ignore_index)
 
         batch_size, inputs_sequence_length = sequences_encoded['input_ids'].shape
         labels_sequence_length = labels.shape[-1]

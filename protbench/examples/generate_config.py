@@ -61,7 +61,12 @@ def generate_config() -> Dict:
         },
         'env_variables': {
             'WANDB_PROJECT': 'AnkhV2-LoRA',
-        }
+        },
+        'tokenizer_config': {
+            'max_length': None,
+            'padding': 'longest',
+            'truncation': False,
+        },
     }
     return config
 
