@@ -1,20 +1,17 @@
 from functools import partial
+from typing import Callable, Optional
 
 import numpy as np
-from sklearn.metrics import (
-    accuracy_score,
-    precision_recall_fscore_support,
-    top_k_accuracy_score,
-)
-
+from peft import TaskType
 from protbench.applications.benchmarking_task import BenchmarkingTask
 from protbench.models.downstream_models import (
-    DownstreamModelFromEmbedding,
-    DownstreamModelWithPretrainedBackbone,
-)
+    DownstreamModelFromEmbedding, DownstreamModelWithPretrainedBackbone)
 from protbench.models.heads import MultiClassClassificationHead
 from protbench.tasks import HuggingFaceSequenceToClass
 from protbench.utils import collate_inputs, collate_sequence_and_labels
+from sklearn.metrics import (accuracy_score, precision_recall_fscore_support,
+                             top_k_accuracy_score)
+from transformers import EvalPrediction
 
 
 def get_remote_homology_dataset():
@@ -40,7 +37,7 @@ def get_remote_homology_dataset():
 supported_datasets = {"remote_homology": get_remote_homology_dataset}
 
 
-def compute_remote_homology_metrics(p, num_classes):
+def compute_remote_homology_metrics(p: EvalPrediction, num_classes: int):
     prfs = precision_recall_fscore_support(
         p.label_ids, p.predictions.argmax(axis=1), average="macro"
     )
@@ -59,10 +56,10 @@ def compute_remote_homology_metrics(p, num_classes):
 class RemoteHomology(BenchmarkingTask):
     def __init__(
         self,
-        dataset="remote_homology",
-        from_embeddings=False,
-        tokenizer=None,
-        task_type=None,
+        dataset: str = "remote_homology",
+        from_embeddings: bool = False,
+        tokenizer: Optional[Callable] = None,
+        task_type: Optional[TaskType] = None,
     ):
         train_dataset, eval_dataset = supported_datasets[dataset]()
         collate_fn = (
@@ -92,9 +89,7 @@ class RemoteHomology(BenchmarkingTask):
     def get_eval_data(self):
         return self.eval_dataset.data[0], self.eval_dataset.data[1]
 
-    def get_downstream_model(
-        self, backbone_model, embedding_dim, pooling=None
-    ):
+    def get_downstream_model(self, backbone_model, embedding_dim, pooling=None):
         head = MultiClassClassificationHead(
             input_dim=embedding_dim, output_dim=self.get_num_classes()
         )

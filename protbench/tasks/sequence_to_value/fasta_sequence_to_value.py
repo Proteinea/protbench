@@ -1,7 +1,6 @@
-from typing import Tuple, List
+from typing import List, Tuple
 
 from Bio import SeqIO
-
 from protbench.tasks.sequence_to_value.sequence_to_value import SequenceToValue
 
 

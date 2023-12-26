@@ -1,7 +1,6 @@
-from typing import Optional, List, Dict, Union, Callable, Tuple
+from typing import Callable, Dict, List, Optional, Tuple
 
 from datasets import load_dataset
-
 from protbench.tasks.residue_to_class import ResidueToClass
 
 
@@ -16,26 +15,32 @@ class HuggingFaceResidueToClass(ResidueToClass):
         class_to_id: Optional[Dict[str, int]] = None,
         mask_col: Optional[str] = None,
         preprocessing_function: Optional[Callable] = None,
-        label_ignore_value: int = -100,
+        ignore_index: int = -100,
     ):
-        """
-        A generic class for any task where the goal is to predict a class for each
-            residue in a protein sequence. The data is loaded from a huggingface dataset.
+        """A generic class for any task where the goal is to predict a class
+           for each residue in a protein sequence. The data is loaded from
+           a huggingface dataset.
 
         Args:
-            dataset_url (str): the url of the huggingface dataset.
-            data_files (str): the name of the data files in the dataset.
-            data_key (str): the key of the data in the DatasetDict.
-            seqs_col (str): the name of the column containing the sequences.
-            labels_col (str): the name of the column containing the labels.
-            mask_col (Optional[str], optional): the name of the column containing the masks. Defaults to None.
-            preprocessing_function (Optional[Callable[[str, str, Optional[str]], Tuple[str, str, Union[str, None]]]], optional):
-                a function to preprocess the a row of (seq, label, mask). Defaults to None.
-            label_ignore_value (int, optional): the value of label in masked positions to be ignored by loss and metrics computation.
+            dataset_url (str): URL of the huggingface dataset.
+            data_files (str): Name of the data files in the dataset.
+            data_key (str): Key of the data in the DatasetDict.
+            seqs_col (str): Name of the column containing the sequences.
+            labels_col (str): Name of the column containing the labels.
+            mask_col (Optional[str], optional): Name of the column
+                                                containing the masks.
+                                                Defaults to None.
+            preprocessing_function (Optional[Callable]): Function to
+                                                         preprocess the a row
+                                                         of (seq, label, mask).
+                                                         Defaults to None.
+            ignore_index (int, optional): Value of label in masked positions to
+                                          be ignored by loss and metrics
+                                          computation. Defaults to -100.
 
         """
         super(HuggingFaceResidueToClass, self).__init__(
-            label_ignore_value=label_ignore_value, class_to_id=class_to_id
+            ignore_index=ignore_index, class_to_id=class_to_id
         )
 
         self._data = self._load_and_preprocess_data(

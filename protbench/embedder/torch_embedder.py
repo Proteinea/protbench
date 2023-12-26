@@ -1,17 +1,13 @@
 import logging
 import math
-import copy
-
-from pathlib import Path
 from math import ceil
-from typing import Optional, Iterable, List, Union
+from pathlib import Path
+from typing import Iterable, List, Optional, Union
 
 import torch
-
-from tqdm.auto import tqdm
-
 from protbench.embedder import TorchEmbeddingFunction
 from protbench.embedder.embedder import Embedder
+from tqdm.auto import tqdm
 
 
 class TorchEmbedder(Embedder):
@@ -23,22 +19,33 @@ class TorchEmbedder(Embedder):
         devices: Optional[Union[List[torch.device], List[int]]] = None,
         batch_size: int = 1,
     ):
-        """Embedder for torch models. Can be used to embed sequences in batches and on multiple GPUs.
+        """Embedder for torch models. Can be used to embed sequences in batches
+           and on multiple GPUs.
 
         Args:
-            embedding_function (TorchEmbeddingFunction): pytorch embedding function.
-            low_memory (bool, optional): reduce memory usage by not storing embeddings in memory. Defaults to False.
-            save_path (Optional[str], optional): path to save embeddings to. Defaults to None.
-                Embeddings are saved as numpy arrays with the name of the file being the index of the embedding.
-                For example, the embedding of the first sequence will be saved as save_path/0.npy.
-            devices (Optional[Union[List[torch.device], List[int]]], optional): list of devices to use for embedding.
-                If None, all available cuda devices will be used. Defaults to None.
-            batch_size (int, optional): batch size. Defaults to 1.
+            embedding_function (TorchEmbeddingFunction): PyTorch embedding
+                                                         function.
+            low_memory (bool, optional): Reduce memory usage by not storing
+                                         embeddings in memory.
+                                         Defaults to False.
+            save_path (Optional[str], optional): Path to save embeddings to.
+                                                 Defaults to None.
+                Embeddings are saved as numpy arrays with the name of the file
+                being the index of the embedding.
+                For example, the embedding of the first sequence will be saved
+                as save_path/0.npy.
+            devices (Optional[Union[List[torch.device], List[int]]], optional): List of devices to use for embedding.
+                If None, all available cuda devices will be used.
+                Defaults to None.
+            batch_size (int, optional): Batch size. Defaults to 1.
         """
-        super(TorchEmbedder, self).__init__(embedding_function, low_memory, save_path)
+        super(TorchEmbedder, self).__init__(
+            embedding_function, low_memory, save_path
+        )
         if devices is None:
             devices = [
-                torch.device(f"cuda:{i}") for i in range(torch.cuda.device_count())
+                torch.device(f"cuda:{i}")
+                for i in range(torch.cuda.device_count())
             ]
         self.devices = devices
         self.batch_size = batch_size
@@ -69,15 +76,17 @@ class TorchEmbedder(Embedder):
         output_queue: torch.multiprocessing.Queue,
         total_sequences: int,
     ) -> List[torch.Tensor]:
-        """Collect embeddings from processes. This function is used in a parallel embedding run
-        to collect the embeddings sent by the child processes through the output_queue.
+        """Collect embeddings from processes. This function is used in a
+           parallel embedding run to collect the embeddings sent by the child
+           processes through the output_queue.
 
         Args:
-            output_queue (torch.multiprocessing.Queue): shared queue to collect embeddings from.
-            total_sequences (int): total number of sequences to embed.
+            output_queue (torch.multiprocessing.Queue): Shared queue to collect
+                                                        embeddings from.
+            total_sequences (int): Total number of sequences to embed.
 
         Returns:
-            List[torch.Tensor]: _description_
+            List[torch.Tensor]: List of PyTorch Tensors.
         """
         embeddings = [None] * total_sequences
         with tqdm(
@@ -88,11 +97,8 @@ class TorchEmbedder(Embedder):
         ) as pbar:
             for _ in range(total_sequences):
                 i, embedding = output_queue.get()
-                # leaving this here just to make sure, but this should never happen
                 assert embeddings[i] is None
                 embeddings[i] = torch.from_numpy(embedding)
-                # del embedding
-                # del i
                 pbar.update(1)
             assert output_queue.empty()
         return embeddings
@@ -106,7 +112,7 @@ class TorchEmbedder(Embedder):
         for batch_start in tqdm(
             range(0, len(sequences), self.batch_size),
             total=num_batches,
-            desc=f"Embedding sequences: ",
+            desc="Embedding sequences: ",
             unit=" batch",
             leave=False,
         ):
@@ -125,7 +131,9 @@ class TorchEmbedder(Embedder):
                     embeddings.append(embedding)
         return embeddings
 
-    def _run_multiple_gpus(self, sequences: Iterable[str]) -> List[torch.Tensor]:
+    def _run_multiple_gpus(
+        self, sequences: Iterable[str]
+    ) -> List[torch.Tensor]:
         # run on multiple gpus
         output_queue = (
             torch.multiprocessing.Queue(maxsize=len(sequences))
@@ -202,13 +210,18 @@ class TorchEmbedder(Embedder):
         device = devices[rank]
         embedding_function.device = device
         embedding_function.model.to(device)
-        sequences, start_idx = TorchEmbedder._get_sequences_for_current_process(
+        (
+            sequences,
+            start_idx,
+        ) = TorchEmbedder._get_sequences_for_current_process(
             rank, world_size, sequences
         )
         for batch_start in range(0, len(sequences), batch_size):
             batch_end = batch_start + batch_size
             batch_sequences = sequences[batch_start:batch_end]
-            batch_embeddings = embedding_function(batch_sequences, remove_padding=True)
+            batch_embeddings = embedding_function(
+                batch_sequences, remove_padding=True
+            )
             for i, embedding in enumerate(
                 batch_embeddings, start=batch_start + start_idx
             ):

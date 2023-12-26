@@ -1,11 +1,8 @@
-from transformers import (
-    AutoTokenizer,
-    T5ForConditionalGeneration,
-    T5EncoderModel,
-)
-from peft import get_peft_model, LoraConfig, TaskType
 from typing import Tuple
 
+from peft import LoraConfig, TaskType, get_peft_model
+from transformers import (AutoTokenizer, T5EncoderModel,
+                          T5ForConditionalGeneration)
 
 model_url_map = {
     "ankh-base": "ElnaggarLab/ankh-base",
@@ -21,7 +18,9 @@ model_url_map = {
 def get_available_checkpoints():
     return list(model_url_map.keys())
 
+
 # lora_task_type instead of task_type.
+
 
 def initialize_model_from_checkpoint(
     model_name: str,
@@ -30,7 +29,7 @@ def initialize_model_from_checkpoint(
     lora_r: int = 16,
     lora_alpha: int = 16,
     lora_dropout: float = 0.1,
-    lora_bias: str = 'none'
+    lora_bias: str = "none",
 ) -> Tuple[T5EncoderModel, AutoTokenizer]:
     tokenizer = AutoTokenizer.from_pretrained(model_url_map[model_name])
     if initialize_with_lora:

@@ -1,12 +1,14 @@
+from typing import Callable, Optional
+
+from peft import TaskType
 from protbench import metrics
 from protbench.applications.benchmarking_task import BenchmarkingTask
 from protbench.models.downstream_models import (
-    DownstreamModelFromEmbedding,
-    DownstreamModelWithPretrainedBackbone,
-)
+    DownstreamModelFromEmbedding, DownstreamModelWithPretrainedBackbone)
 from protbench.models.heads import RegressionHead
 from protbench.tasks import HuggingFaceSequenceToValue
 from protbench.utils import collate_inputs, collate_sequence_and_labels
+from transformers import EvalPrediction
 
 
 def get_fluorescence_dataset():
@@ -30,7 +32,7 @@ def get_fluorescence_dataset():
 supported_datasets = {"fluorescence": get_fluorescence_dataset}
 
 
-def compute_fluoresscence_metrics(p):
+def compute_fluoresscence_metrics(p: EvalPrediction):
     return {
         "spearman": metrics.compute_spearman(p),
     }
@@ -39,10 +41,10 @@ def compute_fluoresscence_metrics(p):
 class Fluorescence(BenchmarkingTask):
     def __init__(
         self,
-        dataset="fluorescence",
-        from_embeddings=False,
-        tokenizer=None,
-        task_type=None,
+        dataset: str = "fluorescence",
+        from_embeddings: bool = False,
+        tokenizer: Optional[Callable] = None,
+        task_type: Optional[TaskType] = None,
     ):
         train_dataset, eval_dataset = supported_datasets[dataset]()
         collate_fn = (
@@ -70,9 +72,7 @@ class Fluorescence(BenchmarkingTask):
     def get_eval_data(self):
         return self.eval_dataset.data[0], self.eval_dataset.data[1]
 
-    def get_downstream_model(
-        self, backbone_model, embedding_dim, pooling=None
-    ):
+    def get_downstream_model(self, backbone_model, embedding_dim, pooling=None):
         head = RegressionHead(input_dim=embedding_dim)
         if self.from_embeddings:
             model = DownstreamModelFromEmbedding(backbone_model, head)

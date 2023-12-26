@@ -1,16 +1,16 @@
+from typing import Callable, Optional
+
+from peft import TaskType
 from protbench import metrics
 from protbench.applications.benchmarking_task import BenchmarkingTask
 from protbench.models.downstream_models import (
-    DownstreamModelFromEmbedding,
-    DownstreamModelWithPretrainedBackbone,
-)
+    DownstreamModelFromEmbedding, DownstreamModelWithPretrainedBackbone)
 from protbench.models.heads import BinaryClassificationHead
 from protbench.tasks import HuggingFaceSequenceToClass
-from protbench.utils import (
-    collate_inputs,
-    collate_sequence_and_labels,
-    preprocess_binary_classification_logits,
-)
+from protbench.utils import (collate_inputs, collate_sequence_and_labels,
+                             preprocess_binary_classification_logits)
+from torch import nn
+from transformers import EvalPrediction
 
 
 def get_solubility_dataset():
@@ -35,7 +35,7 @@ def get_solubility_dataset():
 supported_datasets = {"solubility": get_solubility_dataset}
 
 
-def compute_solubility_metrics(p):
+def compute_solubility_metrics(p: EvalPrediction):
     return {
         "accuracy": metrics.compute_accuracy(p),
         "precision": metrics.compute_precision(p, average="binary"),
@@ -47,10 +47,10 @@ def compute_solubility_metrics(p):
 class Solubility(BenchmarkingTask):
     def __init__(
         self,
-        dataset="solubility",
-        from_embeddings=False,
-        tokenizer=None,
-        task_type=None,
+        dataset: str = "solubility",
+        from_embeddings: bool = False,
+        tokenizer: Optional[Callable] = None,
+        task_type: Optional[TaskType] = None,
     ):
         train_dataset, eval_dataset = supported_datasets[dataset]()
         collate_fn = (
@@ -78,11 +78,12 @@ class Solubility(BenchmarkingTask):
         return self.eval_dataset.data[0], self.eval_dataset.data[1]
 
     def get_downstream_model(
-        self, backbone_model, embedding_dim, pooling=None
+        self,
+        backbone_model: nn.Module,
+        embedding_dim: int,
+        pooling: Callable = None,
     ):
-        head = BinaryClassificationHead(
-            input_dim=embedding_dim
-        )
+        head = BinaryClassificationHead(input_dim=embedding_dim)
         if self.from_embeddings:
             model = DownstreamModelFromEmbedding(backbone_model, head)
         else:

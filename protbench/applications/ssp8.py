@@ -1,21 +1,21 @@
+from typing import Any, Callable, List, Optional, Union
+
+import numpy as np
+from peft import TaskType
 from protbench import metrics
 from protbench.applications.benchmarking_task import BenchmarkingTask
 from protbench.models.downstream_models import (
-    DownstreamModelFromEmbedding,
-    DownstreamModelWithPretrainedBackbone,
-)
+    DownstreamModelFromEmbedding, DownstreamModelWithPretrainedBackbone)
 from protbench.models.heads import TokenClassificationHead
 from protbench.tasks import HuggingFaceResidueToClass
-from protbench.utils import (
-    collate_inputs_and_labels,
-    collate_sequence_and_align_labels,
-)
-from protbench.utils.preprocessing_utils import (
-    preprocess_multi_classification_logits,
-)
+from protbench.utils import (collate_inputs_and_labels,
+                             collate_sequence_and_align_labels)
+from protbench.utils.preprocessing_utils import \
+    preprocess_multi_classification_logits
+from transformers import EvalPrediction
 
 
-def preprocess_ssp_rows(seq, label, mask):
+def preprocess_ssp_rows(seq: str, label: Union[List, np.ndarray], mask: Any):
     mask = list(map(float, mask.split()))
     return seq, label, mask
 
@@ -122,7 +122,7 @@ supported_datasets = {
 }
 
 
-def compute_secondary_structure_metrics(p):
+def compute_secondary_structure_metrics(p: EvalPrediction):
     return {
         "accuracy": metrics.compute_accuracy(p),
         "precision": metrics.compute_precision(p, average="macro"),
@@ -133,7 +133,11 @@ def compute_secondary_structure_metrics(p):
 
 class SSP8(BenchmarkingTask):
     def __init__(
-        self, dataset, from_embeddings=False, tokenizer=None, task_type=None
+        self,
+        dataset: str,
+        from_embeddings: bool = False,
+        tokenizer: Optional[Callable] = None,
+        task_type: Optional[TaskType] = None,
     ):
         train_dataset, eval_dataset = supported_datasets[dataset]()
         collate_fn = (
@@ -160,9 +164,7 @@ class SSP8(BenchmarkingTask):
     def get_eval_data(self):
         return self.eval_dataset.data[0], self.eval_dataset.data[1]
 
-    def get_downstream_model(
-        self, backbone_model, embedding_dim, pooling=None
-    ):
+    def get_downstream_model(self, backbone_model, embedding_dim, pooling=None):
         head = TokenClassificationHead(
             input_dim=embedding_dim, output_dim=self.get_num_classes()
         )

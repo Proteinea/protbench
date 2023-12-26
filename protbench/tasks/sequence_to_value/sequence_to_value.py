@@ -1,7 +1,10 @@
 import abc
-from typing import Tuple, List
+from typing import List, Tuple
 
-class SequenceToValue(abc.ABC):
+from protbench.tasks.task import Task
+
+
+class SequenceToValue(Task):
     def __init__(
         self,
     ) -> None:

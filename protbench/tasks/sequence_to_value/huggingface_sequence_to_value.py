@@ -1,7 +1,6 @@
-from typing import Dict, List, Tuple, Union, Optional, Callable
+from typing import Callable, Dict, List, Optional, Tuple, Union
 
 from datasets import load_dataset
-
 from protbench.tasks.sequence_to_value.sequence_to_value import SequenceToValue
 
 

@@ -1,27 +1,36 @@
-from typing import Optional
+from typing import Callable, Optional, Union
 
 import torch
+from torch import nn
 from protbench.models.pooling import GlobalAvgPooling1D, GlobalMaxPooling1D
 
 
-class DownstreamModelFromEmbedding(torch.nn.Module):
+class DownstreamModelFromEmbedding(nn.Module):
     def __init__(
         self,
-        downstream_backbone: torch.nn.Module,
-        head: torch.nn.Module,
+        downstream_backbone: nn.Module,
+        head: nn.Module,
         pad_token_id: Optional[int] = 0,
-    ) -> None:
-        """Constrcut a downstream model using a backbone and a head.
+    ):
+        """Initializes a downstream model using a backbone and a head.
 
         Args:
-            downstream_backbone (torch.nn.Module): downstream backbone. Should receive
-                the last hidden state of the embedding model (batch_size, seq_len, embd_dim), and a padding mask of shape (batch_size, seq_len)
-                as input and return a tensor of the same shape as the input embedding.
+            downstream_backbone (nn.Module): downstream backbone. Should
+                                             receive the last hidden state of
+                                             the embedding model
+                                             (batch_size, seq_len, embd_dim),
+                                             and a padding mask of shape
+                                             (batch_size, seq_len) as input and
+                                             return a tensor of the same shape
+                                             as the input embedding.
                 Note: if pad_token_id is None, the padding mask will be None.
-            head (torch.nn.Module): downstream head. Should receive the output of the backbone
-                as input of shape (batch_size, seq_len, embd_dim).
-            pad_token_id (int, optional): padding token id used to pad the input embeddings. Defaults to 0.
-                If None, the padding mask passed to the backbone will be None.
+            head (nn.Module): Downstream head. Should receive the output of the
+                              backbone as input of shape
+                              (batch_size, seq_len, embd_dim).
+            pad_token_id (int, optional): padding token id used to pad the
+                                          input embeddings. Defaults to 0.
+                                          If None, the padding mask passed to
+                                          the backbone will be None.
         """
         super(DownstreamModelFromEmbedding, self).__init__()
         self.downstream_backbone = downstream_backbone
@@ -34,7 +43,8 @@ class DownstreamModelFromEmbedding(torch.nn.Module):
         """Embed a batch of sequences.
 
         Args:
-            embds (torch.Tensor): embeddings of shape (batch_size, seq_len, embd_dim).
+            embds (torch.Tensor): embeddings of shape
+                                  (batch_size, seq_len, embd_dim).
             labels (Optional[torch.Tensor], optional): labels. Defaults to None.
 
         Returns:
@@ -48,14 +58,29 @@ class DownstreamModelFromEmbedding(torch.nn.Module):
         return self.head(hidden_states, labels=labels)
 
 
-class DownstreamModelWithPretrainedBackbone(torch.nn.Module):
-    def __init__(self, backbone, head, pooling=None) -> None:
+class DownstreamModelWithPretrainedBackbone(nn.Module):
+    def __init__(
+        self,
+        backbone: nn.Module,
+        head: nn.Module,
+        pooling: Union[Callable, nn.Module] = None,
+    ) -> None:
+        """Initializes a Downstream model with a head and
+           pooling layer attached to it.
+
+        Args:
+            backbone (nn.Module): Backbone pretrained model.
+            head (nn.Module): Head that is related to the specified task
+            pooling (Union[Callable, nn.Module], optional): Pooling layer.
+                                                            Defaults to None.
+        """
         super(DownstreamModelWithPretrainedBackbone, self).__init__()
         self.backbone = backbone
         self.head = head
-        if pooling == 'max':
+
+        if pooling == "max":
             self.pooling = GlobalMaxPooling1D()
-        elif pooling == 'avg':
+        elif pooling == "avg":
             self.pooling = GlobalAvgPooling1D()
         else:
             self.pooling = None
@@ -64,6 +89,8 @@ class DownstreamModelWithPretrainedBackbone(torch.nn.Module):
         embeddings = self.backbone(
             input_ids=input_ids, attention_mask=attention_mask
         ).last_hidden_state
+
         if self.pooling is not None:
             embeddings = self.pooling(embeddings, attention_mask)
+
         return self.head(embeddings, labels)

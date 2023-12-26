@@ -1,4 +1,4 @@
-from typing import Dict, List, Callable
+from typing import Callable, Dict, List
 
 import torch
 from transformers import AutoTokenizer
@@ -59,24 +59,33 @@ def collate_inputs_and_labels(
     return {"embds": embds, "labels": labels}
 
 
-
-def collate_sequence_and_align_labels(tokenizer: Callable, ignore_index: int = -100) -> Callable:
+def collate_sequence_and_align_labels(
+    tokenizer: Callable, ignore_index: int = -100
+) -> Callable:
     def _collate_sequence_and_align_labels(batch: List[Dict]) -> Dict:
         sequences = [example["sequences"] for example in batch]
-        labels = [to_torch_tensor(example["labels"], dtype=torch.long) for example in batch]
+        labels = [
+            to_torch_tensor(example["labels"], dtype=torch.long)
+            for example in batch
+        ]
         sequences_encoded = tokenizer(sequences)
-        labels = torch.nn.utils.rnn.pad_sequence(labels,
-                                                 batch_first=True,
-                                                 padding_value=ignore_index)
+        labels = torch.nn.utils.rnn.pad_sequence(
+            labels, batch_first=True, padding_value=ignore_index
+        )
 
-        batch_size, inputs_sequence_length = sequences_encoded['input_ids'].shape
+        batch_size, inputs_sequence_length = sequences_encoded[
+            "input_ids"
+        ].shape
         labels_sequence_length = labels.shape[-1]
         if labels_sequence_length < inputs_sequence_length:
             length_difference = inputs_sequence_length - labels_sequence_length
-            padding_tokens = torch.tensor([[ignore_index] * length_difference] * batch_size)
+            padding_tokens = torch.tensor(
+                [[ignore_index] * length_difference] * batch_size
+            )
             labels = torch.cat((labels, padding_tokens), dim=1)
-        sequences_encoded['labels'] = labels
+        sequences_encoded["labels"] = labels
         return sequences_encoded
+
     return _collate_sequence_and_align_labels
 
 
@@ -87,6 +96,7 @@ def collate_sequence_and_labels(tokenizer: Callable) -> Callable:
 
         sequences_encoded = tokenizer(sequences)
         labels = to_torch_tensor(labels)
-        sequences_encoded['labels'] = labels
+        sequences_encoded["labels"] = labels
         return sequences_encoded
+
     return _collate_sequence_and_labels

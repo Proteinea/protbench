@@ -1,10 +1,8 @@
 import abc
 from pathlib import Path
-from typing import Iterable, Any, List, Optional, Union
+from typing import Any, Iterable, List, Optional
 
 import numpy as np
-from tqdm.auto import tqdm
-
 from protbench.embedder import EmbeddingFunction
 
 
@@ -16,8 +14,10 @@ class Embedder(abc.ABC):
         save_path: Optional[str] = None,
     ):
         self.embedding_function = embedding_function
-        if low_memory and save_path == None:
-            raise ValueError("Expected save_path to be set when low_memory is True")
+        if low_memory and save_path is None:
+            raise ValueError(
+                "Expected save_path to be set when low_memory is True"
+            )
         self.low_memory = low_memory
         if save_path:
             self.save_path = Path(save_path)

@@ -1,9 +1,10 @@
 import abc
+from typing import Dict, List, Optional, Tuple
 
-from typing import Dict, List, Tuple, Optional
+from protbench.tasks.task import Task
 
 
-class SequenceToClass(abc.ABC):
+class SequenceToClass(Task):
     def __init__(
         self,
         class_to_id: Optional[Dict[str, int]] = None,

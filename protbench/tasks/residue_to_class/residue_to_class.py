@@ -1,33 +1,27 @@
 import abc
-from typing import Optional
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
+
+from protbench.tasks.task import Task
 
 
-class ResidueToClass:
+class ResidueToClass(Task):
     def __init__(
         self,
-        label_ignore_value: int = -100,
+        ignore_index: int = -100,
         class_to_id: Optional[Dict[str, int]] = None,
     ):
-        """A generic class for any task where the goal is to predict a class for each
-            residue in a protein sequence.
+        """A generic class for any task where the goal is to predict a class
+           for each residue in a protein sequence.
 
         Args:
-            seqs_file (str): the path to the fasta file containing the protein sequences.
-            labels_file (str): the path to the fasta file containing the labels for each sequence.
-                The file must have the following format:
-                    >seq_id SET=train/val MASK=11100011
-                    labels
-
-                The 'SET' field determines if the corresponding sequence is part of the training or validation set.
-                The 'MASK' field determines which residues should be ignored (excluded from loss and metrics computation) during training.
-
-                Note: the 'MASK' field does not perform any attention masking on the input sequence. It only affects the loss and metrics computation.
-                Note: The sequence, mask, and labels length must be the same for each sequence in the file.
-            label_ignore_value (int, optional): the value of label to be ignored by loss and metrics computation.
-                Defaults to -100.
+            ignore_index (int, optional): Value of label to be ignored by loss
+                                          and metrics computation.
+                                          Defaults to -100.
+            class_to_id (Optional[Dict[str, int]]): Dictionary containing class
+                                                    names and their
+                                                    corresponding ids.
         """
-        self.label_ignore_value = label_ignore_value
+        self.ignore_index = ignore_index
         if class_to_id:
             self.class_to_id = class_to_id
             self.num_classes = len(class_to_id)
@@ -60,7 +54,9 @@ class ResidueToClass:
             encoded_label[i] = self.class_to_id[cls]
         return encoded_label
 
-    def mask_labels(self, label: List[int], mask: Optional[List[bool]]) -> List[int]:
+    def mask_labels(
+        self, label: List[int], mask: Optional[List[bool]]
+    ) -> List[int]:
         """Mask the labels with the given mask by setting the masked classes to the default
             pytorch ignore index.
 
@@ -70,8 +66,9 @@ class ResidueToClass:
             masked_label = [0, 1, -100, -100, 1, 0]
 
         Args:
-            label (List[int]): encoded label
-            mask (List[bool]): boolean mask with False indicating the positions to be masked (huggingface style)
+            label (List[int]): Encoded label
+            mask (List[bool]): Boolean mask with False indicating the positions
+                               to be masked (huggingface style)
 
         Returns:
             List[int]: masked label
@@ -80,7 +77,7 @@ class ResidueToClass:
             return label
         for i, mask_value in enumerate(mask):
             if mask_value == 0:
-                label[i] = self.label_ignore_value
+                label[i] = self.ignore_index
         return label
 
     def validate_lengths(

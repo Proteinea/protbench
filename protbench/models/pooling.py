@@ -1,16 +1,13 @@
+from functools import partial
+from typing import Optional
+
 import torch
 from torch import nn
 
 
-from functools import partial
-from typing import Optional
-
-
 class GlobalMaxPooling1D(nn.Module):
     def __init__(self):
-        """
-        Applies global max pooling over timesteps dimension
-        """
+        """Applies global max pooling over timesteps dimension"""
 
         super().__init__()
         self.global_max_pool1d = partial(torch.amax, dim=1)
@@ -34,15 +31,15 @@ class GlobalMaxPooling1D(nn.Module):
 
 class GlobalAvgPooling1D(nn.Module):
     def __init__(self):
-        """
-        Applies global average pooling over timesteps dimension
-        """
+        """Applies global average pooling over timesteps dimension"""
 
         super().__init__()
         self.global_avg_pool1d = partial(torch.mean, dim=1)
         self.global_avg_pool1d_with_nan = partial(torch.nanmean, dim=1)
 
-    def forward(self, x, attention_mask=None):
+    def forward(
+        self, x: torch.Tensor, attention_mask: Optional[torch.Tensor] = None
+    ):
         """Forward pass of the global max pooling layer.
 
         Args:

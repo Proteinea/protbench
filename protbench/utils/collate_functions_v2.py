@@ -1,12 +1,16 @@
 import abc
-from typing import List, Dict, Any
-import torch
 import warnings
+from typing import Any, Dict, List
+
+import torch
 
 
 def warn_experimental(cls_name):
-    warnings.warn(f'{cls_name} is still experimental and not ready '
-                  'for production usage.', UserWarning)
+    warnings.warn(
+        f"{cls_name} is still experimental and not ready "
+        "for production usage.",
+        UserWarning,
+    )
 
 
 class CollatorFunction(abc.ABC):
@@ -33,9 +37,9 @@ class CollatorFunction(abc.ABC):
 
 
 class CollateEmbeddingsAndLabels(CollatorFunction):
-    def __init__(self, padding_value=0,
-                 pad_labels=False,
-                 label_padding_value=-100) -> None:
+    def __init__(
+        self, padding_value=0, pad_labels=False, label_padding_value=-100
+    ) -> None:
         super().__init__(tokenizer=None)
         self.padding_value = padding_value
         self.pad_labels = pad_labels
@@ -43,12 +47,12 @@ class CollateEmbeddingsAndLabels(CollatorFunction):
 
     def call(self, batch: Dict) -> Dict:
         embeddings = torch.nn.utils.rnn.pad_sequence(
-            batch['embeddings'],
+            batch["embeddings"],
             batch_first=True,
-            padding_value=self.padding_value
+            padding_value=self.padding_value,
         )
-        if not isinstance(batch['labels'], torch.Tensor):
-            labels = torch.tensor(batch['labels'])
+        if not isinstance(batch["labels"], torch.Tensor):
+            labels = torch.tensor(batch["labels"])
 
         if self.pad_labels:
             labels = torch.nn.utils.rnn.pad_sequence(

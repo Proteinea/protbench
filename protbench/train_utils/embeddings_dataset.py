@@ -25,4 +25,7 @@ class EmbeddingsDataset(Dataset):
         return len(self.embeddings)
 
     def __getitem__(self, idx):
-        return {"embd": self.embeddings[idx], "labels": torch.tensor(self.labels[idx])}
+        return {
+            "embd": self.embeddings[idx],
+            "labels": torch.tensor(self.labels[idx]),
+        }

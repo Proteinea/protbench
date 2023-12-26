@@ -1,40 +1,8 @@
 import unittest
 
 import numpy as np
+from protbench.src.metrics.metrics import compute_accuracy
 from transformers import EvalPrediction
-
-from protbench.src.metrics import MetricRegistry
-from protbench.src.metrics.metrics import (
-    compute_accuracy,
-)
-
-
-class TestMetricRegistry(unittest.TestCase):
-    def test_add_metric(self):
-        if "test_metric" in MetricRegistry.metric_name_map:
-            del MetricRegistry.metric_name_map["test_metric"]
-
-        @MetricRegistry.register("test_metric")
-        def test_metric():
-            return "test"
-
-        self.assertIn("test_metric", MetricRegistry.metric_name_map)
-        self.assertIs(MetricRegistry.metric_name_map["test_metric"], test_metric)
-        self.assertEqual(MetricRegistry.metric_name_map["test_metric"], test_metric)
-
-    def test_add_metric_with_existing_name(self):
-        if "test_metric" in MetricRegistry.metric_name_map:
-            del MetricRegistry.metric_name_map["test_metric"]
-
-        @MetricRegistry.register("test_metric")
-        def test_metric():
-            return "test"
-
-        with self.assertRaises(ValueError):
-
-            @MetricRegistry.register("test_metric")
-            def test_metric2():
-                return "test2"
 
 
 class TestMetrics(unittest.TestCase):
