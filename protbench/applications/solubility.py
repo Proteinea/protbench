@@ -4,11 +4,16 @@ from peft import TaskType
 from protbench import metrics
 from protbench.applications.benchmarking_task import BenchmarkingTask
 from protbench.models.downstream_models import (
-    DownstreamModelFromEmbedding, DownstreamModelWithPretrainedBackbone)
+    DownstreamModelFromEmbedding,
+    DownstreamModelWithPretrainedBackbone,
+)
 from protbench.models.heads import BinaryClassificationHead
 from protbench.tasks import HuggingFaceSequenceToClass
-from protbench.utils import (collate_inputs, collate_sequence_and_labels,
-                             preprocess_binary_classification_logits)
+from protbench.utils import (
+    collate_inputs,
+    collate_sequence_and_labels,
+    preprocess_binary_classification_logits,
+)
 from torch import nn
 from transformers import EvalPrediction
 
@@ -36,11 +41,18 @@ supported_datasets = {"solubility": get_solubility_dataset}
 
 
 def compute_solubility_metrics(p: EvalPrediction):
+    accuracies_std = metrics.compute_accuracies_std(p)
+    num_examples = p.label_ids.shape[0]
+    error_bar = metrics.compute_accuracies_error_bar(
+        accuracies_std=accuracies_std, num_examples=num_examples
+    )
     return {
         "accuracy": metrics.compute_accuracy(p),
         "precision": metrics.compute_precision(p, average="binary"),
         "recall": metrics.compute_recall(p, average="binary"),
         "f1": metrics.compute_f1(p, average="binary"),
+        "accuracy_std": accuracies_std,
+        "error_bar": error_bar,
     }
 
 

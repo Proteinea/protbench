@@ -6,3 +6,6 @@ from protbench.applications.remote_homology import RemoteHomology
 from protbench.applications.solubility import Solubility
 from protbench.applications.ssp3 import SSP3
 from protbench.applications.ssp8 import SSP8
+from protbench.applications.gb1_sampled import GB1Sampled
+from protbench.applications.pli import PLI
+from protbench.applications.ppi import PPI

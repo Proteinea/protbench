@@ -3,8 +3,12 @@ from typing import Optional
 import numpy as np
 from protbench.metrics.utils import remove_ignored_predictions
 from scipy.stats import spearmanr
-from sklearn.metrics import (accuracy_score, f1_score, precision_score,
-                             recall_score)
+from sklearn.metrics import (
+    accuracy_score,
+    f1_score,
+    precision_score,
+    recall_score,
+)
 from transformers import EvalPrediction
 
 
@@ -25,6 +29,20 @@ def compute_accuracy(
             predictions, labels, ignore_value=ignore_index
         )
     return float(accuracy_score(predictions, labels, **kwargs))
+
+
+def compute_accuracies_std(
+    p: EvalPrediction, ignore_index: Optional[int] = -100, **kwargs
+):
+    accuracies = []
+    for predictions, labels in zip(p.predictions, p.label_ids):
+        predictions, labels = predictions.reshape(-1), labels.reshape(-1)
+        if ignore_index is not None:
+            predictions, labels = remove_ignored_predictions(
+                predictions, labels, ignore_value=ignore_index
+            )
+        accuracies.append((predictions == labels).mean())
+    return np.std(accuracies)
 
 
 def compute_precision(
@@ -104,38 +122,16 @@ def compute_spearman(
     return spearmanr(predictions, labels, **kwargs).correlation
 
 
-def compute_error_bar_for_token_classification(
-    p: EvalPrediction, ignore_index=-100
-):
-    if len(p.predictions.shape) > 2:
-        p.predictions = p.predictions.argmax(-1)
-        p.predictions.astype(p.label_ids.dtype)
-
-    accuracies = []
-    for i in range(p.predictions.shape[0]):
-        current_pred = p.predictions[None, i]
-        current_labels = p.label_ids[None, i]
-        ep = EvalPrediction(current_pred, current_labels)
-        accuracies.append(compute_accuracy(ep, ignore_index=ignore_index))
-    accuracy_std = np.std(accuracies)
-    accs_std_error = accuracy_std / (len(accuracies) ** 0.5)
-    # 1.96 is the z score for 95% confidence interval
+def compute_accuracies_error_bar(accuracies_std, num_examples):
+    accs_std_error = accuracies_std / (len(num_examples)) ** 0.5
     error_bar = 1.96 * accs_std_error
     return error_bar
 
 
-def compute_error_bar_for_binary_classification(p: EvalPrediction):
-    accuracies = (p.predictions == p.label_ids).astype("float32")
-    accs_std = np.std(accuracies)
-    accs_std_error = accs_std / (len(accs_std)) ** 0.5
-    error_bar = 1.96 * accs_std_error
-    return error_bar
-
-
-def compute_error_bar_for_regression(p: EvalPrediction):
-    spearman_corr = compute_spearman(p)
-    n = p.shape[0]
-    error = (
-        (1 - spearman_corr**2) ** 2 * (1 + spearman_corr**2 / 2) / (n - 3)
+def compute_error_bar_for_regression(spearman_corr, num_examples):
+    error_bar = (
+        (1 - spearman_corr**2) ** 2
+        * (1 + spearman_corr**2 / 2)
+        / (num_examples - 3)
     ) ** 0.5
-    return error
+    return error_bar

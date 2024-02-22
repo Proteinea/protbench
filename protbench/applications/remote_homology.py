@@ -3,14 +3,20 @@ from typing import Callable, Optional
 
 import numpy as np
 from peft import TaskType
+from protbench import metrics
 from protbench.applications.benchmarking_task import BenchmarkingTask
 from protbench.models.downstream_models import (
-    DownstreamModelFromEmbedding, DownstreamModelWithPretrainedBackbone)
+    DownstreamModelFromEmbedding,
+    DownstreamModelWithPretrainedBackbone,
+)
 from protbench.models.heads import MultiClassClassificationHead
 from protbench.tasks import HuggingFaceSequenceToClass
 from protbench.utils import collate_inputs, collate_sequence_and_labels
-from sklearn.metrics import (accuracy_score, precision_recall_fscore_support,
-                             top_k_accuracy_score)
+from sklearn.metrics import (
+    accuracy_score,
+    precision_recall_fscore_support,
+    top_k_accuracy_score,
+)
 from transformers import EvalPrediction
 
 
@@ -42,6 +48,15 @@ def compute_remote_homology_metrics(p: EvalPrediction, num_classes: int):
         p.label_ids, p.predictions.argmax(axis=1), average="macro"
     )
 
+    eval_pred = EvalPrediction(
+        predictions=p.predictions.argmax(axis=1), label_ids=p.label_ids
+    )
+    accuracies_std = metrics.compute_accuracies_std(eval_pred)
+    num_examples = p.label_ids.shape[0]
+    error_bar = metrics.compute_accuracies_error_bar(
+        accuracies_std=accuracies_std, num_examples=num_examples
+    )
+
     return {
         "accuracy": accuracy_score(p.label_ids, p.predictions.argmax(axis=1)),
         "precision": prfs[0],
@@ -50,6 +65,8 @@ def compute_remote_homology_metrics(p: EvalPrediction, num_classes: int):
         "hits10": top_k_accuracy_score(
             p.label_ids, p.predictions, k=10, labels=np.arange(num_classes)
         ),
+        "accuracy_std": accuracies_std,
+        "error_bar": error_bar,
     }
 
 

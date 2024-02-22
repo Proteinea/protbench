@@ -5,13 +5,18 @@ from peft import TaskType
 from protbench import metrics
 from protbench.applications.benchmarking_task import BenchmarkingTask
 from protbench.models.downstream_models import (
-    DownstreamModelFromEmbedding, DownstreamModelWithPretrainedBackbone)
+    DownstreamModelFromEmbedding,
+    DownstreamModelWithPretrainedBackbone,
+)
 from protbench.models.heads import TokenClassificationHead
 from protbench.tasks import HuggingFaceResidueToClass
-from protbench.utils import (collate_inputs_and_labels,
-                             collate_sequence_and_align_labels)
-from protbench.utils.preprocessing_utils import \
-    preprocess_multi_classification_logits
+from protbench.utils import (
+    collate_inputs_and_labels,
+    collate_sequence_and_align_labels,
+)
+from protbench.utils.preprocessing_utils import (
+    preprocess_multi_classification_logits,
+)
 from transformers import EvalPrediction
 
 
@@ -123,11 +128,18 @@ supported_datasets = {
 
 
 def compute_secondary_structure_metrics(p: EvalPrediction):
+    accuracies_std = metrics.compute_accuracies_std(p)
+    num_examples = p.label_ids.shape[0]
+    error_bar = metrics.compute_accuracies_error_bar(
+        accuracies_std=accuracies_std, num_examples=num_examples
+    )
     return {
         "accuracy": metrics.compute_accuracy(p),
         "precision": metrics.compute_precision(p, average="macro"),
         "recall": metrics.compute_recall(p, average="macro"),
         "f1": metrics.compute_f1(p, average="macro"),
+        "accuracy_std": accuracies_std,
+        "error_bar": error_bar,
     }
 
 

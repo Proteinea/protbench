@@ -1,25 +1,23 @@
 from typing import Callable, Optional
 
 from peft import TaskType
+from protbench import metrics
 from protbench.applications.benchmarking_task import BenchmarkingTask
 from protbench.models.downstream_models import (  # noqa
-    DownstreamModelFromEmbedding, DownstreamModelWithPretrainedBackbone)
+    DownstreamModelFromEmbedding,
+    DownstreamModelWithPretrainedBackbone,
+)
 from protbench.models.heads import MultiClassClassificationHead
 from protbench.tasks import HuggingFaceSequenceToClass
 from protbench.utils import collate_inputs, collate_sequence_and_labels
-from protbench.utils.preprocessing_utils import \
-    preprocess_multi_classification_logits
+from protbench.utils.preprocessing_utils import (
+    preprocess_multi_classification_logits,
+)
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from transformers import EvalPrediction
 
 
 def get_deeploc_dataset():
-    """Initializes two `HuggingFaceSequenceToClass`
-       instances (training and validation).
-
-    Returns:
-        _type_: _description_
-    """
     train_data = HuggingFaceSequenceToClass(
         dataset_url="proteinea/deeploc",
         seqs_col="input",
@@ -46,11 +44,20 @@ def compute_deep_localization_metrics(p: EvalPrediction):
     prfs = precision_recall_fscore_support(
         p.label_ids, p.predictions, average="macro"
     )
+
+    accuracies_std = metrics.compute_accuracies_std(p)
+    num_examples = p.label_ids.shape[0]
+    error_bar = metrics.compute_accuracies_error_bar(
+        accuracies_std=accuracies_std, num_examples=num_examples
+    )
+
     return {
         "accuracy": accuracy_score(p.label_ids, p.predictions),
         "precision": prfs[0],
         "recall": prfs[1],
         "f1": prfs[2],
+        "accuracies_std": accuracies_std,
+        "error_bar": error_bar,
     }
 
 
