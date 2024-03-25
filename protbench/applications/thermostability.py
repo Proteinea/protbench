@@ -7,58 +7,52 @@ from protbench.models.downstream_models import (
 from protbench.models.heads import RegressionHead
 from protbench.tasks import HuggingFaceSequenceToValue
 from protbench.utils import collate_inputs, collate_sequence_and_labels
-from transformers import EvalPrediction
 
 
-def get_ppi_dataset():
+def get_thermostability_dataset():
     train_data = HuggingFaceSequenceToValue(
-        dataset_url="proteinea/skempi_ppi_concat",
-        data_files="train_concat.csv",
+        dataset_url="proteinea/thermostability",
+        data_files="thermo_train.csv",
         data_key="train",
-        seqs_col="protein_concat",
-        labels_col="affinity (pKd)",
+        seqs_col="sequence",
+        labels_col="target",
     )
     val_data = HuggingFaceSequenceToValue(
-        dataset_url="proteinea/skempi_ppi_concat",
-        data_files="valid_concat.csv",
+        dataset_url="proteinea/thermostability",
+        data_files="thermo_eval.csv",
         data_key="train",
-        seqs_col="protein_concat",
-        labels_col="affinity (pKd)",
+        seqs_col="sequence",
+        labels_col="target",
     )
     test_data = HuggingFaceSequenceToValue(
-        dataset_url="proteinea/skempi_ppi_concat",
-        data_files="test_concat.csv",
+        dataset_url="proteinea/thermostability",
+        data_files="thermo_test.csv",
         data_key="train",
-        seqs_col="protein_concat",
-        labels_col="affinity (pKd)",
+        seqs_col="sequence",
+        labels_col="target",
     )
     return train_data, val_data, test_data
 
 
-supported_datasets = {"ppi": get_ppi_dataset}
+supported_datasets = {"thermostability": get_thermostability_dataset}
 
 
-def compute_ppi_metrics(p: EvalPrediction):
-    spearmanr = metrics.compute_spearman(p)
+def compute_thermostability_metrics(p):
+    spearman = metrics.compute_spearman(p)
     num_examples = p.label_ids.shape[0]
     error_bar = metrics.compute_error_bar_for_regression(
-        spearman_corr=spearmanr, num_examples=num_examples
+        spearman_corr=spearman, num_examples=num_examples
     )
-    rmse = metrics.compute_rmse(p)
-    pearson_corr = metrics.compute_pearsonr(p)
     return {
-        "spearman": spearmanr,
+        "spearman": spearman,
         "error_bar": error_bar,
-        "pearsonr": pearson_corr,
-        "rmse": rmse,
     }
 
 
-
-class PPI(BenchmarkingTask):
+class Thermostability(BenchmarkingTask):
     def __init__(
         self,
-        dataset="ppi",
+        dataset="thermostability",
         from_embeddings=False,
         tokenizer=None,
         task_type=None,
@@ -78,7 +72,7 @@ class PPI(BenchmarkingTask):
             test_dataset=test_dataset,
             preprocessing_fn=None,
             collate_fn=collate_fn,
-            metrics_fn=compute_ppi_metrics,
+            metrics_fn=compute_thermostability_metrics,
             metric_for_best_model="eval_validation_spearman",
             from_embeddings=from_embeddings,
             tokenizer=tokenizer,

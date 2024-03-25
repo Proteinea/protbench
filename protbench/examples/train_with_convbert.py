@@ -1,4 +1,7 @@
+# flake8: noqa: E402
+
 import os
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 import wandb
 from functools import partial
@@ -94,7 +97,7 @@ def delete_directory_contents(directory_path):
             os.remove(os.path.join(root, name))
 
 
-def compute_embeddings(model, tokenizer, train_seqs, val_seqs):
+def compute_embeddings(model, tokenizer, train_seqs, val_seqs, test_seqs=None):
     embedding_fn = TorchEmbeddingFunction(
         model,
         partial(tokenize, tokenizer=tokenizer),
@@ -111,14 +114,22 @@ def compute_embeddings(model, tokenizer, train_seqs, val_seqs):
     )
 
     embeddings = []
-    for data in [train_seqs, val_seqs]:
+    compute_data = [train_seqs, val_seqs]
+    if test_seqs is not None:
+        compute_data.append(test_seqs)
+
+    for data in compute_data:
         embeddings.append(embedder.run(data))
+    
+
+    if test_seqs is None:
+        embeddings.append(None)
 
     return embeddings
 
 
 def compute_embeddings_and_save_to_disk(
-    model, tokenizer, train_seqs, val_seqs
+    model, tokenizer, train_seqs, val_seqs, test_seqs=None
 ):
     embedding_fn = TorchEmbeddingFunction(
         model,
@@ -128,8 +139,11 @@ def compute_embeddings_and_save_to_disk(
         pad_token_id=tokenizer.pad_token_id,
     )
 
-    train_embeddings_path = "train_embeddings"
-    val_embeddings_path = "val_embeddings"
+    train_embeddings_path = "/root/.cache/train_embeddings"
+    val_embeddings_path = "/root/.cache/val_embeddings"
+
+    if test_seqs is not None:
+        test_embeddings_path = "/root/.cache/test_embeddings"
 
     if not os.path.exists(train_embeddings_path):
         os.mkdir(train_embeddings_path)
@@ -141,10 +155,21 @@ def compute_embeddings_and_save_to_disk(
     else:
         delete_directory_contents(val_embeddings_path)
 
-    for data, path in [
+    if test_seqs is not None and not os.path.exists(test_embeddings_path):
+        os.mkdir(test_embeddings_path)
+    else:
+        delete_directory_contents(test_embeddings_path)
+
+    
+    compute_data = [
         (train_seqs, train_embeddings_path),
         (val_seqs, val_embeddings_path),
-    ]:
+    ]
+
+    if test_seqs is not None:
+        compute_data.append((test_seqs, test_embeddings_path))
+
+    for data, path in compute_data:
         embedder = TorchEmbedder(
             embedding_fn,
             low_memory=True,
@@ -290,6 +315,21 @@ def available_tasks(tasks_to_run: Optional[List] = None):
             from_embeddings=True,
             task_type=TaskType.SEQ_CLS,
         ),
+        "gb1_sampled": partial(
+            applications.GB1Sampled,
+            from_embeddings=True,
+            task_type=TaskType.SEQ_CLS
+        ),
+        "pli": partial(
+            applications.PLI,
+            from_embeddings=True,
+            task_type=TaskType.SEQ_CLS
+        ),
+        "ppi": partial(
+            applications.PPI,
+            from_embeddings=True,
+            task_type=TaskType.SEQ_CLS,
+        ),
     }
     task_types = [
         TaskType.TOKEN_CLS,
@@ -300,6 +340,9 @@ def available_tasks(tasks_to_run: Optional[List] = None):
         TaskType.TOKEN_CLS,
         TaskType.TOKEN_CLS,
         TaskType.TOKEN_CLS,
+        TaskType.SEQ_CLS,
+        TaskType.SEQ_CLS,
+        TaskType.SEQ_CLS,
         TaskType.SEQ_CLS,
         TaskType.SEQ_CLS,
         TaskType.SEQ_CLS,
@@ -344,15 +387,22 @@ def main(config_args: omegaconf.DictConfig):
             task: applications.BenchmarkingTask
             train_seqs, train_labels = task.get_train_data()
             val_seqs, val_labels = task.get_eval_data()
+
+            if task.test_dataset is not None:
+                test_seqs, test_labels = task.get_test_data()
+            else:
+                test_seqs, test_labels = None, None
+
             num_classes = task.get_num_classes()
             if not config_args.train_config.low_memory and task.from_embeddings:
-                train_embds, val_embds = compute_embeddings(
-                    pretrained_model, tokenizer, train_seqs, val_seqs
+                train_embds, val_embds, test_embds = compute_embeddings(
+                    pretrained_model, tokenizer, train_seqs, val_seqs, test_seqs
                 )
             elif task.from_embeddings:
                 compute_embeddings_and_save_to_disk(
-                    pretrained_model, tokenizer, train_seqs, val_seqs
+                    pretrained_model, tokenizer, train_seqs, val_seqs, test_seqs
                 )
+
             if task.from_embeddings:
                 pretrained_model.cpu()
                 torch.cuda.empty_cache()
@@ -363,25 +413,34 @@ def main(config_args: omegaconf.DictConfig):
             if not config_args.train_config.low_memory and task.from_embeddings:
                 train_dataset = EmbeddingsDataset(train_embds, train_labels)
                 val_dataset = EmbeddingsDataset(val_embds, val_labels)
+                if task.test_dataset is not None:
+                    test_dataset = EmbeddingsDataset(test_embds, test_labels)
             elif task.from_embeddings:
                 train_dataset = EmbeddingsDatasetFromDisk(
-                    "train_embeddings", train_labels
+                    "/root/.cache/train_embeddings", train_labels
                 )
                 val_dataset = EmbeddingsDatasetFromDisk(
-                    "val_embeddings", val_labels
+                    "/root/.cache/val_embeddings", val_labels
                 )
+                if task.test_dataset is not None:
+                    test_dataset = EmbeddingsDatasetFromDisk('/root/.cache/test_embeddings', test_labels)
             else:
                 train_dataset = SequenceAndLabelsDataset(
                     train_seqs, train_labels
                 )
                 val_dataset = SequenceAndLabelsDataset(val_seqs, val_labels)
 
+                if task.test_dataset is not None:
+                    test_dataset = SequenceAndLabelsDataset(test_seqs, test_labels)
+
             print("Number of train embeddings: ", len(train_dataset))
             print("Number of validation embeddings: ", len(val_dataset))
+            if task.test_dataset is not None:
+                print("Number of test embeddings: ", len(test_dataset))
             print("Number of classes: ", num_classes)
 
             for i in range(config_args.train_config.num_trials_per_checkpoint):
-                run_name = f"original-{checkpoint}-{task_name}-{i}"
+                run_name = f"original-{checkpoint}-{task_name}-{i}-{config_args.convbert_config.pooling}"
 
                 set_seed(config_args.train_config.seed)
 
@@ -400,7 +459,7 @@ def main(config_args: omegaconf.DictConfig):
                 model = task.get_downstream_model(
                     downstream_model,
                     embedding_dim,
-                    pooling=config_args.model_config.pooling,
+                    pooling=config_args.convbert_config.pooling,
                 )
 
                 training_args = TrainingArguments(
@@ -421,7 +480,7 @@ def main(config_args: omegaconf.DictConfig):
                     fp16=False,
                     fp16_opt_level="02",
                     seed=config_args.train_config.seed,
-                    load_best_model_at_end=True,
+                    load_best_model_at_end=False,
                     save_total_limit=1,
                     metric_for_best_model=task.metric_for_best_model,
                     greater_is_better=True,
@@ -429,11 +488,16 @@ def main(config_args: omegaconf.DictConfig):
                     report_to=config_args.train_config.report_to,
                     remove_unused_columns=False,
                 )
+                if task.test_dataset is not None:
+                    eval_ds = {'validation': val_dataset, 'test': test_dataset}
+                else:
+                    eval_ds = {'validation': val_dataset}
+
                 trainer = Trainer(
                     model=model,
                     args=training_args,
                     train_dataset=train_dataset,
-                    eval_dataset=val_dataset,
+                    eval_dataset=eval_ds,
                     compute_metrics=task.metrics_fn,
                     data_collator=collate_fn,
                     preprocess_logits_for_metrics=logits_preprocessing_fn,

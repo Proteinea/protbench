@@ -1,60 +1,21 @@
 import abc
-from typing import Callable
-
-from peft import TaskType
-from protbench.tasks.task import Task
 
 
 class BenchmarkingTask(abc.ABC):
     def __init__(
         self,
-        train_dataset: Task,
-        eval_dataset: Task,
-        preprocessing_fn: Callable,
-        collate_fn: Callable,
-        metrics_fn: Callable,
-        metric_for_best_model: str = None,
-        from_embeddings: bool = False,
-        tokenizer: Callable = None,
-        requires_pooling: bool = False,
-        task_type: TaskType = None,
+        train_dataset,
+        eval_dataset,
+        preprocessing_fn,
+        collate_fn,
+        metrics_fn,
+        test_dataset=None,
+        metric_for_best_model=None,
+        from_embeddings=False,
+        tokenizer=None,
+        requires_pooling=False,
+        task_type=None,
     ):
-        """Base class for downstream tasks.
-
-        Args:
-            train_dataset (Task): A task instance that contains training data.
-            eval_dataset (Task): A task instance that contains validation data.
-            preprocessing_fn (Callable): Preprocessing function that will be
-                                         called to prepare the outputs before
-                                         passing them to the metrics function.
-            collate_fn (Callable): Collate function that will be passed to the
-                                   dataloader to prepare the batch of inputs
-                                   before passing them to the model.
-            metrics_fn (Callable): Metrics function that will be called after
-                                   each N steps.
-            metric_for_best_model (str, optional): Metric that will be used to
-                                                   pick the best model.
-                                                   Defaults to None.
-            from_embeddings (bool, optional): Whether the inputs to the model
-                                              are extracted embeddings or not.
-                                              Defaults to False.
-            tokenizer (Callable, optional): Tokenizer that will be used to
-                                            encode the inputs, if
-                                            `from_embeddings` is set to `True`
-                                            then no need for the tokenizer.
-                                            Defaults to None.
-            requires_pooling (bool, optional): Whether the specified task
-                                               requires pooling layer or not.
-                                               Defaults to False.
-            task_type (TaskType, optional): If LoRA or any parameter efficient
-                                            finetuning is going to be used then
-                                            TaskType could be stored here.
-                                            Defaults to None.
-
-        Raises:
-            ValueError: If `from_embedding` is set to `False` and tokenizer is
-                        set to `None`.
-        """
         if not from_embeddings and tokenizer is None:
             raise ValueError(
                 "Expected a `tokenizer`  when `from_embeddings` "
@@ -62,6 +23,7 @@ class BenchmarkingTask(abc.ABC):
             )
         self.train_dataset = train_dataset
         self.eval_dataset = eval_dataset
+        self.test_dataset = test_dataset
         self.preprocessing_fn = preprocessing_fn
         self.collate_fn = collate_fn
         self.metrics_fn = metrics_fn
@@ -75,8 +37,10 @@ class BenchmarkingTask(abc.ABC):
     def get_train_data(self):
         raise NotImplementedError("Should be implemented in a subclass.")
 
-    @abc.abstractmethod
     def get_eval_data(self):
+        raise NotImplementedError("Should be implemented in a subclass.")
+
+    def get_test_data(self):
         raise NotImplementedError("Should be implemented in a subclass.")
 
     @abc.abstractmethod
@@ -85,3 +49,6 @@ class BenchmarkingTask(abc.ABC):
 
     def get_num_classes(self):
         return getattr(self.train_dataset, "num_classes", None)
+
+    def save_outputs_to_csv(run_name, predictions, label_ids, test_dataset):
+        raise NotImplementedError("Should be implemented in a subclass.")

@@ -1,9 +1,12 @@
 from functools import partial
-from typing import Callable, Optional
 
 import numpy as np
-from peft import TaskType
-from protbench import metrics
+from sklearn.metrics import (
+    accuracy_score,
+    precision_recall_fscore_support,
+    top_k_accuracy_score,
+)
+
 from protbench.applications.benchmarking_task import BenchmarkingTask
 from protbench.models.downstream_models import (
     DownstreamModelFromEmbedding,
@@ -12,12 +15,6 @@ from protbench.models.downstream_models import (
 from protbench.models.heads import MultiClassClassificationHead
 from protbench.tasks import HuggingFaceSequenceToClass
 from protbench.utils import collate_inputs, collate_sequence_and_labels
-from sklearn.metrics import (
-    accuracy_score,
-    precision_recall_fscore_support,
-    top_k_accuracy_score,
-)
-from transformers import EvalPrediction
 
 
 def get_remote_homology_dataset():
@@ -37,24 +34,24 @@ def get_remote_homology_dataset():
         data_files=None,
         data_key="validation",
     )
-    return train_data, val_data
+
+    test_data = HuggingFaceSequenceToClass(
+        class_to_id=train_data.class_to_id,
+        dataset_url="proteinea/remote_homology",
+        seqs_col="primary",
+        labels_col="fold_label",
+        data_files="test_fold_holdout.csv",
+        data_key="train",)
+
+    return train_data, val_data, test_data
 
 
 supported_datasets = {"remote_homology": get_remote_homology_dataset}
 
 
-def compute_remote_homology_metrics(p: EvalPrediction, num_classes: int):
+def compute_remote_homology_metrics(p, num_classes):
     prfs = precision_recall_fscore_support(
         p.label_ids, p.predictions.argmax(axis=1), average="macro"
-    )
-
-    eval_pred = EvalPrediction(
-        predictions=p.predictions.argmax(axis=1), label_ids=p.label_ids
-    )
-    accuracies_std = metrics.compute_accuracies_std(eval_pred)
-    num_examples = p.label_ids.shape[0]
-    error_bar = metrics.compute_accuracies_error_bar(
-        accuracies_std=accuracies_std, num_examples=num_examples
     )
 
     return {
@@ -65,20 +62,18 @@ def compute_remote_homology_metrics(p: EvalPrediction, num_classes: int):
         "hits10": top_k_accuracy_score(
             p.label_ids, p.predictions, k=10, labels=np.arange(num_classes)
         ),
-        "accuracy_std": accuracies_std,
-        "error_bar": error_bar,
     }
 
 
 class RemoteHomology(BenchmarkingTask):
     def __init__(
         self,
-        dataset: str = "remote_homology",
-        from_embeddings: bool = False,
-        tokenizer: Optional[Callable] = None,
-        task_type: Optional[TaskType] = None,
+        dataset="remote_homology",
+        from_embeddings=False,
+        tokenizer=None,
+        task_type=None,
     ):
-        train_dataset, eval_dataset = supported_datasets[dataset]()
+        train_dataset, eval_dataset, test_dataset = supported_datasets[dataset]()
         collate_fn = (
             collate_inputs
             if from_embeddings
@@ -93,11 +88,12 @@ class RemoteHomology(BenchmarkingTask):
                 compute_remote_homology_metrics,
                 num_classes=train_dataset.num_classes,
             ),
-            metric_for_best_model="eval_hits10",
+            metric_for_best_model="eval_validation_hits10",
             from_embeddings=from_embeddings,
             tokenizer=tokenizer,
             requires_pooling=True,
             task_type=task_type,
+            test_dataset=test_dataset,
         )
 
     def get_train_data(self):
@@ -106,7 +102,12 @@ class RemoteHomology(BenchmarkingTask):
     def get_eval_data(self):
         return self.eval_dataset.data[0], self.eval_dataset.data[1]
 
-    def get_downstream_model(self, backbone_model, embedding_dim, pooling=None):
+    def get_test_data(self):
+        return self.test_dataset.data[0], self.test_dataset.data[1]
+
+    def get_downstream_model(
+        self, backbone_model, embedding_dim, pooling=None
+    ):
         head = MultiClassClassificationHead(
             input_dim=embedding_dim, output_dim=self.get_num_classes()
         )

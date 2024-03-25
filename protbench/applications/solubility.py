@@ -1,6 +1,3 @@
-from typing import Callable, Optional
-
-from peft import TaskType
 from protbench import metrics
 from protbench.applications.benchmarking_task import BenchmarkingTask
 from protbench.models.downstream_models import (
@@ -14,7 +11,6 @@ from protbench.utils import (
     collate_sequence_and_labels,
     preprocess_binary_classification_logits,
 )
-from torch import nn
 from transformers import EvalPrediction
 
 
@@ -26,6 +22,14 @@ def get_solubility_dataset():
         seqs_col="sequences",
         labels_col="labels",
     )
+    validation_data = HuggingFaceSequenceToClass(
+        class_to_id=train_data.class_to_id,
+        dataset_url="proteinea/solubility",
+        data_files=None,
+        data_key="validation",
+        seqs_col="sequences",
+        labels_col="labels",
+    )
     test_data = HuggingFaceSequenceToClass(
         class_to_id=train_data.class_to_id,
         dataset_url="proteinea/solubility",
@@ -34,10 +38,11 @@ def get_solubility_dataset():
         seqs_col="sequences",
         labels_col="labels",
     )
-    return train_data, test_data
+    return train_data, validation_data, test_data
 
 
 supported_datasets = {"solubility": get_solubility_dataset}
+
 
 
 def compute_solubility_metrics(p: EvalPrediction):
@@ -59,12 +64,12 @@ def compute_solubility_metrics(p: EvalPrediction):
 class Solubility(BenchmarkingTask):
     def __init__(
         self,
-        dataset: str = "solubility",
-        from_embeddings: bool = False,
-        tokenizer: Optional[Callable] = None,
-        task_type: Optional[TaskType] = None,
+        dataset="solubility",
+        from_embeddings=False,
+        tokenizer=None,
+        task_type=None,
     ):
-        train_dataset, eval_dataset = supported_datasets[dataset]()
+        train_dataset, eval_dataset, test_dataset = supported_datasets[dataset]()
         collate_fn = (
             collate_inputs
             if from_embeddings
@@ -73,10 +78,11 @@ class Solubility(BenchmarkingTask):
         super().__init__(
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
+            test_dataset=test_dataset,
             preprocessing_fn=preprocess_binary_classification_logits,
             collate_fn=collate_fn,
             metrics_fn=compute_solubility_metrics,
-            metric_for_best_model="accuracy",
+            metric_for_best_model="eval_validation_accuracy",
             from_embeddings=from_embeddings,
             tokenizer=tokenizer,
             requires_pooling=True,
@@ -89,13 +95,15 @@ class Solubility(BenchmarkingTask):
     def get_eval_data(self):
         return self.eval_dataset.data[0], self.eval_dataset.data[1]
 
+    def get_test_data(self):
+        return self.test_dataset.data[0], self.test_dataset.data[1]
+
     def get_downstream_model(
-        self,
-        backbone_model: nn.Module,
-        embedding_dim: int,
-        pooling: Callable = None,
+        self, backbone_model, embedding_dim, pooling=None
     ):
-        head = BinaryClassificationHead(input_dim=embedding_dim)
+        head = BinaryClassificationHead(
+            input_dim=embedding_dim
+        )
         if self.from_embeddings:
             model = DownstreamModelFromEmbedding(backbone_model, head)
         else:

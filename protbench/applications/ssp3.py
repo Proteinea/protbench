@@ -1,7 +1,3 @@
-from typing import Any, Callable, List, Optional, Union
-
-import numpy as np
-from peft import TaskType
 from protbench import metrics
 from protbench.applications.benchmarking_task import BenchmarkingTask
 from protbench.models.downstream_models import (
@@ -20,7 +16,7 @@ from protbench.utils.preprocessing_utils import (
 from transformers import EvalPrediction
 
 
-def preprocess_ssp_rows(seq: str, label: Union[List, np.ndarray], mask: Any):
+def preprocess_ssp_rows(seq, label, mask):
     mask = list(map(float, mask.split()))
     return seq, label, mask
 
@@ -145,11 +141,7 @@ def compute_secondary_structure_metrics(p: EvalPrediction):
 
 class SSP3(BenchmarkingTask):
     def __init__(
-        self,
-        dataset: str,
-        from_embeddings: bool = False,
-        tokenizer: Optional[Callable] = None,
-        task_type: Optional[TaskType] = None,
+        self, dataset, from_embeddings=False, tokenizer=None, task_type=None
     ):
         train_dataset, eval_dataset = supported_datasets[dataset]()
         collate_fn = (
@@ -163,7 +155,7 @@ class SSP3(BenchmarkingTask):
             preprocessing_fn=preprocess_multi_classification_logits,
             collate_fn=collate_fn,
             metrics_fn=compute_secondary_structure_metrics,
-            metric_for_best_model="accuracy",
+            metric_for_best_model="eval_validation_accuracy",
             from_embeddings=from_embeddings,
             tokenizer=tokenizer,
             requires_pooling=False,
@@ -176,7 +168,9 @@ class SSP3(BenchmarkingTask):
     def get_eval_data(self):
         return self.eval_dataset.data[0], self.eval_dataset.data[1]
 
-    def get_downstream_model(self, backbone_model, embedding_dim, pooling=None):
+    def get_downstream_model(
+        self, backbone_model, embedding_dim, pooling=None
+    ):
         head = TokenClassificationHead(
             input_dim=embedding_dim, output_dim=self.get_num_classes()
         )

@@ -19,9 +19,6 @@ def get_available_checkpoints():
     return list(model_url_map.keys())
 
 
-# lora_task_type instead of task_type.
-
-
 def initialize_model_from_checkpoint(
     model_name: str,
     initialize_with_lora: bool = False,

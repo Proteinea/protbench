@@ -7,6 +7,9 @@ from protbench.models.downstream_models import (
 from protbench.models.heads import RegressionHead
 from protbench.tasks import HuggingFaceSequenceToValue
 from protbench.utils import collate_inputs, collate_sequence_and_labels
+import pandas as pd
+from scipy.stats import spearmanr
+from transformers import EvalPrediction
 
 
 def get_pli_dataset():
@@ -20,14 +23,14 @@ def get_pli_dataset():
     val_data = HuggingFaceSequenceToValue(
         dataset_url="proteinea/pdbbind_pli",
         data_files="pdbbind_valid.csv",
-        data_key="validation",
+        data_key="train",
         seqs_col="protein",
         labels_col="affinity (pKd/pKi)",
     )
     test_data = HuggingFaceSequenceToValue(
-        dataset_url="proteinea/skempi_pli_concat",
+        dataset_url="proteinea/pdbbind_pli",
         data_files="casf_test.csv",
-        data_key="test",
+        data_key="train",
         seqs_col="protein",
         labels_col="affinity (pKd/pKi)",
     )
@@ -37,15 +40,19 @@ def get_pli_dataset():
 supported_datasets = {"pli": get_pli_dataset}
 
 
-def compute_pli_metrics(p):
-    spearman = metrics.compute_spearman(p)
+def compute_pli_metrics(p: EvalPrediction):
+    spearmanr = metrics.compute_spearman(p)
     num_examples = p.label_ids.shape[0]
     error_bar = metrics.compute_error_bar_for_regression(
-        spearman_corr=spearman, num_examples=num_examples
+        spearman_corr=spearmanr, num_examples=num_examples
     )
+    rmse = metrics.compute_rmse(p)
+    pearson_corr = metrics.compute_pearsonr(p)
     return {
-        "spearman": spearman,
+        "spearman": spearmanr,
         "error_bar": error_bar,
+        "pearsonr": pearson_corr,
+        "rmse": rmse,
     }
 
 
@@ -57,9 +64,7 @@ class PLI(BenchmarkingTask):
         tokenizer=None,
         task_type=None,
     ):
-        train_dataset, eval_dataset, test_dataset = supported_datasets[
-            dataset
-        ]()
+        train_dataset, eval_dataset, test_dataset = supported_datasets[dataset]()
         collate_fn = (
             collate_inputs
             if from_embeddings
@@ -81,15 +86,40 @@ class PLI(BenchmarkingTask):
         )
 
     def get_train_data(self):
-        return self.train_dataset.data[0], self.train_dataset.data[1]
+        xs = []
+        ys = []
+        for x, y in zip(self.train_dataset.data[0], self.train_dataset.data[1]):
+            if x is None or len(x) == 0:
+                continue
+
+            xs.append(x)
+            ys.append(y)
+        return xs, ys
 
     def get_eval_data(self):
-        return self.eval_dataset.data[0], self.eval_dataset.data[1]
+        xs = []
+        ys = []
+        for x, y in zip(self.eval_dataset.data[0], self.eval_dataset.data[1]):
+            if x is None or len(x) == 0:
+                continue
+
+            xs.append(x)
+            ys.append(y)
+        return xs, ys
 
     def get_test_data(self):
-        return self.test_dataset.data[0], self.test_dataset.data[1]
+        xs = []
+        ys = []
+        for x, y in zip(self.test_dataset.data[0], self.test_dataset.data[1]):
+            if x is None or len(x) == 0:
+                continue
+            xs.append(x)
+            ys.append(y)
+        return xs, ys
 
-    def get_downstream_model(self, backbone_model, embedding_dim, pooling=None):
+    def get_downstream_model(
+        self, backbone_model, embedding_dim, pooling=None
+    ):
         head = RegressionHead(input_dim=embedding_dim)
         if self.from_embeddings:
             model = DownstreamModelFromEmbedding(backbone_model, head)

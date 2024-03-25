@@ -8,8 +8,18 @@ from sklearn.metrics import (
     f1_score,
     precision_score,
     recall_score,
+    mean_squared_error,
 )
 from transformers import EvalPrediction
+from scipy.stats import pearsonr
+
+
+def compute_pearsonr(p: EvalPrediction, ignore_index: Optional[int] = -100, **kwargs):
+    return pearsonr(p.predictions.flatten(), p.label_ids.flatten()).statistic
+
+
+def compute_rmse(p: EvalPrediction, ignore_index: Optional[int] = -100, **kwargs):
+    return mean_squared_error(p.label_ids.flatten(), p.predictions.flatten())
 
 
 def compute_accuracy(
@@ -123,7 +133,7 @@ def compute_spearman(
 
 
 def compute_accuracies_error_bar(accuracies_std, num_examples):
-    accs_std_error = accuracies_std / (len(num_examples)) ** 0.5
+    accs_std_error = accuracies_std / num_examples ** 0.5
     error_bar = 1.96 * accs_std_error
     return error_bar
 

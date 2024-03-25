@@ -1,19 +1,19 @@
-from typing import Callable, Optional
-
-from peft import TaskType
-from protbench import metrics
 from protbench.applications.benchmarking_task import BenchmarkingTask
-from protbench.models.downstream_models import (  # noqa
-    DownstreamModelFromEmbedding,
-    DownstreamModelWithPretrainedBackbone,
-)
-from protbench.models.heads import MultiClassClassificationHead
 from protbench.tasks import HuggingFaceSequenceToClass
 from protbench.utils import collate_inputs, collate_sequence_and_labels
+from protbench.models.heads import MultiClassClassificationHead
+from protbench.models.downstream_models import DownstreamModelFromEmbedding
+from protbench.models.downstream_models import (
+    DownstreamModelWithPretrainedBackbone,
+)  # noqa
+from sklearn.metrics import precision_recall_fscore_support
+from sklearn.metrics import accuracy_score
 from protbench.utils.preprocessing_utils import (
     preprocess_multi_classification_logits,
 )
-from sklearn.metrics import accuracy_score, precision_recall_fscore_support
+import numpy as np
+import pandas as pd
+from protbench.metrics import compute_accuracies_std, compute_accuracies_error_bar
 from transformers import EvalPrediction
 
 
@@ -45,9 +45,9 @@ def compute_deep_localization_metrics(p: EvalPrediction):
         p.label_ids, p.predictions, average="macro"
     )
 
-    accuracies_std = metrics.compute_accuracies_std(p)
+    accuracies_std = compute_accuracies_std(p)
     num_examples = p.label_ids.shape[0]
-    error_bar = metrics.compute_accuracies_error_bar(
+    error_bar = compute_accuracies_error_bar(
         accuracies_std=accuracies_std, num_examples=num_examples
     )
 
@@ -60,14 +60,13 @@ def compute_deep_localization_metrics(p: EvalPrediction):
         "error_bar": error_bar,
     }
 
-
 class DeepLoc(BenchmarkingTask):
     def __init__(
         self,
-        dataset: str = "deeploc",
-        from_embeddings: bool = False,
-        tokenizer: Optional[Callable] = None,
-        task_type: Optional[TaskType] = None,
+        dataset="deeploc",
+        from_embeddings=False,
+        tokenizer=None,
+        task_type=None,
     ):
         train_dataset, eval_dataset = supported_datasets[dataset]()
         collate_fn = (
@@ -81,7 +80,7 @@ class DeepLoc(BenchmarkingTask):
             preprocessing_fn=preprocess_multi_classification_logits,
             collate_fn=collate_fn,
             metrics_fn=compute_deep_localization_metrics,
-            metric_for_best_model="eval_accuracy",
+            metric_for_best_model="eval_validation_accuracy",
             from_embeddings=from_embeddings,
             tokenizer=tokenizer,
             requires_pooling=True,
@@ -94,7 +93,9 @@ class DeepLoc(BenchmarkingTask):
     def get_eval_data(self):
         return self.eval_dataset.data[0], self.eval_dataset.data[1]
 
-    def get_downstream_model(self, backbone_model, embedding_dim, pooling=None):
+    def get_downstream_model(
+        self, backbone_model, embedding_dim, pooling=None
+    ):
         head = MultiClassClassificationHead(
             input_dim=embedding_dim, output_dim=self.get_num_classes()
         )

@@ -1,5 +1,7 @@
-import os
+# flake8: noqa: E402
 
+import os
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 import wandb
 from functools import partial
 
@@ -291,6 +293,16 @@ def available_tasks(tasks_to_run: Optional[List] = None):
             from_embeddings=False,
             task_type=TaskType.SEQ_CLS,
         ),
+        "gb1_sampled": partial(
+            applications.GB1Sampled,
+            from_embeddings=False,
+            task_type=TaskType.SEQ_CLS
+        ),
+        "ppi": partial(
+            applications.PPI,
+            from_embeddings=False,
+            task_type=TaskType.SEQ_CLS,
+        ),
     }
     task_types = [
         TaskType.TOKEN_CLS,
@@ -301,6 +313,8 @@ def available_tasks(tasks_to_run: Optional[List] = None):
         TaskType.TOKEN_CLS,
         TaskType.TOKEN_CLS,
         TaskType.TOKEN_CLS,
+        TaskType.SEQ_CLS,
+        TaskType.SEQ_CLS,
         TaskType.SEQ_CLS,
         TaskType.SEQ_CLS,
         TaskType.SEQ_CLS,
@@ -341,6 +355,7 @@ def main(config_args: omegaconf.DictConfig):
                     lora_alpha=config_args.model_with_lora_config.lora_alpha,
                     lora_dropout=config_args.model_with_lora_config.lora_dropout, # noqa
                     lora_bias=config_args.model_with_lora_config.lora_bias,
+                    target_modules=config_args.model_with_lora_config.target_modules
                 )
                 if config_args.train_config.gradient_checkpointing:
                     pretrained_model.gradient_checkpointing_enable()
@@ -358,6 +373,8 @@ def main(config_args: omegaconf.DictConfig):
             task: applications.BenchmarkingTask
             train_seqs, train_labels = task.get_train_data()
             val_seqs, val_labels = task.get_eval_data()
+            if task.test_dataset is not None:
+                test_seqs, test_labels = task.get_test_data()
             num_classes = task.get_num_classes()
             if not config_args.train_config.low_memory and task.from_embeddings:
                 train_embds, val_embds = compute_embeddings(
@@ -384,18 +401,24 @@ def main(config_args: omegaconf.DictConfig):
                 val_dataset = EmbeddingsDatasetFromDisk(
                     "val_embeddings", val_labels
                 )
+                if task.test_dataset is not None:
+                    test_dataset = EmbeddingsDatasetFromDisk('test_embeddings', test_labels)
             else:
                 train_dataset = SequenceAndLabelsDataset(
                     train_seqs, train_labels
                 )
                 val_dataset = SequenceAndLabelsDataset(val_seqs, val_labels)
+                if task.test_dataset is not None:
+                    test_dataset = SequenceAndLabelsDataset(test_seqs, test_labels)
 
             print("Number of train embeddings: ", len(train_dataset))
             print("Number of validation embeddings: ", len(val_dataset))
+            if task.test_dataset is not None:
+                print("Number of test embeddings: ", len(test_dataset))
             print("Number of classes: ", num_classes)
 
             for i in range(config_args.train_config.num_trials_per_checkpoint):
-                run_name = f"original-{checkpoint}-{task_name}-{i}"
+                run_name = f"{checkpoint}-{task_name}-pooling-{config_args.model_with_lora_config.pooling}-lora_r-{config_args.model_with_lora_config.lora_r}-lora_alpha-{config_args.model_with_lora_config.lora_alpha}-lora_dropout-{config_args.model_with_lora_config.lora_dropout}-lora_bias-{config_args.model_with_lora_config.lora_bias}-target_modules-{config_args.model_with_lora_config.target_modules}"
 
                 set_seed(config_args.train_config.seed)
 
@@ -433,16 +456,23 @@ def main(config_args: omegaconf.DictConfig):
                     report_to=config_args.train_config.report_to,
                     remove_unused_columns=False,
                 )
+
+                if task.test_dataset is not None:
+                    eval_ds = {'validation': val_dataset, 'test': test_dataset}
+                else:
+                    eval_ds = {'validation': val_dataset}
+
                 trainer = Trainer(
                     model=model,
                     args=training_args,
                     train_dataset=train_dataset,
-                    eval_dataset=val_dataset,
+                    eval_dataset=eval_ds,
                     compute_metrics=task.metrics_fn,
                     data_collator=collate_fn,
                     preprocess_logits_for_metrics=logits_preprocessing_fn,
                 )
                 trainer.train()
+
                 wandb.finish()
                 del pretrained_model
                 gc.collect()
