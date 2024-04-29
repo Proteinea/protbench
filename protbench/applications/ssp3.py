@@ -1,3 +1,4 @@
+from peft import TaskType
 from transformers import EvalPrediction
 
 from protbench import metrics
@@ -153,7 +154,7 @@ class SSP3(BenchmarkingTask):
             from_embeddings=from_embeddings,
             tokenizer=tokenizer,
             requires_pooling=False,
-            task_type=task_type,
+            task_type=TaskType.TOKEN_CLS,
         )
 
     def get_train_data(self):

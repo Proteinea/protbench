@@ -1,8 +1,9 @@
 import unittest
 
 import numpy as np
-from protbench.src.metrics.metrics import compute_accuracy
 from transformers import EvalPrediction
+
+from protbench.src.metrics.metrics import compute_accuracy
 
 
 class TestMetrics(unittest.TestCase):

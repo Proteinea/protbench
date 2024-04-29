@@ -1,8 +1,7 @@
 from protbench.models.convbert import ConvBert
 from protbench.models.downstream_models import DownstreamModelFromEmbedding
-from protbench.models.downstream_models import (
-    DownstreamModelWithPretrainedBackbone,
-)
+from protbench.models.downstream_models import \
+    DownstreamModelWithPretrainedBackbone
 
 
 def initialize_convbert_model_from_embedding_with_default_hyperparameters(

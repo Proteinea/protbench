@@ -1,6 +1,10 @@
-from typing import Dict, List, Tuple, Union
+from typing import Dict
+from typing import List
+from typing import Tuple
+from typing import Union
 
 from Bio import SeqIO
+
 from protbench.tasks.sequence_to_class.sequence_to_class import SequenceToClass
 
 
@@ -13,8 +17,7 @@ class FastaSequenceToClass(SequenceToClass):
 
         Args:
             data_file (str): Path to the fasta file containing the sequences
-                             and labels.
-                The file must have the following format:
+                and labels. The file must have the following format:
                 >seq_id LABEL=class
                 sequence
             where SET is either train or val and LABEL is the class label.

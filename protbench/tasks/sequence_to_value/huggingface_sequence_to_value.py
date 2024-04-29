@@ -1,6 +1,12 @@
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
 
 from datasets import load_dataset
+
 from protbench.tasks.sequence_to_value.sequence_to_value import SequenceToValue
 
 
@@ -17,8 +23,8 @@ class HuggingFaceSequenceToValue(SequenceToValue):
         """Generic task of predicting a class for a sequence.
 
         Args:
-            data_file (str): path to the fasta file containing the sequences and labels.
-                The file must have the following format:
+            data_file (str): path to the fasta file containing the sequences
+                and labels. The file must have the following format:
                 >seq_id LABEL=class
                 sequence
             where SET is either train or val and LABEL is the class label.

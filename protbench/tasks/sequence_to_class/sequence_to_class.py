@@ -1,5 +1,8 @@
 import abc
-from typing import Dict, List, Optional, Tuple
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
 
 from protbench.tasks.task import Task
 
@@ -12,8 +15,8 @@ class SequenceToClass(Task):
         """Generic task of predicting a class for a sequence.
 
         Args:
-            data_file (str): path to the fasta file containing the sequences and labels.
-                The file must have the following format:
+            data_file (str): path to the fasta file containing the
+                sequences and labels. The file must have the following format:
                 >seq_id LABEL=class
                 sequence
             where SET is either train or val and LABEL is the class label.
@@ -44,5 +47,6 @@ class SequenceToClass(Task):
     def _check_number_of_classes(self) -> None:
         if self.num_classes < 2:
             raise ValueError(
-                f"Number of classes must be at least 2 but got {self.num_classes}."
+                "Number of classes must be at least 2 but got "
+                f"{self.num_classes}."
             )

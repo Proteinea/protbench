@@ -66,7 +66,6 @@ class Fluorescence(BenchmarkingTask):
         dataset: str = "fluorescence",
         from_embeddings: bool = False,
         tokenizer: Optional[Callable] = None,
-        task_type: Optional[TaskType] = None,
     ):
         train_dataset, eval_dataset, test_data = supported_datasets[dataset]()
         collate_fn = (
@@ -86,7 +85,7 @@ class Fluorescence(BenchmarkingTask):
             from_embeddings=from_embeddings,
             tokenizer=tokenizer,
             requires_pooling=True,
-            task_type=task_type,
+            task_type=TaskType.SEQ_CLS,
         )
 
     def get_train_data(self):

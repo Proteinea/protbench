@@ -1,5 +1,8 @@
 import abc
-from typing import Dict, List, Optional, Tuple
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
 
 from protbench.tasks.task import Task
 
@@ -57,8 +60,8 @@ class ResidueToClass(Task):
     def mask_labels(
         self, label: List[int], mask: Optional[List[bool]]
     ) -> List[int]:
-        """Mask the labels with the given mask by setting the masked classes to the default
-            pytorch ignore index.
+        """Mask the labels with the given mask by setting the masked classes
+            to the default pytorch ignore index.
 
         Example:
             label = [0, 1, 2, 2, 1, 0]
@@ -99,5 +102,6 @@ class ResidueToClass(Task):
     def _check_number_of_classes(self) -> None:
         if self.num_classes < 2:
             raise ValueError(
-                f"Number of classes must be at least 2 but got {self.num_classes}."
+                "Number of classes must be at least 2 but got "
+                f"{self.num_classes}."
             )

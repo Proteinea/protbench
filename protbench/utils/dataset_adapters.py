@@ -10,8 +10,9 @@ class EmbeddingsDataset(Dataset):
         """Dataset for embeddings and corresponding labels of a task.
 
         Args:
-            embeddings (list[torch.Tensor]): list of tensors of embeddings (batch_size, seq_len, embd_dim)
-                where each tensor may have a different seq_len.
+            embeddings (list[torch.Tensor]): list of tensors of embeddings
+                (batch_size, seq_len, embd_dim) where each tensor
+                may have a different seq_len.
             labels (list[Any]): list of labels.
         """
         if len(embeddings) != len(labels):
@@ -28,7 +29,9 @@ class EmbeddingsDataset(Dataset):
         return len(self.embeddings)
 
     def __getitem__(self, idx):
-        embds = self.embeddings[idx][self.shift_left : -self.shift_right, :]
+        # fmt: off
+        embds = self.embeddings[idx][self.shift_left: -self.shift_right, :]
+        # fmt: on
         labels = torch.tensor(self.labels[idx])
         return {
             "embds": embds,
@@ -41,8 +44,9 @@ class EmbeddingsDatasetFromDisk(Dataset):
         """Dataset for embeddings and corresponding labels of a task.
 
         Args:
-            embeddings (list[torch.Tensor]): list of tensors of embeddings (batch_size, seq_len, embd_dim)
-                where each tensor may have a different seq_len.
+            embeddings (list[torch.Tensor]): list of tensors of embeddings
+                (batch_size, seq_len, embd_dim) where each tensor
+                may have a different seq_len.
             labels (list[Any]): list of labels.
         """
         if len(os.listdir(embeddings_path)) != len(labels):
@@ -60,9 +64,11 @@ class EmbeddingsDatasetFromDisk(Dataset):
 
     def __getitem__(self, idx):
         embedding_path = os.path.join(self.embeddings, f"{idx}.npy")
+        # fmt: off
         embds = torch.from_numpy(
-            np.load(embedding_path)[self.shift_left : -self.shift_right, :]
+            np.load(embedding_path)[self.shift_left: -self.shift_right, :]
         )
+        # fmt: on
         labels = torch.tensor(self.labels[idx])
         return {
             "embds": embds,

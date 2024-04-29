@@ -1,6 +1,10 @@
-from typing import Any, Callable, List, Union
+from typing import Any
+from typing import Callable
+from typing import List
+from typing import Union
 
 import torch
+
 from protbench.embedder import EmbeddingFunction
 
 

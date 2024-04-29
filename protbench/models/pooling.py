@@ -18,12 +18,15 @@ class GlobalMaxPooling1D(nn.Module):
         """Forward pass of the global max pooling layer.
 
         Args:
-            x (torch.Tensor): Input tensor of shape (batch_size, seq_len, embedding_dim).
-            attention_mask (torch.Tensor, optional): Attention mask of shape (batch_size, seq_len). Defaults to None.
+            x (torch.Tensor): Input tensor of shape
+                (batch_size, seq_len, embedding_dim).
+            attention_mask (torch.Tensor, optional): Attention mask of shape
+                (batch_size, seq_len). Defaults to None.
         """
         if attention_mask is not None:
             attention_mask = attention_mask.bool()
-            # fill masked valBinaryClassificationHeadues with -inf so that they are not selected by max pooling
+            # fill masked valBinaryClassificationHeadues with -inf so
+            # that they are not selected by max pooling
             x = x.masked_fill(~attention_mask.unsqueeze(-1), float("-inf"))
         out = self.global_max_pool1d(x)
         return out
@@ -43,15 +46,19 @@ class GlobalAvgPooling1D(nn.Module):
         """Forward pass of the global max pooling layer.
 
         Args:
-            x (torch.Tensor): Input tensor of shape (batch_size, seq_len, embedding_dim).
-            attention_mask (torch.Tensor, optional): Attention mask of shape (batch_size, seq_len). Defaults to None.
+            x (torch.Tensor): Input tensor of shape
+                (batch_size, seq_len, embedding_dim).
+            attention_mask (torch.Tensor, optional): Attention mask of shape
+                (batch_size, seq_len). Defaults to None.
         """
         if attention_mask is not None:
             if torch.isnan(x).any():
-                # if there are nan values in x, use mean to propagate the nan forward
+                # if there are nan values in x, use mean to propagate
+                # the nan forward
                 out = self.global_avg_pool1d(x)
             else:
-                # fill masked values with nan so that they don't affect torch.nanmean
+                # fill masked values with nan so that they
+                # don't affect torch.nanmean
                 attention_mask = attention_mask.bool()
                 x = x.masked_fill(~attention_mask.unsqueeze(-1), torch.nan)
                 out = self.global_avg_pool1d_with_nan(x)

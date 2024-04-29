@@ -1,4 +1,9 @@
-from typing import Dict, Tuple
+from typing import Callable
+from typing import Dict
+from typing import Tuple
+
+import torch
+from peft import TaskType
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import precision_recall_fscore_support
 from transformers import EvalPrediction
@@ -12,17 +17,9 @@ from protbench.utils import collate_inputs
 from protbench.utils import collate_sequence_and_labels
 from protbench.utils.preprocessing_utils import \
     preprocess_multi_classification_logits
-from peft import TaskType
-from typing import Callable
-import torch
 
 
 def get_deeploc_dataset() -> Tuple:
-    """Creates training and validation dataset instances.
-
-    Returns:
-        Tuple: Train and Validation datasets.
-    """
     train_data = HuggingFaceSequenceToClass(
         dataset_url="proteinea/deeploc",
         seqs_col="input",
@@ -48,14 +45,6 @@ supported_datasets = {
 
 
 def compute_deep_localization_metrics(p: EvalPrediction) -> Dict:
-    """Runs evaluation metrics on the input predictions.
-
-    Args:
-        p (EvalPrediction): Predictions and labels instance.
-
-    Returns:
-        Dict: Evaluation outputs.
-    """
     prfs = precision_recall_fscore_support(
         p.label_ids, p.predictions, average="macro"
     )
@@ -82,21 +71,7 @@ class DeepLoc(BenchmarkingTask):
         dataset: str = "deeploc",
         from_embeddings: bool = False,
         tokenizer: Callable = None,
-        task_type: TaskType = None,
     ):
-        """DeepLoc benchmarking task.
-
-        Args:
-            dataset (str, optional): dataset name. Defaults to "deeploc".
-            from_embeddings (bool, optional): Whether the model that will
-                be created should expect embeddings as inputs or input ids.
-                Defaults to False.
-            tokenizer (Callable, optional): Tokenization function.
-                Defaults to None.
-            task_type (TaskType, optional): Task type that will be used
-                if using PEFT. Defaults to None.
-        """
-
         train_dataset, eval_dataset = supported_datasets[dataset]()
         collate_fn = (
             collate_inputs
@@ -113,35 +88,16 @@ class DeepLoc(BenchmarkingTask):
             from_embeddings=from_embeddings,
             tokenizer=tokenizer,
             requires_pooling=True,
-            task_type=task_type,
+            task_type=TaskType.SEQ_CLS,
         )
 
     def get_train_data(self) -> Tuple:
-        """Returns training sequences and training labels.
-
-        Returns:
-            Tuple: Training sequences and training labels
-        """
         return self.train_dataset.data[0], self.train_dataset.data[1]
 
     def get_eval_data(self):
-        """Returns validation sequences and validation labels.
-
-        Returns:
-            Tuple: validation sequences and validation labels
-        """
         return self.eval_dataset.data[0], self.eval_dataset.data[1]
 
     def get_task_head(self, embedding_dim: int) -> torch.nn.Module:
-        """Returns the head of the task that
-        will be attached to the downstream model.
-
-        Args:
-            embedding_dim (int): Embedding dimension.
-
-        Returns:
-            torch.nn.Module: Head that will be attached to the downstream head.
-        """
         head = MultiClassClassificationHead(
             input_dim=embedding_dim, output_dim=self.get_num_classes()
         )

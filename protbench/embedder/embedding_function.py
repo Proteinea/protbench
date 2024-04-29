@@ -1,5 +1,7 @@
 import abc
-from typing import Any, List, Union
+from typing import Any
+from typing import List
+from typing import Union
 
 
 class EmbeddingFunction(abc.ABC):

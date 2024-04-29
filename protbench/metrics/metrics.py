@@ -1,17 +1,16 @@
 from typing import Optional
 
 import numpy as np
-from protbench.metrics.utils import remove_ignored_predictions
-from scipy.stats import spearmanr
-from sklearn.metrics import (
-    accuracy_score,
-    f1_score,
-    precision_score,
-    recall_score,
-    mean_squared_error,
-)
-from transformers import EvalPrediction
 from scipy.stats import pearsonr
+from scipy.stats import spearmanr
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import f1_score
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import precision_score
+from sklearn.metrics import recall_score
+from transformers import EvalPrediction
+
+from protbench.metrics.utils import remove_ignored_predictions
 
 
 def compute_pearsonr(

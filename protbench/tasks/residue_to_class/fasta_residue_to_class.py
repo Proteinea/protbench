@@ -1,6 +1,9 @@
-from typing import List, Tuple, Union
+from typing import List
+from typing import Tuple
+from typing import Union
 
 from Bio import SeqIO
+
 from protbench.tasks.residue_to_class.residue_to_class import ResidueToClass
 
 

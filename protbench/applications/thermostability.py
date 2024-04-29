@@ -1,3 +1,5 @@
+from peft import TaskType
+
 from protbench import metrics
 from protbench.applications.benchmarking_task import BenchmarkingTask
 from protbench.models.heads import RegressionHead
@@ -54,7 +56,6 @@ class Thermostability(BenchmarkingTask):
         dataset="thermostability",
         from_embeddings=False,
         tokenizer=None,
-        task_type=None,
     ):
         train_dataset, eval_dataset, test_dataset = supported_datasets[
             dataset
@@ -76,7 +77,7 @@ class Thermostability(BenchmarkingTask):
             from_embeddings=from_embeddings,
             tokenizer=tokenizer,
             requires_pooling=True,
-            task_type=task_type,
+            task_type=TaskType.SEQ_CLS,
         )
 
     def get_train_data(self):

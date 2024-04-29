@@ -1,6 +1,12 @@
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
 
 from datasets import load_dataset
+
 from protbench.tasks.sequence_to_class.sequence_to_class import SequenceToClass
 
 

@@ -1,5 +1,6 @@
 import abc
-from typing import List, Tuple
+from typing import List
+from typing import Tuple
 
 from protbench.tasks.task import Task
 
@@ -11,8 +12,8 @@ class SequenceToValue(Task):
         """Generic task of predicting a value for a sequence.
 
         Args:
-            data_file (str): path to the fasta file containing the sequences and labels.
-                The file must have the following format:
+            data_file (str): path to the fasta file containing the sequences
+                and labels. The file must have the following format:
                 >seq_id VALUE=value
                 sequence
 

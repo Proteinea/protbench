@@ -1,6 +1,7 @@
 from functools import partial
 
 import numpy as np
+from peft import TaskType
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import precision_recall_fscore_support
 from sklearn.metrics import top_k_accuracy_score
@@ -69,7 +70,6 @@ class RemoteHomology(BenchmarkingTask):
         dataset="remote_homology",
         from_embeddings=False,
         tokenizer=None,
-        task_type=None,
     ):
         train_dataset, eval_dataset, test_dataset = supported_datasets[
             dataset
@@ -92,7 +92,7 @@ class RemoteHomology(BenchmarkingTask):
             from_embeddings=from_embeddings,
             tokenizer=tokenizer,
             requires_pooling=True,
-            task_type=task_type,
+            task_type=TaskType.SEQ_CLS,
             test_dataset=test_dataset,
         )
 

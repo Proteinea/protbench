@@ -2,8 +2,10 @@ from typing import Tuple
 
 import torch
 import transformers.models.convbert as c_bert
-from protbench.models.pooling import GlobalAvgPooling1D, GlobalMaxPooling1D
 from torch import nn
+
+from protbench.models.pooling import GlobalAvgPooling1D
+from protbench.models.pooling import GlobalMaxPooling1D
 
 
 class ConvBert(nn.Module):

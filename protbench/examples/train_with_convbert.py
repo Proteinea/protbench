@@ -8,20 +8,19 @@ import random
 from functools import partial
 
 import hydra
+import numpy as np
 import omegaconf
 import torch
 import wandb
-
 from transformers import Trainer
 from transformers import TrainingArguments
 
 from protbench import applications
+from protbench.embedder import utils
 from protbench.models import ConvBert
 from protbench.utils import EmbeddingsDataset
 from protbench.utils import EmbeddingsDatasetFromDisk
 from protbench.utils import SequenceAndLabelsDataset
-from protbench.embedder import utils
-import numpy as np
 
 
 def set_seed(seed):
@@ -36,29 +35,23 @@ def main(config_args: omegaconf.DictConfig):
         os.environ[env_variable] = value
 
     for checkpoint in config_args.model_checkpoints:
-        for task_name, task in applications.get_tasks(
-            tasks_to_run=config_args.tasks, from_embeddings=True,
-        ):
-            with torch.device("cuda:0"):
-                (
-                    pretrained_model,
-                    tokenizer,
-                ) = applications.models.ankh.initialize_model_from_checkpoint(
-                    checkpoint,
-                    initialize_with_lora=False,
-                    gradient_checkpointing=config_args.train_config.gradient_checkpointing,
-                )
-                embedding_dim = pretrained_model.config.d_model
-
-            task = task(
-                tokenizer=partial(
-                    tokenizer,
-                    add_special_tokens=True,
-                    padding="longest",
-                    return_tensors="pt",
-                )
+        with torch.device("cuda:0"):
+            pretrained_model, tokenizer = applications.models.ankh.initialize_model_from_checkpoint(
+                checkpoint,
+                initialize_with_lora=False,
+                gradient_checkpointing=config_args.train_config.gradient_checkpointing,
             )
-            task: applications.BenchmarkingTask
+            embedding_dim = pretrained_model.config.d_model
+            tokenizer = partial(
+                tokenizer,
+                add_special_tokens=True,
+                padding="longest",
+                return_tensors="pt",
+            )
+
+        for task_name, task in applications.get_tasks(
+            tasks_to_run=config_args.tasks, from_embeddings=True, tokenizer=tokenizer
+        ):
             train_seqs, train_labels = task.get_train_data()
             val_seqs, val_labels = task.get_eval_data()
 
@@ -86,13 +79,9 @@ def main(config_args: omegaconf.DictConfig):
                     save_path=save_dirs,
                 )
                 embedding_outputs = compute_embeddings_wrapper(train_seqs=train_seqs, val_seqs=val_seqs, test_seqs=test_seqs)
-
-
-            if task.from_embeddings:
-                pretrained_model.cpu()
+                pretrained_model.cpu() # To free up space.
                 torch.cuda.empty_cache()
 
-            if task.from_embeddings:
                 if not config_args.train_config.low_memory:
                     train_embeds, val_embeds, test_embeds = embedding_outputs
 

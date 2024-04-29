@@ -1,10 +1,15 @@
-from functools import partial
 import os
-from typing import Callable, Dict, List, Optional
+from dataclasses import dataclass
+from functools import partial
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Optional
+
+import torch
+
 from protbench.embedder import TorchEmbedder
 from protbench.embedder import TorchEmbeddingFunction
-import torch
-from dataclasses import dataclass
 
 
 @dataclass

@@ -1,8 +1,12 @@
 import abc
 from pathlib import Path
-from typing import Any, Iterable, List, Optional
+from typing import Any
+from typing import Iterable
+from typing import List
+from typing import Optional
 
 import numpy as np
+
 from protbench.embedder.embedding_function import EmbeddingFunction
 
 

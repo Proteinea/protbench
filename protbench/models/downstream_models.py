@@ -1,8 +1,12 @@
-from typing import Callable, Optional, Union
+from typing import Callable
+from typing import Optional
+from typing import Union
 
 import torch
 from torch import nn
-from protbench.models.pooling import GlobalAvgPooling1D, GlobalMaxPooling1D
+
+from protbench.models.pooling import GlobalAvgPooling1D
+from protbench.models.pooling import GlobalMaxPooling1D
 
 
 class DownstreamModelFromEmbedding(nn.Module):

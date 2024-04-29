@@ -1,11 +1,13 @@
 import abc
 from typing import Callable
+from typing import Optional
+
+from peft import TaskType
+
 from protbench.models.downstream_models import DownstreamModelFromEmbedding
 from protbench.models.downstream_models import \
     DownstreamModelWithPretrainedBackbone
 from protbench.tasks.task import Task
-from typing import Optional
-from peft import TaskType
 
 
 class BenchmarkingTask(abc.ABC):

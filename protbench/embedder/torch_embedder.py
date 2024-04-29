@@ -2,12 +2,16 @@ import logging
 import math
 from math import ceil
 from pathlib import Path
-from typing import Iterable, List, Optional, Union
+from typing import Iterable
+from typing import List
+from typing import Optional
+from typing import Union
 
 import torch
-from protbench.embedder.torch_embedding_function import TorchEmbeddingFunction
-from protbench.embedder.embedder import Embedder
 from tqdm.auto import tqdm
+
+from protbench.embedder.embedder import Embedder
+from protbench.embedder.torch_embedding_function import TorchEmbeddingFunction
 
 
 class TorchEmbedder(Embedder):
