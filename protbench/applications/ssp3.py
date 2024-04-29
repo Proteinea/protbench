@@ -136,7 +136,7 @@ def compute_secondary_structure_metrics(p: EvalPrediction):
 
 class SSP3(BenchmarkingTask):
     def __init__(
-        self, dataset, from_embeddings=False, tokenizer=None, task_type=None
+        self, dataset, from_embeddings=False, tokenizer=None,
     ):
         train_dataset, eval_dataset = supported_datasets[dataset]()
         collate_fn = (

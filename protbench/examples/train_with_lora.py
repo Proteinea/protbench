@@ -2,12 +2,9 @@
 
 import os
 
-from protbench.embedder import utils
-
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 import gc
-import random
 from functools import partial
 
 import hydra
@@ -19,15 +16,10 @@ from transformers import Trainer
 from transformers import TrainingArguments
 
 from protbench import applications
-from protbench.utils import EmbeddingsDataset  # noqa
-from protbench.utils import EmbeddingsDatasetFromDisk
 from protbench.utils import SequenceAndLabelsDataset
+from protbench.examples.utils import create_run_name
+from protbench.examples.utils import set_seed
 
-
-def set_seed(seed):
-    torch.manual_seed(seed)
-    np.random.seed(seed)
-    random.seed(seed)
 
 
 @hydra.main(config_name="config", config_path="config", version_base=None)
@@ -85,8 +77,17 @@ def main(config_args: omegaconf.DictConfig):
             print("Number of classes: ", num_classes)
 
             for i in range(config_args.train_config.num_trials_per_checkpoint):
-                run_name = f"{checkpoint}-{task_name}-pooling-{config_args.model_with_lora_config.pooling}-lora_r-{config_args.model_with_lora_config.lora_r}-lora_alpha-{config_args.model_with_lora_config.lora_alpha}-lora_dropout-{config_args.model_with_lora_config.lora_dropout}-lora_bias-{config_args.model_with_lora_config.lora_bias}-target_modules-{config_args.model_with_lora_config.target_modules}"
-
+                run_name = create_run_name(
+                    num_trial=i,
+                    checkpoint=checkpoint,
+                    task_name=task_name,
+                    pooling=config_args.model_with_lora_config.pooling,
+                    lora_r=config_args.model_with_lora_config.lora_r,
+                    lora_alpha=config_args.model_with_lora_config.lora_alpha,
+                    lora_dropout=config_args.model_with_lora_config.lora_dropout,
+                    lora_bias=config_args.model_with_lora_config.lora_bias,
+                    target_modules=config_args.model_with_lora_config.target_modules
+                )
                 set_seed(config_args.train_config.seed)
 
                 model = task.get_downstream_model(
@@ -96,7 +97,6 @@ def main(config_args: omegaconf.DictConfig):
                     if task.requires_pooling
                     else None,
                 )
-
                 training_args = TrainingArguments(
                     output_dir=os.path.join("trainer-outputs", run_name),
                     run_name=run_name,

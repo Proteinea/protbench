@@ -18,19 +18,6 @@ model_url_map = {
 }
 
 
-def default_config_tokenize_function(tokenizer):
-    def tokenize(batch):
-        nonlocal tokenizer
-        return tokenizer.batch_encode_plus(
-            batch,
-            add_special_tokens=True,
-            padding=True,
-            return_tensors="pt",
-        )["input_ids"]
-
-    return tokenize
-
-
 def get_available_checkpoints():
     return list(model_url_map.keys())
 
@@ -40,7 +27,7 @@ def embeddings_postprocessing_fn(model_outputs):
 
 
 def initialize_model_from_checkpoint(
-    model_name: str,
+    checkpoint: str,
     initialize_with_lora: bool = False,
     lora_task_type: TaskType = None,
     lora_r: int = 16,
@@ -49,10 +36,11 @@ def initialize_model_from_checkpoint(
     lora_bias: str = "none",
     gradient_checkpointing: bool = False,
 ) -> Tuple[T5EncoderModel, AutoTokenizer]:
-    tokenizer = AutoTokenizer.from_pretrained(model_url_map[model_name])
+
+    tokenizer = AutoTokenizer.from_pretrained(model_url_map[checkpoint])
     if initialize_with_lora:
         model = T5ForConditionalGeneration.from_pretrained(
-            model_url_map[model_name]
+            model_url_map[checkpoint]
         )
         peft_config = LoraConfig(
             task_type=lora_task_type,
@@ -64,7 +52,7 @@ def initialize_model_from_checkpoint(
         )
         model = get_peft_model(model, peft_config).encoder
     else:
-        model = T5EncoderModel.from_pretrained(model_url_map[model_name])
+        model = T5EncoderModel.from_pretrained(model_url_map[checkpoint])
 
     if gradient_checkpointing:
         model.gradient_checkpointing_enable()

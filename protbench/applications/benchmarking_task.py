@@ -80,6 +80,7 @@ class BenchmarkingTask(abc.ABC):
     def get_test_data(self):
         raise NotImplementedError("Should be implemented in a subclass.")
 
+    @abc.abstractmethod
     def get_task_head(self, embedding_dim):
         raise NotImplementedError("Should be implemented in a subclass.")
 

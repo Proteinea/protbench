@@ -4,11 +4,9 @@ import os
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
-import random
 from functools import partial
 
 import hydra
-import numpy as np
 import omegaconf
 import torch
 import wandb
@@ -21,12 +19,8 @@ from protbench.models import ConvBert
 from protbench.utils import EmbeddingsDataset
 from protbench.utils import EmbeddingsDatasetFromDisk
 from protbench.utils import SequenceAndLabelsDataset
-
-
-def set_seed(seed):
-    torch.manual_seed(seed)
-    np.random.seed(seed)
-    random.seed(seed)
+from protbench.examples.utils import set_seed
+from protbench.examples.utils import create_run_name
 
 
 @hydra.main(config_name="config", config_path="config", version_base=None)
@@ -118,7 +112,12 @@ def main(config_args: omegaconf.DictConfig):
             print("Number of classes: ", num_classes)
 
             for i in range(config_args.train_config.num_trials_per_checkpoint):
-                run_name = f"original-{checkpoint}-{task_name}-{i}-{config_args.convbert_config.pooling}"
+                run_name = create_run_name(
+                    num_trial=i,
+                    checkpoint=checkpoint,
+                    task_name=task_name,
+                    pooling=config_args.convbert_config.pooling,
+                )
 
                 set_seed(config_args.train_config.seed)
 
