@@ -8,15 +8,18 @@ from transformers import EvalPrediction
 class TestMetrics(unittest.TestCase):
     def test_compute_binary_classification_accuracy(self):
         p = EvalPrediction(
-            predictions=np.array([0, 1, 0, 1]), label_ids=np.array([0, 1, 0, 1])
+            predictions=np.array([0, 1, 0, 1]),
+            label_ids=np.array([0, 1, 0, 1]),
         )
         self.assertEqual(compute_accuracy(p), 1.0)
         p = EvalPrediction(
-            predictions=np.array([0, 1, 0, 1]), label_ids=np.array([0, 1, 1, 0])
+            predictions=np.array([0, 1, 0, 1]),
+            label_ids=np.array([0, 1, 1, 0]),
         )
         self.assertEqual(compute_accuracy(p), 0.5)
         p = EvalPrediction(
-            predictions=np.array([0, 1, 0, 1]), label_ids=np.array([1, 0, 1, 0])
+            predictions=np.array([0, 1, 0, 1]),
+            label_ids=np.array([1, 0, 1, 0]),
         )
         self.assertEqual(compute_accuracy(p), 0.0)
 
