@@ -1,19 +1,13 @@
+from transformers import EvalPrediction
+
 from protbench import metrics
 from protbench.applications.benchmarking_task import BenchmarkingTask
-from protbench.models.downstream_models import (
-    DownstreamModelFromEmbedding,
-    DownstreamModelWithPretrainedBackbone,
-)
 from protbench.models.heads import TokenClassificationHead
 from protbench.tasks import HuggingFaceResidueToClass
-from protbench.utils import (
-    collate_inputs_and_labels,
-    collate_sequence_and_align_labels,
-)
-from protbench.utils.preprocessing_utils import (
-    preprocess_multi_classification_logits,
-)
-from transformers import EvalPrediction
+from protbench.utils import collate_inputs_and_labels
+from protbench.utils import collate_sequence_and_align_labels
+from protbench.utils.preprocessing_utils import \
+    preprocess_multi_classification_logits
 
 
 def preprocess_ssp_rows(seq, label, mask):
@@ -168,14 +162,8 @@ class SSP3(BenchmarkingTask):
     def get_eval_data(self):
         return self.eval_dataset.data[0], self.eval_dataset.data[1]
 
-    def get_downstream_model(
-        self, backbone_model, embedding_dim, pooling=None
-    ):
+    def get_task_head(self, embedding_dim):
         head = TokenClassificationHead(
             input_dim=embedding_dim, output_dim=self.get_num_classes()
         )
-        if self.from_embeddings:
-            model = DownstreamModelFromEmbedding(backbone_model, head)
-        else:
-            model = DownstreamModelWithPretrainedBackbone(backbone_model, head)
-        return model
+        return head

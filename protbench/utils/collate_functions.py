@@ -1,4 +1,6 @@
-from typing import Callable, Dict, List
+from typing import Callable
+from typing import Dict
+from typing import List
 
 import torch
 from transformers import AutoTokenizer

@@ -1,7 +1,7 @@
 from typing import Callable, Dict, List, Optional, Tuple, Union
 
 from datasets import load_dataset
-from protbench.tasks.sequence_to_class import SequenceToClass
+from protbench.tasks.sequence_to_class.sequence_to_class import SequenceToClass
 
 
 class HuggingFaceSequenceToClass(SequenceToClass):

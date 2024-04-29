@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Any, Iterable, List, Optional
 
 import numpy as np
-from protbench.embedder import EmbeddingFunction
+from protbench.embedder.embedding_function import EmbeddingFunction
 
 
 class Embedder(abc.ABC):

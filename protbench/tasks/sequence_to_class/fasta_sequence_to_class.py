@@ -1,7 +1,7 @@
 from typing import Dict, List, Tuple, Union
 
 from Bio import SeqIO
-from protbench.tasks.sequence_to_class import SequenceToClass
+from protbench.tasks.sequence_to_class.sequence_to_class import SequenceToClass
 
 
 class FastaSequenceToClass(SequenceToClass):

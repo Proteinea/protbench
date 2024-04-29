@@ -1,12 +1,9 @@
 from protbench import metrics
 from protbench.applications.benchmarking_task import BenchmarkingTask
-from protbench.models.downstream_models import (
-    DownstreamModelFromEmbedding,
-    DownstreamModelWithPretrainedBackbone,
-)
 from protbench.models.heads import RegressionHead
 from protbench.tasks import HuggingFaceSequenceToValue
-from protbench.utils import collate_inputs, collate_sequence_and_labels
+from protbench.utils import collate_inputs
+from protbench.utils import collate_sequence_and_labels
 
 
 def get_thermostability_dataset():
@@ -34,7 +31,9 @@ def get_thermostability_dataset():
     return train_data, val_data, test_data
 
 
-supported_datasets = {"thermostability": get_thermostability_dataset}
+supported_datasets = {
+    "thermostability": get_thermostability_dataset,
+}
 
 
 def compute_thermostability_metrics(p):
@@ -89,12 +88,6 @@ class Thermostability(BenchmarkingTask):
     def get_test_data(self):
         return self.test_dataset.data[0], self.test_dataset.data[1]
 
-    def get_downstream_model(self, backbone_model, embedding_dim, pooling=None):
+    def get_task_head(self, embedding_dim):
         head = RegressionHead(input_dim=embedding_dim)
-        if self.from_embeddings:
-            model = DownstreamModelFromEmbedding(backbone_model, head)
-        else:
-            model = DownstreamModelWithPretrainedBackbone(
-                backbone_model, head, pooling
-            )
-        return model
+        return head

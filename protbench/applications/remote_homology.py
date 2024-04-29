@@ -1,20 +1,15 @@
 from functools import partial
 
 import numpy as np
-from sklearn.metrics import (
-    accuracy_score,
-    precision_recall_fscore_support,
-    top_k_accuracy_score,
-)
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import precision_recall_fscore_support
+from sklearn.metrics import top_k_accuracy_score
 
 from protbench.applications.benchmarking_task import BenchmarkingTask
-from protbench.models.downstream_models import (
-    DownstreamModelFromEmbedding,
-    DownstreamModelWithPretrainedBackbone,
-)
 from protbench.models.heads import MultiClassClassificationHead
 from protbench.tasks import HuggingFaceSequenceToClass
-from protbench.utils import collate_inputs, collate_sequence_and_labels
+from protbench.utils import collate_inputs
+from protbench.utils import collate_sequence_and_labels
 
 
 def get_remote_homology_dataset():
@@ -41,12 +36,15 @@ def get_remote_homology_dataset():
         seqs_col="primary",
         labels_col="fold_label",
         data_files="test_fold_holdout.csv",
-        data_key="train",)
+        data_key="train",
+    )
 
     return train_data, val_data, test_data
 
 
-supported_datasets = {"remote_homology": get_remote_homology_dataset}
+supported_datasets = {
+    "remote_homology": get_remote_homology_dataset,
+}
 
 
 def compute_remote_homology_metrics(p, num_classes):
@@ -73,7 +71,9 @@ class RemoteHomology(BenchmarkingTask):
         tokenizer=None,
         task_type=None,
     ):
-        train_dataset, eval_dataset, test_dataset = supported_datasets[dataset]()
+        train_dataset, eval_dataset, test_dataset = supported_datasets[
+            dataset
+        ]()
         collate_fn = (
             collate_inputs
             if from_embeddings
@@ -105,16 +105,8 @@ class RemoteHomology(BenchmarkingTask):
     def get_test_data(self):
         return self.test_dataset.data[0], self.test_dataset.data[1]
 
-    def get_downstream_model(
-        self, backbone_model, embedding_dim, pooling=None
-    ):
+    def get_task_head(self, embedding_dim):
         head = MultiClassClassificationHead(
             input_dim=embedding_dim, output_dim=self.get_num_classes()
         )
-        if self.from_embeddings:
-            model = DownstreamModelFromEmbedding(backbone_model, head)
-        else:
-            model = DownstreamModelWithPretrainedBackbone(
-                backbone_model, head, pooling
-            )
-        return model
+        return head

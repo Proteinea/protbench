@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Iterable, List, Optional, Union
 
 import torch
-from protbench.embedder import TorchEmbeddingFunction
+from protbench.embedder.torch_embedding_function import TorchEmbeddingFunction
 from protbench.embedder.embedder import Embedder
 from tqdm.auto import tqdm
 
@@ -195,8 +195,8 @@ class TorchEmbedder(Embedder):
         output_queue: Optional[torch.multiprocessing.Queue] = None,
         save_path: Optional[Path] = None,
     ):
-        # Entry point for parallel embedding run. This function is used to run the embedding function
-        # on a single gpu in a parallel embedding run.
+        # Entry point for parallel embedding run. This function is used to run
+        # the embedding function on a single gpu in a parallel embedding run.
         # Notes:
         # - This function is not meant to be called directly. It is called by the _run_multiple_gpus function.
         # - Why does this function send the embeddings to the parent process as a numpy array?

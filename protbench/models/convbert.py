@@ -2,7 +2,7 @@ from typing import Tuple
 
 import torch
 import transformers.models.convbert as c_bert
-from protbench.models import GlobalAvgPooling1D, GlobalMaxPooling1D
+from protbench.models.pooling import GlobalAvgPooling1D, GlobalMaxPooling1D
 from torch import nn
 
 

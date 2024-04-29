@@ -2,48 +2,42 @@ import os
 
 os.environ["WANDB_PROJECT"] = "AnkhV2-Run2-AvgPooling"
 
-import wandb
+import random
 from functools import partial
 
-from protbench.embedder import TorchEmbedder, TorchEmbeddingFunction
-from protbench.tasks import (
-    HuggingFaceResidueToClass,
-    HuggingFaceSequenceToClass,
-    HuggingFaceSequenceToValue,
-    PickleResidueToClass
-)
-from protbench.models import (
-    ConvBert,
-    TokenClassificationHead,
-    BinaryClassificationHead,
-    RegressionHead,
-    DownstreamModelFromEmbedding,
-    ContactPredictionHead,
-    MultiClassClassificationHead
-)
-from protbench import metrics
-from protbench.utils import (
-    collate_inputs,
-    collate_inputs_and_labels,
-    preprocess_multi_classification_logits,
-    preprocess_binary_classification_logits,
-)
-
-from torch.utils.data import Dataset
-import torch
 import numpy as np
-import random
-from transformers import (
-    T5EncoderModel,
-    AutoTokenizer,
-    Trainer,
-    TrainingArguments,
-)
-
-from scipy.spatial.distance import pdist, squareform
-from sklearn.metrics import precision_recall_fscore_support, accuracy_score, top_k_accuracy_score
+import torch
+import wandb
+from scipy.spatial.distance import pdist
+from scipy.spatial.distance import squareform
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import precision_recall_fscore_support
+from sklearn.metrics import top_k_accuracy_score
+from torch.utils.data import Dataset
+from transformers import AutoTokenizer
 from transformers import EvalPrediction
+from transformers import T5EncoderModel
+from transformers import Trainer
+from transformers import TrainingArguments
 
+from protbench import metrics
+from protbench.embedder import TorchEmbedder
+from protbench.embedder import TorchEmbeddingFunction
+from protbench.models import BinaryClassificationHead
+from protbench.models import ContactPredictionHead
+from protbench.models import ConvBert
+from protbench.models import DownstreamModelFromEmbedding
+from protbench.models import MultiClassClassificationHead
+from protbench.models import RegressionHead
+from protbench.models import TokenClassificationHead
+from protbench.tasks import HuggingFaceResidueToClass
+from protbench.tasks import HuggingFaceSequenceToClass
+from protbench.tasks import HuggingFaceSequenceToValue
+from protbench.tasks import PickleResidueToClass
+from protbench.utils import collate_inputs
+from protbench.utils import collate_inputs_and_labels
+from protbench.utils import preprocess_binary_classification_logits
+from protbench.utils import preprocess_multi_classification_logits
 
 
 class EmbeddingsDataset(Dataset):
@@ -100,8 +94,10 @@ class EmbeddingsDatasetFromDisk(Dataset):
         return len(os.listdir(self.embeddings))
 
     def __getitem__(self, idx):
-        embedding_path = os.path.join(self.embeddings, f'{idx}.npy')
-        embds = torch.from_numpy(np.load(embedding_path)[self.shift_left : -self.shift_right, :])
+        embedding_path = os.path.join(self.embeddings, f"{idx}.npy")
+        embds = torch.from_numpy(
+            np.load(embedding_path)[self.shift_left : -self.shift_right, :]
+        )
         labels = torch.tensor(self.labels[idx])
         return {
             "embds": embds,
@@ -124,7 +120,9 @@ def preprocess_contact_prediction_labels(seq, label, mask):
 
 
 def compute_deep_localization_metrics(p):
-    prfs = precision_recall_fscore_support(p.label_ids, p.predictions.argmax(axis=1), average='macro')
+    prfs = precision_recall_fscore_support(
+        p.label_ids, p.predictions.argmax(axis=1), average="macro"
+    )
     return {
         "accuracy": accuracy_score(p.label_ids, p.predictions.argmax(axis=1)),
         "precision": prfs[0],
@@ -134,15 +132,18 @@ def compute_deep_localization_metrics(p):
 
 
 def compute_remote_homology_metrics(p, num_classes):
-    prfs = precision_recall_fscore_support(p.label_ids, p.predictions.argmax(axis=1), average='macro')
+    prfs = precision_recall_fscore_support(
+        p.label_ids, p.predictions.argmax(axis=1), average="macro"
+    )
 
     return {
         "accuracy": accuracy_score(p.label_ids, p.predictions.argmax(axis=1)),
         "precision": prfs[0],
         "recall": prfs[1],
         "f1": prfs[2],
-        "hits10": top_k_accuracy_score(p.label_ids, p.predictions, k=10,
-                                       labels=np.arange(num_classes)),
+        "hits10": top_k_accuracy_score(
+            p.label_ids, p.predictions, k=10, labels=np.arange(num_classes)
+        ),
     }
 
 
@@ -221,7 +222,7 @@ def get_data(task_name, max_seqs=None):
             },
         )
 
-    elif task_name == 'ssp-ts115':
+    elif task_name == "ssp-ts115":
         train_data = HuggingFaceResidueToClass(
             **{
                 "dataset_url": "proteinea/secondary_structure_prediction",
@@ -320,7 +321,7 @@ def get_data(task_name, max_seqs=None):
             },
         )
 
-    elif task_name == 'ssp8-ts115':
+    elif task_name == "ssp8-ts115":
         train_data = HuggingFaceResidueToClass(
             **{
                 "dataset_url": "proteinea/secondary_structure_prediction",
@@ -406,7 +407,7 @@ def get_data(task_name, max_seqs=None):
             },
         )
 
-    elif task_name == 'deeploc':
+    elif task_name == "deeploc":
         train_data = HuggingFaceSequenceToClass(
             **{
                 "dataset_url": "proteinea/deeploc",
@@ -425,10 +426,10 @@ def get_data(task_name, max_seqs=None):
                 "labels_col": "loc",
                 "data_files": None,
                 "data_key": "test",
-            }
+            },
         )
 
-    elif task_name == 'remote_homology':
+    elif task_name == "remote_homology":
         train_data = HuggingFaceSequenceToClass(
             **{
                 "dataset_url": "proteinea/remote_homology",
@@ -447,7 +448,7 @@ def get_data(task_name, max_seqs=None):
                 "labels_col": "fold_label",
                 "data_files": None,
                 "data_key": "validation",
-            }
+            },
         )
 
     return (
@@ -516,7 +517,9 @@ def compute_embeddings(model, tokenizer, train_seqs, val_seqs):
     return embeddings
 
 
-def compute_embeddings_and_save_to_disk(model, tokenizer, train_seqs, val_seqs):
+def compute_embeddings_and_save_to_disk(
+    model, tokenizer, train_seqs, val_seqs
+):
     embedding_fn = TorchEmbeddingFunction(
         model,
         partial(tokenize, tokenizer=tokenizer),
@@ -525,8 +528,8 @@ def compute_embeddings_and_save_to_disk(model, tokenizer, train_seqs, val_seqs):
         pad_token_id=tokenizer.pad_token_id,
     )
 
-    train_embeddings_path = 'train_embeddings'
-    val_embeddings_path = 'val_embeddings'
+    train_embeddings_path = "train_embeddings"
+    val_embeddings_path = "val_embeddings"
 
     if not os.path.exists(train_embeddings_path):
         os.mkdir(train_embeddings_path)
@@ -538,7 +541,10 @@ def compute_embeddings_and_save_to_disk(model, tokenizer, train_seqs, val_seqs):
     else:
         delete_directory_contents(val_embeddings_path)
 
-    for data, path in [(train_seqs, train_embeddings_path), (val_seqs, val_embeddings_path)]:
+    for data, path in [
+        (train_seqs, train_embeddings_path),
+        (val_seqs, val_embeddings_path),
+    ]:
         embedder = TorchEmbedder(
             embedding_fn,
             low_memory=True,
@@ -690,7 +696,6 @@ def get_downstream_model(task_name, embedding_dim, num_classes):
                 "output_dim": num_classes,
             },
         ),
-
         "deeploc": (
             ConvBert,
             {
@@ -701,7 +706,7 @@ def get_downstream_model(task_name, embedding_dim, num_classes):
             {
                 "input_dim": embedding_dim,
                 "output_dim": num_classes,
-            }
+            },
         ),
         "remote_homology": (
             ConvBert,
@@ -713,9 +718,8 @@ def get_downstream_model(task_name, embedding_dim, num_classes):
             {
                 "input_dim": embedding_dim,
                 "output_dim": num_classes,
-            }
+            },
         ),
-
     }
     return DownstreamModelFromEmbedding(
         task_class_map[task_name][0](**task_class_map[task_name][1]),
@@ -749,7 +753,6 @@ def get_metrics(task_name, num_classes=None):
             "recall": metrics.compute_recall(x, average="macro"),
             "f1": metrics.compute_f1(x, average="macro"),
         },
-
         "ssp8-casp12": lambda x: {
             "accuracy": metrics.compute_accuracy(x),
             "precision": metrics.compute_precision(x, average="macro"),
@@ -785,9 +788,12 @@ def get_metrics(task_name, num_classes=None):
         },
         "contact_prediction": None,
         "deeploc": lambda x: compute_deep_localization_metrics(x),
-        "remote_homology": lambda x: compute_remote_homology_metrics(x, num_classes)
+        "remote_homology": lambda x: compute_remote_homology_metrics(
+            x, num_classes
+        ),
     }
     return task_class_map[task_name]
+
 
 def get_collate_fn(task_name):
     task_class_map = {
@@ -903,7 +909,7 @@ def main():
     ]
 
     for checkpoint in checkpoints:
-        with torch.device('cuda:0'):
+        with torch.device("cuda:0"):
             pretrained_model, tokenizer = get_pretrained_model_and_tokenizer(
                 checkpoint
             )
@@ -932,10 +938,12 @@ def main():
                 train_dataset = EmbeddingsDataset(train_embds, train_labels)
                 val_dataset = EmbeddingsDataset(val_embds, val_labels)
             else:
-                train_dataset = EmbeddingsDatasetFromDisk('train_embeddings',
-                                                          train_labels)
-                val_dataset = EmbeddingsDatasetFromDisk('val_embeddings',
-                                                        val_labels)
+                train_dataset = EmbeddingsDatasetFromDisk(
+                    "train_embeddings", train_labels
+                )
+                val_dataset = EmbeddingsDatasetFromDisk(
+                    "val_embeddings", val_labels
+                )
 
             print("Number of train embeddings: ", len(train_dataset))
             print("Number of validation embeddings: ", len(val_dataset))
@@ -946,7 +954,7 @@ def main():
                 set_seed(SEED)
                 model = get_downstream_model(
                     task,
-                    train_dataset[0]['embds'].shape[1],
+                    train_dataset[0]["embds"].shape[1],
                     num_classes,
                 )
                 training_args = TrainingArguments(

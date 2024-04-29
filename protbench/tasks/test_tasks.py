@@ -6,50 +6,11 @@ from typing import List, Tuple
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
-from protbench.src.tasks import Task, TaskRegistry
-from protbench.src.tasks.ResidueToClass import ResidueToClass
-from protbench.src.tasks.sequence_to_class.sequence_to_class import \
-    SequenceToClass
-from protbench.src.tasks.tasks import SequenceToValue
+from protbench.tasks.residue_to_class.residue_to_class import ResidueToClass
+from protbench.tasks.sequence_to_class.sequence_to_class import SequenceToClass
+from protbench.tasks.sequence_to_value.sequence_to_value import SequenceToValue
 
 random.seed(42)
-
-
-class TestTaskRegistry(unittest.TestCase):
-    def test_add_task(self):
-        if "test_task" in TaskRegistry.task_name_map:
-            del TaskRegistry.task_name_map["test_task"]
-
-        @TaskRegistry.register("test_task")
-        class TestTask(Task):
-            pass
-
-        self.assertIn("test_task", TaskRegistry.task_name_map)
-        self.assertIs(TaskRegistry.task_name_map["test_task"], TestTask)
-
-    def test_add_task_with_existing_name(self):
-        if "test_task" in TaskRegistry.task_name_map:
-            del TaskRegistry.task_name_map["test_task"]
-
-        @TaskRegistry.register("test_task")
-        class TestTask(Task):
-            pass
-
-        with self.assertRaises(ValueError):
-
-            @TaskRegistry.register("test_task")
-            class TestTask2(Task):
-                pass
-
-    def test_add_task_not_inheriting_task(self):
-        if "test_task" in TaskRegistry.task_name_map:
-            del TaskRegistry.task_name_map["test_task"]
-
-        with self.assertRaises(TypeError):
-
-            @TaskRegistry.register("test_task")
-            class TestTask:
-                pass
 
 
 class TestResidueToClass(unittest.TestCase):

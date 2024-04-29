@@ -8,7 +8,7 @@ class TorchEmbeddingFunction(EmbeddingFunction):
     def __init__(
         self,
         model: torch.nn.Module,
-        tokenizer: Callable[[List[str]], torch.Tensor],
+        tokenizer: Callable,
         device: Union[int, torch.device],
         embeddings_postprocessing_fn: Callable[[Any], torch.Tensor] = None,
         pad_token_id: int = 0,
@@ -73,6 +73,8 @@ class TorchEmbeddingFunction(EmbeddingFunction):
         try:
             model_outputs = self.model(input_ids.to(self.device))
         except Exception:
+            # If cuda out of memory, switch to CPU, extract
+            # embeddings then move the model back to the GPU.
             self.model.cpu()
             model_outputs = self.model(input_ids.cpu())
             self.model.to(self.device)

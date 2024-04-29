@@ -1,7 +1,7 @@
 from typing import Callable, Dict, List, Optional, Tuple
 
 from datasets import load_dataset
-from protbench.tasks.residue_to_class import ResidueToClass
+from protbench.tasks.residue_to_class.residue_to_class import ResidueToClass
 
 
 class HuggingFaceResidueToClass(ResidueToClass):

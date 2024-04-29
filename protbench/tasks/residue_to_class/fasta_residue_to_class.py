@@ -1,7 +1,7 @@
 from typing import List, Tuple, Union
 
 from Bio import SeqIO
-from protbench.tasks.residue_to_class import ResidueToClass
+from protbench.tasks.residue_to_class.residue_to_class import ResidueToClass
 
 
 class FastaResidueToClass(ResidueToClass):
