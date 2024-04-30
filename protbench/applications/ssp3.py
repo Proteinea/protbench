@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from typing import Callable
+from typing import Dict
+from typing import Tuple
 
+import torch
 from peft import TaskType
 from transformers import EvalPrediction
 
@@ -9,8 +12,6 @@ from protbench import metrics
 from protbench.applications.benchmarking_task import BenchmarkingTask
 from protbench.models.heads import TokenClassificationHead
 from protbench.tasks import HuggingFaceResidueToClass
-from protbench.utils import collate_inputs_and_labels
-from protbench.utils import collate_sequence_and_align_labels
 from protbench.utils.preprocessing_utils import (
     preprocess_multi_classification_logits,
 )
@@ -123,7 +124,7 @@ supported_datasets = {
 }
 
 
-def compute_secondary_structure_metrics(p: EvalPrediction):
+def compute_secondary_structure_metrics(p: EvalPrediction) -> Dict:
     accuracies_std = metrics.compute_accuracies_std(p)
     num_examples = p.label_ids.shape[0]
     error_bar = metrics.compute_accuracies_error_bar(
@@ -150,29 +151,23 @@ class SSP3(BenchmarkingTask):
         tokenizer: Callable | None = None,
     ):
         train_dataset, eval_dataset = supported_datasets[dataset]()
-        collate_fn = (
-            collate_inputs_and_labels
-            if from_embeddings
-            else collate_sequence_and_align_labels(tokenizer)
-        )
         super().__init__(
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
             preprocessing_fn=preprocess_multi_classification_logits,
-            collate_fn=collate_fn,
             metrics_fn=compute_secondary_structure_metrics,
             metric_for_best_model="eval_validation_accuracy",
             from_embeddings=from_embeddings,
             tokenizer=tokenizer,
         )
 
-    def get_train_data(self):
+    def get_train_data(self) -> Tuple:
         return self.train_dataset.data[0], self.train_dataset.data[1]
 
-    def get_eval_data(self):
+    def get_eval_data(self) -> Tuple:
         return self.eval_dataset.data[0], self.eval_dataset.data[1]
 
-    def get_task_head(self, embedding_dim):
+    def get_task_head(self, embedding_dim) -> torch.nn.Module:
         head = TokenClassificationHead(
             input_dim=embedding_dim, output_dim=self.get_num_classes()
         )

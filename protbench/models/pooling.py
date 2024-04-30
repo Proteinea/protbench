@@ -1,9 +1,16 @@
 from __future__ import annotations
 
-from functools import partial
-
 import torch
 from torch import nn
+
+
+def prepare_attention_mask(
+    attention_mask: torch.Tensor,
+    dtype: torch.dtype,
+    device: torch.device,
+) -> torch.Tensor:
+    attention_mask = attention_mask.to(device=device, dtype=dtype)
+    return attention_mask.unsqueeze(-1)
 
 
 class GlobalMaxPooling1D(nn.Module):
@@ -11,7 +18,6 @@ class GlobalMaxPooling1D(nn.Module):
         """Applies global max pooling over timesteps dimension"""
 
         super().__init__()
-        self.global_max_pool1d = partial(torch.amax, dim=1)
 
     def forward(
         self, x: torch.Tensor, attention_mask: torch.Tensor | None = None
@@ -25,12 +31,15 @@ class GlobalMaxPooling1D(nn.Module):
                 (batch_size, seq_len). Defaults to None.
         """
         if attention_mask is not None:
-            attention_mask = attention_mask.bool()
-            # fill masked valBinaryClassificationHeadues with -inf so
-            # that they are not selected by max pooling
-            x = x.masked_fill(~attention_mask.unsqueeze(-1), float("-inf"))
-        out = self.global_max_pool1d(x)
-        return out
+            attention_mask = prepare_attention_mask(
+                attention_mask=attention_mask,
+                dtype=x.dtype,
+                device=x.device,
+            )
+            x = x * attention_mask
+
+        x = torch.amax(x, dim=1)
+        return x
 
 
 class GlobalAvgPooling1D(nn.Module):
@@ -38,8 +47,6 @@ class GlobalAvgPooling1D(nn.Module):
         """Applies global average pooling over timesteps dimension"""
 
         super().__init__()
-        self.global_avg_pool1d = partial(torch.mean, dim=1)
-        self.global_avg_pool1d_with_nan = partial(torch.nanmean, dim=1)
 
     def forward(
         self, x: torch.Tensor, attention_mask: torch.Tensor | None = None
@@ -53,16 +60,12 @@ class GlobalAvgPooling1D(nn.Module):
                 (batch_size, seq_len). Defaults to None.
         """
         if attention_mask is not None:
-            if torch.isnan(x).any():
-                # if there are nan values in x, use mean to propagate
-                # the nan forward
-                out = self.global_avg_pool1d(x)
-            else:
-                # fill masked values with nan so that they
-                # don't affect torch.nanmean
-                attention_mask = attention_mask.bool()
-                x = x.masked_fill(~attention_mask.unsqueeze(-1), torch.nan)
-                out = self.global_avg_pool1d_with_nan(x)
+            attention_mask = prepare_attention_mask(
+                attention_mask=attention_mask,
+                dtype=x.dtype,
+                device=x.device,
+            )
+            x = x * attention_mask
+            return torch.sum(x, dim=1) / torch.sum(attention_mask, dim=1)
         else:
-            out = self.global_avg_pool1d(x)
-        return out
+            return torch.mean(x, dim=1)

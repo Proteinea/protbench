@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from typing import Callable
+from typing import Dict
+from typing import Tuple
 
+import torch
 from peft import TaskType
 from transformers import EvalPrediction
 
@@ -9,8 +12,6 @@ from protbench import metrics
 from protbench.applications.benchmarking_task import BenchmarkingTask
 from protbench.models.heads import RegressionHead
 from protbench.tasks import HuggingFaceSequenceToValue
-from protbench.utils import collate_inputs
-from protbench.utils import collate_sequence_and_labels
 
 
 def get_fluorescence_dataset():
@@ -45,7 +46,7 @@ supported_datasets = {
 }
 
 
-def compute_fluoresscence_metrics(p: EvalPrediction):
+def compute_fluoresscence_metrics(p: EvalPrediction) -> Dict:
     spearmanr = metrics.compute_spearman(p)
     num_examples = p.label_ids.shape[0]
     error_bar = metrics.compute_error_bar_for_regression(
@@ -72,33 +73,27 @@ class Fluorescence(BenchmarkingTask):
         tokenizer: Callable | None = None,
     ):
         train_dataset, eval_dataset, test_data = supported_datasets[dataset]()
-        collate_fn = (
-            collate_inputs
-            if from_embeddings
-            else collate_sequence_and_labels(tokenizer=tokenizer)
-        )
 
         super().__init__(
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
             test_dataset=test_data,
             preprocessing_fn=None,
-            collate_fn=collate_fn,
             metrics_fn=compute_fluoresscence_metrics,
             metric_for_best_model="eval_validation_spearman",
             from_embeddings=from_embeddings,
             tokenizer=tokenizer,
         )
 
-    def get_train_data(self):
+    def get_train_data(self) -> Tuple:
         return self.train_dataset.data[0], self.train_dataset.data[1]
 
-    def get_eval_data(self):
+    def get_eval_data(self) -> Tuple:
         return self.eval_dataset.data[0], self.eval_dataset.data[1]
 
-    def get_test_data(self):
+    def get_test_data(self) -> Tuple:
         return self.test_dataset.data[0], self.test_dataset.data[1]
 
-    def get_task_head(self, embedding_dim):
+    def get_task_head(self, embedding_dim) -> torch.nn.Module:
         head = RegressionHead(input_dim=embedding_dim)
         return head

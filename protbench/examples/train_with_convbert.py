@@ -31,7 +31,7 @@ def main(config_args: omegaconf.DictConfig):
             (
                 pretrained_model,
                 tokenizer,
-            ) = applications.models.ankh.initialize_model_from_checkpoint(
+            ) = applications.pretrained.ankh.initialize_model_from_checkpoint(
                 checkpoint,
                 initialize_with_lora=False,
                 gradient_checkpointing=config_args.train_config.gradient_checkpointing,
@@ -60,69 +60,54 @@ def main(config_args: omegaconf.DictConfig):
 
             num_classes = task.get_num_classes()
 
-            if task.from_embeddings:
-                save_dirs = embedder.SaveDirectories()
-                compute_embeddings_wrapper = embedder.ComputeEmbeddingsWrapper(
-                    model=pretrained_model,
-                    tokenizer=tokenizer.encode,
-                    tokenizer_options={
-                        "add_special_tokens": True,
-                        "padding": True,
-                        "truncation": False,
-                        "return_tensors": "pt",
-                    },
-                    post_processing_function=applications.models.ankh.embeddings_postprocessing_fn,
-                    pad_token_id=0,
-                    low_memory=config_args.train_config.low_memory,
-                    save_directories=save_dirs,
-                )
-                embedding_outputs = compute_embeddings_wrapper(
-                    train_seqs=train_seqs,
-                    val_seqs=val_seqs,
-                    test_seqs=test_seqs,
-                )
-                # We do not need this model
-                # anymore so we free up space.
-                pretrained_model.cpu()
-                torch.cuda.empty_cache()
+            save_dirs = embedder.SaveDirectories()
+            compute_embeddings_wrapper = embedder.ComputeEmbeddingsWrapper(
+                model=pretrained_model,
+                tokenizer=tokenizer.encode,
+                tokenizer_options={
+                    "add_special_tokens": True,
+                    "padding": True,
+                    "truncation": False,
+                    "return_tensors": "pt",
+                },
+                post_processing_function=applications.pretrained.ankh.embeddings_postprocessing_fn,
+                pad_token_id=0,
+                low_memory=config_args.train_config.low_memory,
+                save_directories=save_dirs,
+                forward_options={},
+            )
+            embedding_outputs = compute_embeddings_wrapper(
+                train_seqs=train_seqs,
+                val_seqs=val_seqs,
+                test_seqs=test_seqs,
+            )
+            # We do not need this model
+            # anymore so we free up space.
+            pretrained_model.cpu()
+            torch.cuda.empty_cache()
 
-                if config_args.train_config.low_memory:
-                    train_dataset = dataset_adapters.EmbeddingsDatasetFromDisk(
-                        save_dirs.train, train_labels
-                    )
-                    val_dataset = dataset_adapters.EmbeddingsDatasetFromDisk(
-                        save_dirs.validation, val_labels
-                    )
-                    if task.test_dataset is not None:
-                        test_dataset = (
-                            dataset_adapters.EmbeddingsDatasetFromDisk(
-                                save_dirs.test, test_labels
-                            )
-                        )
-                else:
-                    train_embeds, val_embeds, test_embeds = embedding_outputs
-                    train_dataset = dataset_adapters.EmbeddingsDataset(
-                        train_embeds, train_labels
-                    )
-                    val_dataset = dataset_adapters.EmbeddingsDataset(
-                        val_embeds, val_labels
-                    )
-                    if task.test_dataset is not None:
-                        test_dataset = dataset_adapters.EmbeddingsDataset(
-                            test_embeds, test_labels
-                        )
-
-            else:
-                train_dataset = dataset_adapters.SequenceAndLabelsDataset(
-                    train_seqs, train_labels
+            if config_args.train_config.low_memory:
+                train_dataset = dataset_adapters.EmbeddingsDatasetFromDisk(
+                    save_dirs.train, train_labels
                 )
-                val_dataset = dataset_adapters.SequenceAndLabelsDataset(
-                    val_seqs, val_labels
+                val_dataset = dataset_adapters.EmbeddingsDatasetFromDisk(
+                    save_dirs.validation, val_labels
                 )
-
                 if task.test_dataset is not None:
-                    test_dataset = dataset_adapters.SequenceAndLabelsDataset(
-                        test_seqs, test_labels
+                    test_dataset = dataset_adapters.EmbeddingsDatasetFromDisk(
+                        save_dirs.test, test_labels
+                    )
+            else:
+                train_embeds, val_embeds, test_embeds = embedding_outputs
+                train_dataset = dataset_adapters.EmbeddingsDataset(
+                    train_embeds, train_labels
+                )
+                val_dataset = dataset_adapters.EmbeddingsDataset(
+                    val_embeds, val_labels
+                )
+                if task.test_dataset is not None:
+                    test_dataset = dataset_adapters.EmbeddingsDataset(
+                        test_embeds, test_labels
                     )
 
             print("Number of train embeddings: ", len(train_dataset))
@@ -186,6 +171,7 @@ def main(config_args: omegaconf.DictConfig):
                     report_to=config_args.train_config.report_to,
                     remove_unused_columns=False,
                 )
+
                 if task.test_dataset is not None:
                     eval_ds = {"validation": val_dataset, "test": test_dataset}
                 else:

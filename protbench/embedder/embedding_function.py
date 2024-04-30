@@ -10,8 +10,8 @@ class EmbeddingFunction(abc.ABC):
         """Abstract class for embedding functions.
 
         Args:
-            model (Any): model to use for embedding.
-            tokenizer (Any): tokenizer to use for embedding.
+            model (Callable): model to use for embedding.
+            tokenizer (Callable): tokenizer to use for embedding.
         """
         self.model = model
         self.tokenizer = tokenizer

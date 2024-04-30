@@ -35,7 +35,7 @@ def main(config_args: omegaconf.DictConfig):
                 (
                     pretrained_model,
                     tokenizer,
-                ) = applications.models.ankh.initialize_model_from_checkpoint(
+                ) = applications.pretrained.ankh.initialize_model_from_checkpoint(
                     checkpoint,
                     initialize_with_lora=config_args.model_with_lora_config.use_lora,  # noqa
                     lora_task_type=task_cls.task_type,

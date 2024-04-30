@@ -8,6 +8,8 @@ from protbench.models.downstream_models import (
     DownstreamModelWithPretrainedBackbone,
 )
 from protbench.tasks.task import Task
+from protbench.utils import collate_inputs
+from protbench.utils import collate_sequence_and_labels
 
 
 class BenchmarkingTask(abc.ABC):
@@ -19,7 +21,6 @@ class BenchmarkingTask(abc.ABC):
         train_dataset: Task,
         eval_dataset: Task,
         preprocessing_fn: Callable,
-        collate_fn: Callable,
         metrics_fn: Callable,
         test_dataset: Task | None = None,
         metric_for_best_model: str = None,
@@ -33,8 +34,6 @@ class BenchmarkingTask(abc.ABC):
             eval_dataset (Task): Validation dataset.
             preprocessing_fn (Callable): Preprocessing function that will
                 be called on the logits during evaluation.
-            collate_fn (Callable): Collate function that will be called
-                after collecting the batch.
             metrics_fn (Callable): Metrics function that will be
                 called for evaluation.
             test_dataset (Task | None, optional): Test dataset.
@@ -49,16 +48,20 @@ class BenchmarkingTask(abc.ABC):
         Raises:
             ValueError: If `tokenizer` is None while `from_embeddings` is False.
         """
-        if not from_embeddings and tokenizer is None:
+        if self.from_embeddings:
+            self.collate_fn = collate_inputs
+        elif tokenizer is not None:
+            self.collate_fn = collate_sequence_and_labels(tokenizer)
+        else:
             raise ValueError(
                 "Expected a `tokenizer`  when `from_embeddings` "
                 f"is set to `False`. Received: {tokenizer}."
             )
+
         self.train_dataset = train_dataset
         self.eval_dataset = eval_dataset
         self.test_dataset = test_dataset
         self.preprocessing_fn = preprocessing_fn
-        self.collate_fn = collate_fn
         self.metrics_fn = metrics_fn
         self.metric_for_best_model = metric_for_best_model
         self.from_embeddings = from_embeddings

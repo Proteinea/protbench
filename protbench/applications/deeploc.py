@@ -10,13 +10,10 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import precision_recall_fscore_support
 from transformers import EvalPrediction
 
+from protbench import metrics
 from protbench.applications.benchmarking_task import BenchmarkingTask
-from protbench.metrics import compute_accuracies_error_bar
-from protbench.metrics import compute_accuracies_std
 from protbench.models.heads import MultiClassClassificationHead
 from protbench.tasks import HuggingFaceSequenceToClass
-from protbench.utils import collate_inputs
-from protbench.utils import collate_sequence_and_labels
 from protbench.utils.preprocessing_utils import (
     preprocess_multi_classification_logits,
 )
@@ -52,9 +49,9 @@ def compute_deep_localization_metrics(p: EvalPrediction) -> Dict:
         p.label_ids, p.predictions, average="macro"
     )
 
-    accuracies_std = compute_accuracies_std(p)
+    accuracies_std = metrics.compute_accuracies_std(p)
     num_examples = p.label_ids.shape[0]
-    error_bar = compute_accuracies_error_bar(
+    error_bar = metrics.compute_accuracies_error_bar(
         accuracies_std=accuracies_std, num_examples=num_examples
     )
 
@@ -79,16 +76,10 @@ class DeepLoc(BenchmarkingTask):
         tokenizer: Callable | None = None,
     ):
         train_dataset, eval_dataset = supported_datasets[dataset]()
-        collate_fn = (
-            collate_inputs
-            if from_embeddings
-            else collate_sequence_and_labels(tokenizer=tokenizer)
-        )
         super().__init__(
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
             preprocessing_fn=preprocess_multi_classification_logits,
-            collate_fn=collate_fn,
             metrics_fn=compute_deep_localization_metrics,
             metric_for_best_model="eval_validation_accuracy",
             from_embeddings=from_embeddings,
@@ -98,7 +89,7 @@ class DeepLoc(BenchmarkingTask):
     def get_train_data(self) -> Tuple:
         return self.train_dataset.data[0], self.train_dataset.data[1]
 
-    def get_eval_data(self):
+    def get_eval_data(self) -> Tuple:
         return self.eval_dataset.data[0], self.eval_dataset.data[1]
 
     def get_task_head(self, embedding_dim: int) -> torch.nn.Module:

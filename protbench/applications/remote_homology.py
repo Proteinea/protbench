@@ -2,8 +2,11 @@ from __future__ import annotations
 
 from functools import partial
 from typing import Callable
+from typing import Dict
+from typing import Tuple
 
 import numpy as np
+import torch
 from peft import TaskType
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import precision_recall_fscore_support
@@ -12,8 +15,6 @@ from sklearn.metrics import top_k_accuracy_score
 from protbench.applications.benchmarking_task import BenchmarkingTask
 from protbench.models.heads import MultiClassClassificationHead
 from protbench.tasks import HuggingFaceSequenceToClass
-from protbench.utils import collate_inputs
-from protbench.utils import collate_sequence_and_labels
 
 
 def get_remote_homology_dataset():
@@ -51,7 +52,7 @@ supported_datasets = {
 }
 
 
-def compute_remote_homology_metrics(p, num_classes):
+def compute_remote_homology_metrics(p, num_classes) -> Dict:
     prfs = precision_recall_fscore_support(
         p.label_ids, p.predictions.argmax(axis=1), average="macro"
     )
@@ -80,16 +81,10 @@ class RemoteHomology(BenchmarkingTask):
         train_dataset, eval_dataset, test_dataset = supported_datasets[
             dataset
         ]()
-        collate_fn = (
-            collate_inputs
-            if from_embeddings
-            else collate_sequence_and_labels(tokenizer=tokenizer)
-        )
         super().__init__(
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
             preprocessing_fn=None,
-            collate_fn=collate_fn,
             metrics_fn=partial(
                 compute_remote_homology_metrics,
                 num_classes=train_dataset.num_classes,
@@ -100,16 +95,16 @@ class RemoteHomology(BenchmarkingTask):
             test_dataset=test_dataset,
         )
 
-    def get_train_data(self):
+    def get_train_data(self) -> Tuple:
         return self.train_dataset.data[0], self.train_dataset.data[1]
 
-    def get_eval_data(self):
+    def get_eval_data(self) -> Tuple:
         return self.eval_dataset.data[0], self.eval_dataset.data[1]
 
-    def get_test_data(self):
+    def get_test_data(self) -> Tuple:
         return self.test_dataset.data[0], self.test_dataset.data[1]
 
-    def get_task_head(self, embedding_dim):
+    def get_task_head(self, embedding_dim) -> torch.nn.Module:
         head = MultiClassClassificationHead(
             input_dim=embedding_dim, output_dim=self.get_num_classes()
         )
