@@ -1,3 +1,4 @@
+from typing import List
 from typing import Tuple
 
 from peft import LoraConfig
@@ -34,9 +35,9 @@ def initialize_model_from_checkpoint(
     lora_alpha: int = 16,
     lora_dropout: float = 0.1,
     lora_bias: str = "none",
+    target_modules: List = ["q", "k"],
     gradient_checkpointing: bool = False,
 ) -> Tuple[T5EncoderModel, AutoTokenizer]:
-
     tokenizer = AutoTokenizer.from_pretrained(model_url_map[checkpoint])
     if initialize_with_lora:
         model = T5ForConditionalGeneration.from_pretrained(
@@ -49,6 +50,7 @@ def initialize_model_from_checkpoint(
             lora_alpha=lora_alpha,
             lora_dropout=lora_dropout,
             bias=lora_bias,
+            target_modules=target_modules,
         )
         model = get_peft_model(model, peft_config).encoder
     else:

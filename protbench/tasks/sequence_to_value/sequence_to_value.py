@@ -6,18 +6,8 @@ from protbench.tasks.task import Task
 
 
 class SequenceToValue(Task):
-    def __init__(
-        self,
-    ) -> None:
-        """Generic task of predicting a value for a sequence.
-
-        Args:
-            data_file (str): path to the fasta file containing the sequences
-                and labels. The file must have the following format:
-                >seq_id VALUE=value
-                sequence
-
-        """
+    def __init__(self) -> None:
+        """Generic task of predicting a value for a sequence."""
         super().__init__()
 
     @property

@@ -1,16 +1,19 @@
+from __future__ import annotations
+
 import abc
 from typing import Callable
-from typing import Optional
-
-from peft import TaskType
 
 from protbench.models.downstream_models import DownstreamModelFromEmbedding
-from protbench.models.downstream_models import \
-    DownstreamModelWithPretrainedBackbone
+from protbench.models.downstream_models import (
+    DownstreamModelWithPretrainedBackbone,
+)
 from protbench.tasks.task import Task
 
 
 class BenchmarkingTask(abc.ABC):
+    task_type = None
+    requires_pooling = None
+
     def __init__(
         self,
         train_dataset: Task,
@@ -18,12 +21,10 @@ class BenchmarkingTask(abc.ABC):
         preprocessing_fn: Callable,
         collate_fn: Callable,
         metrics_fn: Callable,
-        test_dataset: Optional[Task] = None,
+        test_dataset: Task | None = None,
         metric_for_best_model: str = None,
         from_embeddings: bool = False,
         tokenizer: Callable = None,
-        requires_pooling: bool = False,
-        task_type: TaskType = None,
     ):
         """Base class for benchmarking datasets.
 
@@ -36,7 +37,7 @@ class BenchmarkingTask(abc.ABC):
                 after collecting the batch.
             metrics_fn (Callable): Metrics function that will be
                 called for evaluation.
-            test_dataset (Optional[Task], optional): Test dataset.
+            test_dataset (Task | None, optional): Test dataset.
                 Defaults to None.
             metric_for_best_model (str, optional): metric that will be used to
                 save/upload the best model. Defaults to None.
@@ -44,11 +45,6 @@ class BenchmarkingTask(abc.ABC):
                 should expect embeddings or input ids. Defaults to False.
             tokenizer (Callable, optional): Tokenization function.
                 Defaults to None.
-            requires_pooling (bool, optional): Whether this task requires
-                pooling for the embeddings before passing it to
-                the logits or not. Defaults to False.
-            task_type (TaskType, optional): Task type that will be used if
-                using PEFT. Defaults to None.
 
         Raises:
             ValueError: If `tokenizer` is None while `from_embeddings` is False.
@@ -67,8 +63,6 @@ class BenchmarkingTask(abc.ABC):
         self.metric_for_best_model = metric_for_best_model
         self.from_embeddings = from_embeddings
         self.tokenizer = tokenizer
-        self.requires_pooling = requires_pooling
-        self.task_type = task_type
 
     @abc.abstractmethod
     def get_train_data(self):
@@ -85,7 +79,9 @@ class BenchmarkingTask(abc.ABC):
         raise NotImplementedError("Should be implemented in a subclass.")
 
     @abc.abstractmethod
-    def get_downstream_model(self, backbone_model, embedding_dim, pooling=None):
+    def get_downstream_model(
+        self, backbone_model, embedding_dim, pooling=None
+    ):
         head = self.get_task_head(embedding_dim=embedding_dim)
         if self.from_embeddings:
             model = DownstreamModelFromEmbedding(backbone_model, head)

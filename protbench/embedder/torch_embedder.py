@@ -1,11 +1,9 @@
 import logging
 import math
 from math import ceil
-from pathlib import Path
+from os import PathLike
 from typing import Iterable
 from typing import List
-from typing import Optional
-from typing import Union
 
 import torch
 from tqdm.auto import tqdm
@@ -19,8 +17,8 @@ class TorchEmbedder(Embedder):
         self,
         embedding_function: TorchEmbeddingFunction,
         low_memory: bool = False,
-        save_path: Optional[str] = None,
-        devices: Optional[Union[List[torch.device], List[int]]] = None,
+        save_path: PathLike | None = None,
+        devices: List[torch.device] | List[int] | None = None,
         batch_size: int = 1,
     ):
         """Embedder for torch models. Can be used to embed sequences in batches
@@ -32,13 +30,14 @@ class TorchEmbedder(Embedder):
             low_memory (bool, optional): Reduce memory usage by not storing
                                          embeddings in memory.
                                          Defaults to False.
-            save_path (Optional[str], optional): Path to save embeddings to.
-                                                 Defaults to None.
+            save_path (PathLike | None, optional): Path to save embeddings to.
+                Defaults to None.
                 Embeddings are saved as numpy arrays with the name of the file
                 being the index of the embedding.
                 For example, the embedding of the first sequence will be saved
                 as save_path/0.npy.
-            devices (Optional[Union[List[torch.device], List[int]]], optional): List of devices to use for embedding.
+            devices (List[torch.device] | List[int] | None, optional):
+                List of devices to use for embedding.
                 If None, all available cuda devices will be used.
                 Defaults to None.
             batch_size (int, optional): Batch size. Defaults to 1.
@@ -58,8 +57,9 @@ class TorchEmbedder(Embedder):
     def _get_sequences_for_current_process(
         rank: int, world_size: int, sequences: Iterable[str]
     ) -> Iterable[str]:
-        """Helper function to get the sequences for the current process in a parallel embedding run.
-        This function is used to split the sequences into world_size batches for each process.
+        """Helper function to get the sequences for the current process in
+            a parallel embedding run. This function is used to split the
+            sequences into world_size batches for each process.
 
         Args:
             rank (int): process rank or index.
@@ -145,7 +145,8 @@ class TorchEmbedder(Embedder):
             else None
         )
         logging.info(
-            f"Using {', '.join([str(d) for d in self.devices])} devices to embed sequences..."
+            f"Using {', '.join([str(d) for d in self.devices])} devices to "
+            "embed sequences..."
         )
         processes = []
         for i in range(len(self.devices)):
@@ -181,7 +182,8 @@ class TorchEmbedder(Embedder):
             sequences (Iterable[str]): sequences to embed.
 
         Returns:
-            List[torch.Tensor]: list of embeddings. If low_memory is True, this list will be empty.
+            List[torch.Tensor]: list of embeddings. If low_memory is True,
+                this list will be empty.
         """
         if len(self.devices) == 1:
             return self._run_single_gpu(sequences)
@@ -196,20 +198,28 @@ class TorchEmbedder(Embedder):
         sequences: Iterable[str],
         batch_size: int,
         embedding_function: TorchEmbeddingFunction,
-        output_queue: Optional[torch.multiprocessing.Queue] = None,
-        save_path: Optional[Path] = None,
+        output_queue: torch.multiprocessing.Queue | None = None,
+        save_path: PathLike | None = None,
     ):
         # Entry point for parallel embedding run. This function is used to run
         # the embedding function on a single gpu in a parallel embedding run.
         # Notes:
-        # - This function is not meant to be called directly. It is called by the _run_multiple_gpus function.
-        # - Why does this function send the embeddings to the parent process as a numpy array?
-        #   This is because for some reason the torch tensors are not properly garbage collected after
-        #   the parent process receives them. This causes shared memory leaks which eventually leads to an
-        #   error with the process hitting the maximum number of open shared files. This is a
-        #   known issue with torch multiprocessing. More details can be found here: https://github.com/pytorch/pytorch/issues/973.
-        #   Also, assuming the issue is fixed, it is probably still better to send the embeddings as numpy arrays
-        #   since they lead to much faster pickling and unpickling (in my use case, the embeddings are 2x faster to send).
+        # - This function is not meant to be called directly. It is called by
+        # the _run_multiple_gpus function.
+        # - Why does this function send the embeddings to the parent process
+        #   as a numpy array?
+        #   This is because for some reason the torch tensors are not properly
+        #   garbage collected after
+        #   the parent process receives them. This causes shared memory leaks
+        #   which eventually leads to an
+        #   error with the process hitting the maximum number of open shared
+        #   files. This is a
+        #   known issue with torch multiprocessing. More details can be found
+        #   here: https://github.com/pytorch/pytorch/issues/973.
+        #   Also, assuming the issue is fixed, it is probably still better to
+        #   send the embeddings as numpy arrays
+        #   since they lead to much faster pickling and unpickling (in my use
+        #   case, the embeddings are 2x faster to send).
 
         device = devices[rank]
         embedding_function.device = device

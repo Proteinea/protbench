@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from functools import partial
+from typing import Callable
 
 import numpy as np
 from peft import TaskType
@@ -65,11 +68,14 @@ def compute_remote_homology_metrics(p, num_classes):
 
 
 class RemoteHomology(BenchmarkingTask):
+    task_type = TaskType.SEQ_CLS
+    requires_pooling = True
+
     def __init__(
         self,
-        dataset="remote_homology",
-        from_embeddings=False,
-        tokenizer=None,
+        dataset: str = "remote_homology",
+        from_embeddings: bool = False,
+        tokenizer: Callable | None = None,
     ):
         train_dataset, eval_dataset, test_dataset = supported_datasets[
             dataset
@@ -91,8 +97,6 @@ class RemoteHomology(BenchmarkingTask):
             metric_for_best_model="eval_validation_hits10",
             from_embeddings=from_embeddings,
             tokenizer=tokenizer,
-            requires_pooling=True,
-            task_type=TaskType.SEQ_CLS,
             test_dataset=test_dataset,
         )
 

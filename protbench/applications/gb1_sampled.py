@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import Callable
+
 from peft import TaskType
 
 from protbench import metrics
@@ -51,11 +55,14 @@ def compute_gb1_metrics(p):
 
 
 class GB1Sampled(BenchmarkingTask):
+    task_type = TaskType.SEQ_CLS
+    requires_pooling = True
+
     def __init__(
         self,
-        dataset="gb1_sampled",
-        from_embeddings=False,
-        tokenizer=None,
+        dataset: str = "gb1_sampled",
+        from_embeddings: bool = False,
+        tokenizer: Callable | None = None,
     ):
         train_dataset, eval_dataset, test_dataset = supported_datasets[
             dataset
@@ -76,8 +83,6 @@ class GB1Sampled(BenchmarkingTask):
             metric_for_best_model="eval_validation_spearman",
             from_embeddings=from_embeddings,
             tokenizer=tokenizer,
-            requires_pooling=True,
-            task_type=TaskType.SEQ_CLS,
         )
 
     def get_train_data(self):

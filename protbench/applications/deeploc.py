@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Callable
 from typing import Dict
 from typing import Tuple
@@ -15,8 +17,9 @@ from protbench.models.heads import MultiClassClassificationHead
 from protbench.tasks import HuggingFaceSequenceToClass
 from protbench.utils import collate_inputs
 from protbench.utils import collate_sequence_and_labels
-from protbench.utils.preprocessing_utils import \
-    preprocess_multi_classification_logits
+from protbench.utils.preprocessing_utils import (
+    preprocess_multi_classification_logits,
+)
 
 
 def get_deeploc_dataset() -> Tuple:
@@ -66,11 +69,14 @@ def compute_deep_localization_metrics(p: EvalPrediction) -> Dict:
 
 
 class DeepLoc(BenchmarkingTask):
+    task_type = TaskType.SEQ_CLS
+    requires_pooling = True
+
     def __init__(
         self,
         dataset: str = "deeploc",
         from_embeddings: bool = False,
-        tokenizer: Callable = None,
+        tokenizer: Callable | None = None,
     ):
         train_dataset, eval_dataset = supported_datasets[dataset]()
         collate_fn = (
@@ -87,8 +93,6 @@ class DeepLoc(BenchmarkingTask):
             metric_for_best_model="eval_validation_accuracy",
             from_embeddings=from_embeddings,
             tokenizer=tokenizer,
-            requires_pooling=True,
-            task_type=TaskType.SEQ_CLS,
         )
 
     def get_train_data(self) -> Tuple:

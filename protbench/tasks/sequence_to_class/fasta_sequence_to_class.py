@@ -1,3 +1,4 @@
+from os import PathLike
 from typing import Dict
 from typing import List
 from typing import Tuple
@@ -9,15 +10,12 @@ from protbench.tasks.sequence_to_class.sequence_to_class import SequenceToClass
 
 
 class FastaSequenceToClass(SequenceToClass):
-    def __init__(
-        self,
-        data_file: str,
-    ) -> None:
+    def __init__(self, data_file: PathLike):
         """Generic task of predicting a class for a sequence.
 
         Args:
-            data_file (str): Path to the fasta file containing the sequences
-                and labels. The file must have the following format:
+            data_file (PathLike): Path to the fasta file containing the
+                sequences and labels. The file must have the following format:
                 >seq_id LABEL=class
                 sequence
             where SET is either train or val and LABEL is the class label.

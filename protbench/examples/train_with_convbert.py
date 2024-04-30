@@ -14,13 +14,11 @@ from transformers import Trainer
 from transformers import TrainingArguments
 
 from protbench import applications
-from protbench.embedder import utils
-from protbench.models import ConvBert
-from protbench.utils import EmbeddingsDataset
-from protbench.utils import EmbeddingsDatasetFromDisk
-from protbench.utils import SequenceAndLabelsDataset
-from protbench.examples.utils import set_seed
+from protbench import embedder
 from protbench.examples.utils import create_run_name
+from protbench.examples.utils import set_seed
+from protbench.models import ConvBert
+from protbench.utils import dataset_adapters
 
 
 @hydra.main(config_name="config", config_path="config", version_base=None)
@@ -30,7 +28,10 @@ def main(config_args: omegaconf.DictConfig):
 
     for checkpoint in config_args.model_checkpoints:
         with torch.device("cuda:0"):
-            pretrained_model, tokenizer = applications.models.ankh.initialize_model_from_checkpoint(
+            (
+                pretrained_model,
+                tokenizer,
+            ) = applications.models.ankh.initialize_model_from_checkpoint(
                 checkpoint,
                 initialize_with_lora=False,
                 gradient_checkpointing=config_args.train_config.gradient_checkpointing,
@@ -43,9 +44,12 @@ def main(config_args: omegaconf.DictConfig):
                 return_tensors="pt",
             )
 
-        for task_name, task in applications.get_tasks(
-            tasks_to_run=config_args.tasks, from_embeddings=True, tokenizer=tokenizer
+        for task_name, task_cls in applications.get_tasks(
+            tasks_to_run=config_args.tasks
         ):
+            task = task_cls(
+                dataset=task_name, from_embeddings=True, tokenizer=tokenizer
+            )
             train_seqs, train_labels = task.get_train_data()
             val_seqs, val_labels = task.get_eval_data()
 
@@ -57,51 +61,67 @@ def main(config_args: omegaconf.DictConfig):
             num_classes = task.get_num_classes()
 
             if task.from_embeddings:
-                save_dirs = utils.SaveDirectories()
-                compute_embeddings_wrapper = utils.ComputeEmbeddingsWrapper(
+                save_dirs = embedder.SaveDirectories()
+                compute_embeddings_wrapper = embedder.ComputeEmbeddingsWrapper(
                     model=pretrained_model,
                     tokenizer=tokenizer.encode,
                     tokenizer_options={
                         "add_special_tokens": True,
                         "padding": True,
                         "truncation": False,
-                        "truncation": False,
+                        "return_tensors": "pt",
                     },
                     post_processing_function=applications.models.ankh.embeddings_postprocessing_fn,
                     pad_token_id=0,
                     low_memory=config_args.train_config.low_memory,
-                    save_path=save_dirs,
+                    save_directories=save_dirs,
                 )
-                embedding_outputs = compute_embeddings_wrapper(train_seqs=train_seqs, val_seqs=val_seqs, test_seqs=test_seqs)
-                pretrained_model.cpu() # To free up space.
+                embedding_outputs = compute_embeddings_wrapper(
+                    train_seqs=train_seqs,
+                    val_seqs=val_seqs,
+                    test_seqs=test_seqs,
+                )
+                # We do not need this model
+                # anymore so we free up space.
+                pretrained_model.cpu()
                 torch.cuda.empty_cache()
 
-                if not config_args.train_config.low_memory:
-                    train_embeds, val_embeds, test_embeds = embedding_outputs
-
-                    train_dataset = EmbeddingsDataset(train_embeds, train_labels)
-                    val_dataset = EmbeddingsDataset(val_embeds, val_labels)
-                    if task.test_dataset is not None:
-                        test_dataset = EmbeddingsDataset(test_embeds, test_labels)
-                else:
-                    train_dataset = EmbeddingsDatasetFromDisk(
+                if config_args.train_config.low_memory:
+                    train_dataset = dataset_adapters.EmbeddingsDatasetFromDisk(
                         save_dirs.train, train_labels
                     )
-                    val_dataset = EmbeddingsDatasetFromDisk(
+                    val_dataset = dataset_adapters.EmbeddingsDatasetFromDisk(
                         save_dirs.validation, val_labels
                     )
                     if task.test_dataset is not None:
-                        test_dataset = EmbeddingsDatasetFromDisk(
-                            save_dirs.test, test_labels
+                        test_dataset = (
+                            dataset_adapters.EmbeddingsDatasetFromDisk(
+                                save_dirs.test, test_labels
+                            )
                         )
+                else:
+                    train_embeds, val_embeds, test_embeds = embedding_outputs
+                    train_dataset = dataset_adapters.EmbeddingsDataset(
+                        train_embeds, train_labels
+                    )
+                    val_dataset = dataset_adapters.EmbeddingsDataset(
+                        val_embeds, val_labels
+                    )
+                    if task.test_dataset is not None:
+                        test_dataset = dataset_adapters.EmbeddingsDataset(
+                            test_embeds, test_labels
+                        )
+
             else:
-                train_dataset = SequenceAndLabelsDataset(
+                train_dataset = dataset_adapters.SequenceAndLabelsDataset(
                     train_seqs, train_labels
                 )
-                val_dataset = SequenceAndLabelsDataset(val_seqs, val_labels)
+                val_dataset = dataset_adapters.SequenceAndLabelsDataset(
+                    val_seqs, val_labels
+                )
 
                 if task.test_dataset is not None:
-                    test_dataset = SequenceAndLabelsDataset(
+                    test_dataset = dataset_adapters.SequenceAndLabelsDataset(
                         test_seqs, test_labels
                     )
 

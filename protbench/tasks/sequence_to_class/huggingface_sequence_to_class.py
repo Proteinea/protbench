@@ -1,7 +1,8 @@
+from __future__ import annotations
+
 from typing import Callable
 from typing import Dict
 from typing import List
-from typing import Optional
 from typing import Tuple
 from typing import Union
 
@@ -18,8 +19,8 @@ class HuggingFaceSequenceToClass(SequenceToClass):
         data_key: str,
         seqs_col: str,
         labels_col: str,
-        class_to_id: Optional[Dict[str, int]] = None,
-        preprocessing_function: Optional[Callable] = None,
+        class_to_id: Dict[str, int] | None = None,
+        preprocessing_function: Callable | None = None,
     ) -> None:
         """A generic class for any task where the goal is to predict a class
            for each residue in a protein sequence. The data is loaded from
@@ -31,13 +32,10 @@ class HuggingFaceSequenceToClass(SequenceToClass):
             data_key (str): Key of the data in the DatasetDict.
             seqs_col (str): Name of the column containing the sequences.
             labels_col (str): Name of the column containing the labels.
-            class_to_id (Optional[Dict[str, int]]): Dictionary containing class
-                                                    names and their
-                                                    corresponding ids.
-            preprocessing_function (Optional[Callable]): Function to
-                                                         preprocess the a row
-                                                         of (seq, label, mask).
-                                                         Defaults to None.
+            class_to_id (Dict[str, int] | None): Dictionary containing class
+                names and their corresponding ids.
+            preprocessing_function (Callable | None): Function to
+                preprocess the a row of (seq, label, mask). Defaults to None.
         """
         super(HuggingFaceSequenceToClass, self).__init__(
             class_to_id=class_to_id
@@ -64,7 +62,7 @@ class HuggingFaceSequenceToClass(SequenceToClass):
         data_key: str,
         seqs_col: str,
         labels_col: str,
-        preprocessing_function: Optional[Callable] = None,
+        preprocessing_function: Callable | None = None,
     ) -> Tuple[List[str], List[int]]:
         # load the examples from the dataset
         dataset = load_dataset(dataset_url, data_files=data_files)

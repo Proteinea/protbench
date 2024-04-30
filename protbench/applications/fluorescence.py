@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 from typing import Callable
-from typing import Optional
 
 from peft import TaskType
 from transformers import EvalPrediction
@@ -61,11 +62,14 @@ def compute_fluoresscence_metrics(p: EvalPrediction):
 
 
 class Fluorescence(BenchmarkingTask):
+    task_type = TaskType.SEQ_CLS
+    requires_pooling = True
+
     def __init__(
         self,
         dataset: str = "fluorescence",
         from_embeddings: bool = False,
-        tokenizer: Optional[Callable] = None,
+        tokenizer: Callable | None = None,
     ):
         train_dataset, eval_dataset, test_data = supported_datasets[dataset]()
         collate_fn = (
@@ -84,8 +88,6 @@ class Fluorescence(BenchmarkingTask):
             metric_for_best_model="eval_validation_spearman",
             from_embeddings=from_embeddings,
             tokenizer=tokenizer,
-            requires_pooling=True,
-            task_type=TaskType.SEQ_CLS,
         )
 
     def get_train_data(self):

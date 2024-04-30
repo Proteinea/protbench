@@ -1,4 +1,4 @@
-from typing import Optional
+from __future__ import annotations
 
 import numpy as np
 from scipy.stats import pearsonr
@@ -13,20 +13,16 @@ from transformers import EvalPrediction
 from protbench.metrics.utils import remove_ignored_predictions
 
 
-def compute_pearsonr(
-    p: EvalPrediction, ignore_index: Optional[int] = -100, **kwargs
-):
+def compute_pearsonr(p: EvalPrediction, ignore_index: int = -100, **kwargs):
     return pearsonr(p.predictions.flatten(), p.label_ids.flatten()).statistic
 
 
-def compute_rmse(
-    p: EvalPrediction, ignore_index: Optional[int] = -100, **kwargs
-):
+def compute_rmse(p: EvalPrediction, ignore_index: int = -100, **kwargs):
     return mean_squared_error(p.label_ids.flatten(), p.predictions.flatten())
 
 
 def compute_accuracy(
-    p: EvalPrediction, ignore_index: Optional[int] = -100, **kwargs
+    p: EvalPrediction, ignore_index: int = -100, **kwargs
 ) -> float:
     """Compute accuracy for classification tasks.
 
@@ -45,7 +41,7 @@ def compute_accuracy(
 
 
 def compute_accuracies_std(
-    p: EvalPrediction, ignore_index: Optional[int] = -100, **kwargs
+    p: EvalPrediction, ignore_index: int = -100, **kwargs
 ):
     accuracies = []
     for predictions, labels in zip(p.predictions, p.label_ids):
@@ -59,7 +55,7 @@ def compute_accuracies_std(
 
 
 def compute_precision(
-    p: EvalPrediction, ignore_index: Optional[int] = -100, **kwargs
+    p: EvalPrediction, ignore_index: int = -100, **kwargs
 ) -> float:
     """Compute precision for classification tasks.
 
@@ -78,7 +74,7 @@ def compute_precision(
 
 
 def compute_recall(
-    p: EvalPrediction, ignore_index: Optional[int] = -100, **kwargs
+    p: EvalPrediction, ignore_index: int = -100, **kwargs
 ) -> float:
     """Compute recall for classification tasks.
 
@@ -96,9 +92,7 @@ def compute_recall(
     return float(recall_score(predictions, labels, **kwargs))
 
 
-def compute_f1(
-    p: EvalPrediction, ignore_index: Optional[int] = -100, **kwargs
-) -> float:
+def compute_f1(p: EvalPrediction, ignore_index: int = -100, **kwargs) -> float:
     """Compute f1 for classification tasks.
 
     Args:
@@ -116,7 +110,7 @@ def compute_f1(
 
 
 def compute_spearman(
-    p: EvalPrediction, ignore_index: Optional[int] = -100, **kwargs
+    p: EvalPrediction, ignore_index: int = -100, **kwargs
 ) -> float:
     """
     Compute spearmanr correlation for regression tasks.

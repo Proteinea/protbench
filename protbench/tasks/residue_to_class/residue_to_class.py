@@ -1,7 +1,8 @@
+from __future__ import annotations
+
 import abc
 from typing import Dict
 from typing import List
-from typing import Optional
 from typing import Tuple
 
 from protbench.tasks.task import Task
@@ -11,18 +12,16 @@ class ResidueToClass(Task):
     def __init__(
         self,
         ignore_index: int = -100,
-        class_to_id: Optional[Dict[str, int]] = None,
+        class_to_id: Dict[str, int] | None = None,
     ):
         """A generic class for any task where the goal is to predict a class
            for each residue in a protein sequence.
 
         Args:
             ignore_index (int, optional): Value of label to be ignored by loss
-                                          and metrics computation.
-                                          Defaults to -100.
-            class_to_id (Optional[Dict[str, int]]): Dictionary containing class
-                                                    names and their
-                                                    corresponding ids.
+                and metrics computation. Defaults to -100.
+            class_to_id (Dict[str, int] | None): Dictionary containing class
+                names and their corresponding ids.
         """
         self.ignore_index = ignore_index
         if class_to_id:
@@ -58,7 +57,7 @@ class ResidueToClass(Task):
         return encoded_label
 
     def mask_labels(
-        self, label: List[int], mask: Optional[List[bool]]
+        self, label: List[int], mask: List[bool] | None
     ) -> List[int]:
         """Mask the labels with the given mask by setting the masked classes
             to the default pytorch ignore index.
@@ -84,7 +83,7 @@ class ResidueToClass(Task):
         return label
 
     def validate_lengths(
-        self, seq: str, label: List[int], mask: Optional[List[bool]]
+        self, seq: str, label: List[int], mask: List[bool] | None = None
     ) -> None:
         if mask:
             if len(seq) != len(label) or len(seq) != len(mask):

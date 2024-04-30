@@ -1,4 +1,4 @@
-from typing import Optional
+from __future__ import annotations
 
 import torch
 from torch import nn
@@ -49,7 +49,7 @@ class TokenClassificationHead(torch.nn.Module):
         return loss
 
     def forward(
-        self, hidden_states: torch.Tensor, labels: Optional[torch.Tensor] = None
+        self, hidden_states: torch.Tensor, labels: torch.Tensor | None = None
     ):
         logits = self.decoder(hidden_states)
         loss = self.compute_loss(logits, labels)
@@ -83,7 +83,7 @@ class BinaryClassificationHead(torch.nn.Module):
         return loss
 
     def forward(
-        self, hidden_states: torch.Tensor, labels: Optional[torch.Tensor] = None
+        self, hidden_states: torch.Tensor, labels: torch.Tensor | None = None
     ):
         logits = self.decoder(hidden_states)
         loss = self.compute_loss(logits, labels)
@@ -119,7 +119,7 @@ class MultiLabelClassificationHead(torch.nn.Module):
         return loss
 
     def forward(
-        self, hidden_states: torch.Tensor, labels: Optional[torch.Tensor] = None
+        self, hidden_states: torch.Tensor, labels: torch.Tensor | None = None
     ):
         logits = self.decoder(hidden_states)
         loss = self.compute_loss(logits, labels)
@@ -152,7 +152,7 @@ class MultiClassClassificationHead(torch.nn.Module):
         return loss
 
     def forward(
-        self, hidden_states: torch.Tensor, labels: Optional[torch.Tensor] = None
+        self, hidden_states: torch.Tensor, labels: torch.Tensor | None = None
     ):
         logits = self.decoder(hidden_states)
         loss = self.compute_loss(logits, labels)
@@ -184,7 +184,7 @@ class RegressionHead(torch.nn.Module):
         return loss
 
     def forward(
-        self, hidden_states: torch.Tensor, labels: Optional[torch.Tensor] = None
+        self, hidden_states: torch.Tensor, labels: torch.Tensor | None = None
     ):
         logits = self.decoder(hidden_states)
         loss = self.compute_loss(logits, labels)
@@ -198,7 +198,9 @@ class RegressionHead(torch.nn.Module):
 
 
 class ContactPredictionHead(torch.nn.Module):
-    def __init__(self, input_dim: int, output_dim: int, ignore_index: int = -1):
+    def __init__(
+        self, input_dim: int, output_dim: int, ignore_index: int = -1
+    ):
         super().__init__()
 
         self.num_labels = output_dim
@@ -221,7 +223,7 @@ class ContactPredictionHead(torch.nn.Module):
         )
 
     def forward(
-        self, hidden_states: torch.Tensor, labels: Optional[torch.Tensor] = None
+        self, hidden_states: torch.Tensor, labels: torch.Tensor | None = None
     ):
         prod = hidden_states[:, :, None, :] * hidden_states[:, None, :, :]
         diff = hidden_states[:, :, None, :] - hidden_states[:, None, :, :]

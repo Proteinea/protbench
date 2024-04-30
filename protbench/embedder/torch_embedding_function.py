@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 from typing import Any
 from typing import Callable
+from typing import Dict
 from typing import List
-from typing import Union
 
 import torch
 
@@ -13,7 +15,9 @@ class TorchEmbeddingFunction(EmbeddingFunction):
         self,
         model: torch.nn.Module,
         tokenizer: Callable,
-        device: Union[int, torch.device],
+        device: int | torch.device,
+        tokenizer_options: Dict = {},
+        forward_options: Dict = {},
         embeddings_postprocessing_fn: Callable[[Any], torch.Tensor] = None,
         pad_token_id: int = 0,
     ):
@@ -23,14 +27,24 @@ class TorchEmbeddingFunction(EmbeddingFunction):
             model (torch.nn.Module): pytorch module.
             tokenizer (Callable[[List[str]], torch.Tensor]): tokenizer.
             device (Union[int, torch.device]): device to use for embedding.
-            embeddings_postprocessing_fn (Callable[[Any], torch.Tensor], optional):
-                function to apply to the model outputs before returning them. Defaults to None.
-                This can be used to extract the last hidden state from a HF ModelOutput object.
-            pad_token_id (int, optional): tokenizer's pad token id. Defaults to 0.
+            embeddings_postprocessing_fn
+                (Callable[[Any], torch.Tensor], optional): function to apply to
+                the model outputs before returning them. Defaults to None. This
+                can be used to extract the last hidden state from
+                a HF ModelOutput object.
+            pad_token_id (int, optional): tokenizer's pad token id.
+                Defaults to 0.
         """
         super().__init__(model, tokenizer)
         if self.model.training:
             self.model.eval()
+
+        self.forward_options = (
+            forward_options if forward_options is not None else {}
+        )
+        self.tokenizer_options = (
+            tokenizer_options if tokenizer_options is not None else {}
+        )
         self.embeddings_postprocessing_fn = embeddings_postprocessing_fn
         self.device = device
         self.pad_token_id = pad_token_id
@@ -44,9 +58,11 @@ class TorchEmbeddingFunction(EmbeddingFunction):
         """Remove padding from embeddings.
 
         Args:
-            embeddings (torch.Tensor): embeddings of shape (batch_size, seq_len, embd_dim).
+            embeddings (torch.Tensor): embeddings of
+                shape (batch_size, seq_len, embd_dim).
             input_ids (torch.Tensor): input_ids of shape (batch_size, seq_len).
-            padding_value (int, optional): padding value in input ids. Defaults to 0.
+            padding_value (int, optional): padding value in input ids.
+                Defaults to 0.
 
         Returns:
             List[torch.Tensor]: list of tensors of embeddings without padding.
@@ -60,22 +76,28 @@ class TorchEmbeddingFunction(EmbeddingFunction):
     @torch.inference_mode()
     def call(
         self, sequences: List[str], remove_padding: bool = True
-    ) -> Union[torch.Tensor, List[torch.Tensor]]:
+    ) -> torch.Tensor | List[torch.Tensor]:
         """Embed a list of sequences.
 
         Args:
             sequences (List[str]): list of sequences to embed.
-            remove_padding (bool, optional): remove padding from embeddings. Defaults to True.
+            remove_padding (bool, optional): remove padding from embeddings.
+                Defaults to True.
 
         Returns:
-            Union[torch.Tensor, List[torch.Tensor]]: if remove_padding is True, returns a list of
-                tensors of embeddings without padding where each tensor has shape (seq_len, embd_dim).
-                If remove_padding is False, returns a tensor of embeddings with shape
+            Union[torch.Tensor, List[torch.Tensor]]: if remove_padding is True,
+                returns a list of tensors of embeddings without padding where
+                each tensor has shape (seq_len, embd_dim). If remove_padding is
+                False, returns a tensor of embeddings with shape
                 (batch_size, max_seq_len, embd_dim).
         """
-        input_ids = self.tokenizer(sequences)
+
+        input_ids = self.tokenizer(sequences, **self.tokenizer_options)
         try:
-            model_outputs = self.model(input_ids.to(self.device))
+            model_outputs = self.model(
+                input_ids.to(self.device),
+                **self.forward_options,
+            )
         except Exception:
             # If cuda out of memory, switch to CPU, extract
             # embeddings then move the model back to the GPU.

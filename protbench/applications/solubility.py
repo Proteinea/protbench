@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import Callable
+
 from peft import TaskType
 from transformers import EvalPrediction
 
@@ -59,11 +63,14 @@ def compute_solubility_metrics(p: EvalPrediction):
 
 
 class Solubility(BenchmarkingTask):
+    task_type = TaskType.SEQ_CLS
+    requires_pooling = True
+
     def __init__(
         self,
-        dataset="solubility",
-        from_embeddings=False,
-        tokenizer=None,
+        dataset: str = "solubility",
+        from_embeddings: bool = False,
+        tokenizer: Callable | None = None,
     ):
         train_dataset, eval_dataset, test_dataset = supported_datasets[
             dataset
@@ -83,8 +90,6 @@ class Solubility(BenchmarkingTask):
             metric_for_best_model="eval_validation_accuracy",
             from_embeddings=from_embeddings,
             tokenizer=tokenizer,
-            requires_pooling=True,
-            task_type=TaskType.SEQ_CLS,
         )
 
     def get_train_data(self):

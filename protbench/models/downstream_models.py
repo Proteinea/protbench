@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 from typing import Callable
-from typing import Optional
 from typing import Union
 
 import torch
@@ -14,7 +15,7 @@ class DownstreamModelFromEmbedding(nn.Module):
         self,
         downstream_backbone: nn.Module,
         head: nn.Module,
-        pad_token_id: Optional[int] = 0,
+        pad_token_id: int = 0,
     ):
         """Initializes a downstream model using a backbone and a head.
 
@@ -42,14 +43,14 @@ class DownstreamModelFromEmbedding(nn.Module):
         self.pad_token_id = pad_token_id
 
     def forward(
-        self, embds: torch.Tensor, labels: Optional[torch.Tensor] = None
+        self, embds: torch.Tensor, labels: torch.Tensor | None = None
     ) -> torch.Tensor:
         """Embed a batch of sequences.
 
         Args:
             embds (torch.Tensor): embeddings of shape
                                   (batch_size, seq_len, embd_dim).
-            labels (Optional[torch.Tensor], optional): labels. Defaults to None.
+            labels (torch.Tensor | None, optional): labels. Defaults to None.
 
         Returns:
             torch.Tensor: return the output of the head.

@@ -1,7 +1,8 @@
+from __future__ import annotations
+
 from typing import Callable
 from typing import Dict
 from typing import List
-from typing import Optional
 from typing import Tuple
 
 from datasets import load_dataset
@@ -17,9 +18,9 @@ class HuggingFaceResidueToClass(ResidueToClass):
         data_key: str,
         seqs_col: str,
         labels_col: str,
-        class_to_id: Optional[Dict[str, int]] = None,
-        mask_col: Optional[str] = None,
-        preprocessing_function: Optional[Callable] = None,
+        class_to_id: Dict[str, int] | None = None,
+        mask_col: str | None = None,
+        preprocessing_function: Callable | None = None,
         ignore_index: int = -100,
     ):
         """A generic class for any task where the goal is to predict a class
@@ -32,16 +33,12 @@ class HuggingFaceResidueToClass(ResidueToClass):
             data_key (str): Key of the data in the DatasetDict.
             seqs_col (str): Name of the column containing the sequences.
             labels_col (str): Name of the column containing the labels.
-            mask_col (Optional[str], optional): Name of the column
-                                                containing the masks.
-                                                Defaults to None.
-            preprocessing_function (Optional[Callable]): Function to
-                                                         preprocess the a row
-                                                         of (seq, label, mask).
-                                                         Defaults to None.
+            mask_col (str | None, optional): Name of the column
+                containing the masks. Defaults to None.
+            preprocessing_function (Callable | None): Function to
+                preprocess the a row of (seq, label, mask). Defaults to None.
             ignore_index (int, optional): Value of label in masked positions to
-                                          be ignored by loss and metrics
-                                          computation. Defaults to -100.
+                be ignored by loss and metrics computation. Defaults to -100.
 
         """
         super(HuggingFaceResidueToClass, self).__init__(
@@ -70,8 +67,8 @@ class HuggingFaceResidueToClass(ResidueToClass):
         data_key: str,
         seqs_col: str,
         labels_col: str,
-        mask_col: Optional[str] = None,
-        preprocessing_function: Optional[Callable] = None,
+        mask_col: str | None = None,
+        preprocessing_function: Callable | None = None,
     ) -> Tuple[List[str], List[List[int]]]:
         # load the examples from the dataset
         dataset = load_dataset(dataset_url, data_files=data_files)

@@ -1,7 +1,8 @@
+from __future__ import annotations
+
 import abc
 from typing import Dict
 from typing import List
-from typing import Optional
 from typing import Tuple
 
 from protbench.tasks.task import Task
@@ -10,17 +11,9 @@ from protbench.tasks.task import Task
 class SequenceToClass(Task):
     def __init__(
         self,
-        class_to_id: Optional[Dict[str, int]] = None,
+        class_to_id: Dict[str, int] | None = None,
     ) -> None:
-        """Generic task of predicting a class for a sequence.
-
-        Args:
-            data_file (str): path to the fasta file containing the
-                sequences and labels. The file must have the following format:
-                >seq_id LABEL=class
-                sequence
-            where SET is either train or val and LABEL is the class label.
-        """
+        """Generic task of predicting a class for a sequence."""
         super().__init__()
 
         if class_to_id:

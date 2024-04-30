@@ -1,11 +1,13 @@
 import os
 import random
 import unittest
-from typing import List, Tuple
+from typing import List
+from typing import Tuple
 
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
+
 from protbench.tasks.residue_to_class.residue_to_class import ResidueToClass
 from protbench.tasks.sequence_to_class.sequence_to_class import SequenceToClass
 from protbench.tasks.sequence_to_value.sequence_to_value import SequenceToValue
@@ -294,7 +296,9 @@ class TestSequenceToValue(unittest.TestCase):
         samples = []
         for i, (seq, target, set) in enumerate(zip(sequences, targets, sets)):
             sample = SeqRecord(
-                Seq(seq), id=f"seq_{i}", description=f"SET={set} VALUE={target}"
+                Seq(seq),
+                id=f"seq_{i}",
+                description=f"SET={set} VALUE={target}",
             )
             samples.append(sample)
 

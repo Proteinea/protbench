@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import abc
+from os import PathLike
 from pathlib import Path
 from typing import Any
 from typing import Iterable
 from typing import List
-from typing import Optional
 
 import numpy as np
 
@@ -15,7 +17,7 @@ class Embedder(abc.ABC):
         self,
         embedding_function: EmbeddingFunction,
         low_memory: bool = False,
-        save_path: Optional[str] = None,
+        save_path: PathLike | None = None,
     ):
         self.embedding_function = embedding_function
         if low_memory and save_path is None:
@@ -31,7 +33,7 @@ class Embedder(abc.ABC):
 
     @staticmethod
     def save_embedding_to_disk(
-        idx: int, embedding: np.ndarray, save_path: Path
+        idx: int, embedding: np.ndarray, save_path: PathLike
     ) -> None:
         np.save(save_path / Path(str(idx)), embedding)
 

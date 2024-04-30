@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import Callable
+
 from peft import TaskType
 from transformers import EvalPrediction
 
@@ -7,8 +11,9 @@ from protbench.models.heads import TokenClassificationHead
 from protbench.tasks import HuggingFaceResidueToClass
 from protbench.utils import collate_inputs_and_labels
 from protbench.utils import collate_sequence_and_align_labels
-from protbench.utils.preprocessing_utils import \
-    preprocess_multi_classification_logits
+from protbench.utils.preprocessing_utils import (
+    preprocess_multi_classification_logits,
+)
 
 
 def preprocess_ssp_rows(seq, label, mask):
@@ -135,8 +140,14 @@ def compute_secondary_structure_metrics(p: EvalPrediction):
 
 
 class SSP8(BenchmarkingTask):
+    task_type = TaskType.SEQ_CLS
+    requires_pooling = False
+
     def __init__(
-        self, dataset, from_embeddings=False, tokenizer=None
+        self,
+        dataset: str,
+        from_embeddings: bool = False,
+        tokenizer: Callable | None = None,
     ):
         train_dataset, eval_dataset = supported_datasets[dataset]()
         collate_fn = (
@@ -153,8 +164,6 @@ class SSP8(BenchmarkingTask):
             metric_for_best_model="eval_validation_accuracy",
             from_embeddings=from_embeddings,
             tokenizer=tokenizer,
-            requires_pooling=False,
-            task_type=TaskType.SEQ_CLS,
         )
 
     def get_train_data(self):

@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import pickle
+from os import PathLike
 from typing import Callable
 from typing import Dict
 from typing import List
-from typing import Optional
 from typing import Tuple
 
 from protbench.tasks.residue_to_class.residue_to_class import ResidueToClass
@@ -11,37 +13,34 @@ from protbench.tasks.residue_to_class.residue_to_class import ResidueToClass
 class PickleResidueToClass(ResidueToClass):
     def __init__(
         self,
-        dataset_path: str,
+        dataset_path: PathLike,
         seqs_col: str,
         labels_col: str,
-        class_to_id: Optional[Dict[str, int]] = None,
-        mask_col: Optional[str] = None,
-        preprocessing_function: Optional[Callable] = None,
+        class_to_id: Dict[str, int] | None = None,
+        mask_col: str | None = None,
+        preprocessing_function: Callable | None = None,
         ignore_index: int = -100,
-        validate_lengths: Optional[bool] = False,
-        encode_labels: Optional[bool] = False,
-        mask_labels: Optional[bool] = False,
-        num_classes: Optional[int] = None,
+        validate_lengths: bool | None = False,
+        encode_labels: bool | None = False,
+        mask_labels: bool | None = False,
+        num_classes: int | None = None,
     ):
         """A generic class for any task where the goal is to predict a class
            for each residue in a protein sequence. The data is loaded from a
            huggingface dataset.
 
         Args:
-            dataset_url (str): URL of the huggingface dataset.
+            dataset_url (PathLike): URL of the huggingface dataset.
             data_files (str): Name of the data files in the dataset.
             data_key (str): Key of the data in the DatasetDict.
             seqs_col (str): Name of the column containing the sequences.
             labels_col (str): Name of the column containing the labels.
-            mask_col (Optional[str], optional): Name of the column containing
-                                                the masks. Defaults to None.
-            preprocessing_function (Optional[Callable]): Function to
-                                                         preprocess the a row
-                                                         of (seq, label, mask).
-                                                         Defaults to None.
+            mask_col (str | None, optional): Name of the column containing
+                the masks. Defaults to None.
+            preprocessing_function (Callable | None): Function to
+                preprocess the a row of (seq, label, mask). Defaults to None.
             ignore_index (int, optional): Value of label in masked
-                                          positions to be ignored by loss and
-                                          metrics computation.
+                positions to be ignored by loss and metrics computation.
 
         """
         super(PickleResidueToClass, self).__init__(
@@ -69,14 +68,14 @@ class PickleResidueToClass(ResidueToClass):
 
     def _load_and_preprocess_data(
         self,
-        dataset_path: str,
+        dataset_path: PathLike,
         seqs_col: str,
         labels_col: str,
-        mask_col: Optional[str] = None,
-        preprocessing_function: Optional[Callable] = None,
-        validate_lengths: Optional[bool] = False,
-        encode_labels: Optional[bool] = False,
-        mask_labels: Optional[bool] = False,
+        mask_col: str | None = None,
+        preprocessing_function: Callable | None = None,
+        validate_lengths: bool = False,
+        encode_labels: bool = False,
+        mask_labels: bool = False,
     ) -> Tuple[List[str], List[List[int]]]:
         # load the examples from the dataset
         with open(dataset_path, "rb") as f:

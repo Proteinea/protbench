@@ -1,11 +1,8 @@
-from functools import partial
-from typing import Callable
+from __future__ import annotations
+
 from typing import Generator
 from typing import List
-from typing import Optional
 from typing import Tuple
-
-from peft import TaskType
 
 from protbench.applications import models
 from protbench.applications.benchmarking_task import BenchmarkingTask
@@ -20,9 +17,7 @@ from protbench.applications.thermostability import Thermostability
 
 
 def get_tasks(
-    tasks_to_run: Optional[List] = None,
-    from_embeddings: bool = False,
-    tokenizer: Optional[Callable] = None,
+    tasks_to_run: List | None = None,
 ) -> Generator[Tuple[str, BenchmarkingTask]]:
     tasks = {
         "ssp3_casp12": SSP3,
@@ -41,16 +36,13 @@ def get_tasks(
         "thermostability": Thermostability,
     }
 
-    for task_name, task_cls in tasks.items():
-        if task_name not in tasks_to_run:
+    # Check whether all specified tasks exist or not.
+    for t in tasks_to_run:
+        if t not in tasks:
             raise ValueError(
-                f"Task {task_name} is not supported, "
+                f"Task {t} is not supported, "
                 f"supported tasks are {list(tasks.keys())}."
             )
 
-        task_instance = task_cls(
-            dataset=task_name,
-            from_embeddings=from_embeddings,
-            tokenizer=tokenizer,
-        )
-        yield task_name, task_instance
+    for task_name, task_cls in tasks.items():
+        yield task_name, task_cls

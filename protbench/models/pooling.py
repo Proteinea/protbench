@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 from functools import partial
-from typing import Optional
 
 import torch
 from torch import nn
@@ -13,7 +14,7 @@ class GlobalMaxPooling1D(nn.Module):
         self.global_max_pool1d = partial(torch.amax, dim=1)
 
     def forward(
-        self, x: torch.Tensor, attention_mask: Optional[torch.Tensor] = None
+        self, x: torch.Tensor, attention_mask: torch.Tensor | None = None
     ):
         """Forward pass of the global max pooling layer.
 
@@ -41,7 +42,7 @@ class GlobalAvgPooling1D(nn.Module):
         self.global_avg_pool1d_with_nan = partial(torch.nanmean, dim=1)
 
     def forward(
-        self, x: torch.Tensor, attention_mask: Optional[torch.Tensor] = None
+        self, x: torch.Tensor, attention_mask: torch.Tensor | None = None
     ):
         """Forward pass of the global max pooling layer.
 

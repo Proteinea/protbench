@@ -1,3 +1,4 @@
+from os import PathLike
 from typing import List
 from typing import Tuple
 from typing import Union
@@ -10,21 +11,21 @@ from protbench.tasks.residue_to_class.residue_to_class import ResidueToClass
 class FastaResidueToClass(ResidueToClass):
     def __init__(
         self,
-        seqs_file: str,
-        labels_file: str,
+        seqs_file: PathLike,
+        labels_file: PathLike,
         ignore_index: int = -100,
     ):
         """A generic class for any task where the goal is to predict a class
            for each residue in a protein sequence.
 
         Args:
-            seqs_file (str): Path to the fasta file containing the
-                             protein sequences.
-            labels_file (str): Path to the fasta file containing the labels for
-                               each sequence.
-                               The file must have the following format:
-                                >seq_id MASK=11100011
-                                labels
+            seqs_file (PathLike): Path to the fasta file containing the
+                protein sequences.
+            labels_file (PathLike): Path to the fasta file containing the
+                labels for each sequence. The file must have the
+                following format:
+                >seq_id MASK=11100011
+                labels
 
                 The 'SET' field determines if the corresponding sequence is
                 part of the training or validation set.
@@ -37,8 +38,7 @@ class FastaResidueToClass(ResidueToClass):
                 Note: The sequence, mask, and labels length must be the same
                 for each sequence in the file.
             ignore_index (int, optional): the value of label to be
-                                                ignored by loss and metrics
-                                                computation. Defaults to -100.
+                ignored by loss and metrics computation. Defaults to -100.
         """
         super(FastaResidueToClass, self).__init__(ignore_index=ignore_index)
 

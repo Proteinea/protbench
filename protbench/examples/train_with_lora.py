@@ -2,13 +2,14 @@
 
 import os
 
+from protbench.applications.benchmarking_task import BenchmarkingTask
+
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 import gc
 from functools import partial
 
 import hydra
-import numpy as np
 import omegaconf
 import torch
 import wandb
@@ -16,10 +17,9 @@ from transformers import Trainer
 from transformers import TrainingArguments
 
 from protbench import applications
-from protbench.utils import SequenceAndLabelsDataset
 from protbench.examples.utils import create_run_name
 from protbench.examples.utils import set_seed
-
+from protbench.utils import SequenceAndLabelsDataset
 
 
 @hydra.main(config_name="config", config_path="config", version_base=None)
@@ -28,7 +28,7 @@ def main(config_args: omegaconf.DictConfig):
         os.environ[env_variable] = value
 
     for checkpoint in config_args.model_checkpoints:
-        for task_name, task, task_type in applications.get_tasks(
+        for task_name, task_cls in applications.get_tasks(
             tasks_to_run=config_args.tasks
         ):
             with torch.device("cuda:0"):
@@ -38,7 +38,7 @@ def main(config_args: omegaconf.DictConfig):
                 ) = applications.models.ankh.initialize_model_from_checkpoint(
                     checkpoint,
                     initialize_with_lora=config_args.model_with_lora_config.use_lora,  # noqa
-                    lora_task_type=task_type,
+                    lora_task_type=task_cls.task_type,
                     lora_r=config_args.model_with_lora_config.lora_r,
                     lora_alpha=config_args.model_with_lora_config.lora_alpha,
                     lora_dropout=config_args.model_with_lora_config.lora_dropout,  # noqa
@@ -57,7 +57,9 @@ def main(config_args: omegaconf.DictConfig):
                     return_tensors="pt",
                 )
 
-            task = task(tokenizer=tokenizer)
+            task = task_cls(
+                dataset=task_name, from_embeddings=False, tokenizer=tokenizer
+            )
             task: applications.BenchmarkingTask
             train_seqs, train_labels = task.get_train_data()
             val_seqs, val_labels = task.get_eval_data()
@@ -86,7 +88,7 @@ def main(config_args: omegaconf.DictConfig):
                     lora_alpha=config_args.model_with_lora_config.lora_alpha,
                     lora_dropout=config_args.model_with_lora_config.lora_dropout,
                     lora_bias=config_args.model_with_lora_config.lora_bias,
-                    target_modules=config_args.model_with_lora_config.target_modules
+                    target_modules=config_args.model_with_lora_config.target_modules,
                 )
                 set_seed(config_args.train_config.seed)
 

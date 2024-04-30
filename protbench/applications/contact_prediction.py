@@ -3,8 +3,9 @@ import numpy as np
 from scipy.spatial.distance import pdist
 from scipy.spatial.distance import squareform
 
-from protbench.tasks.residue_to_class.pickle_residue_to_class import \
-    PickleResidueToClass
+from protbench.tasks.residue_to_class.pickle_residue_to_class import (
+    PickleResidueToClass,
+)
 
 
 def preprocess_contact_prediction_labels(seq, label, mask):

@@ -1,11 +1,12 @@
 import abc
 from typing import Any
+from typing import Callable
 from typing import List
 from typing import Union
 
 
 class EmbeddingFunction(abc.ABC):
-    def __init__(self, model: Any, tokenizer: Any):
+    def __init__(self, model: Callable, tokenizer: Callable):
         """Abstract class for embedding functions.
 
         Args:
