@@ -15,6 +15,8 @@ from sklearn.metrics import top_k_accuracy_score
 from protbench.applications.benchmarking_task import BenchmarkingTask
 from protbench.models.heads import MultiClassClassificationHead
 from protbench.tasks import HuggingFaceSequenceToClass
+from protbench.utils import collate_inputs
+from protbench.utils import collate_sequence_and_labels
 
 
 def get_remote_homology_dataset():
@@ -43,7 +45,6 @@ def get_remote_homology_dataset():
         data_files="test_fold_holdout.csv",
         data_key="train",
     )
-
     return train_data, val_data, test_data
 
 
@@ -81,6 +82,17 @@ class RemoteHomology(BenchmarkingTask):
         train_dataset, eval_dataset, test_dataset = supported_datasets[
             dataset
         ]()
+
+        if from_embeddings:
+            collate_fn = collate_inputs
+        elif tokenizer is not None:
+            collate_fn = collate_sequence_and_labels(tokenizer)
+        else:
+            raise ValueError(
+                "Expected a `tokenizer`  when `from_embeddings` "
+                f"is set to `False`. Received: {tokenizer}."
+            )
+
         super().__init__(
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
@@ -93,6 +105,7 @@ class RemoteHomology(BenchmarkingTask):
             from_embeddings=from_embeddings,
             tokenizer=tokenizer,
             test_dataset=test_dataset,
+            collate_fn=collate_fn,
         )
 
     def get_train_data(self) -> Tuple:

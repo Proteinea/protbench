@@ -6,7 +6,7 @@ from typing import Union
 
 
 class EmbeddingFunction(abc.ABC):
-    def __init__(self, model: Callable, tokenizer: Callable):
+    def __init__(self, model: Callable, tokenization_fn: Callable):
         """Abstract class for embedding functions.
 
         Args:
@@ -14,7 +14,7 @@ class EmbeddingFunction(abc.ABC):
             tokenizer (Callable): tokenizer to use for embedding.
         """
         self.model = model
-        self.tokenizer = tokenizer
+        self.tokenization_fn = tokenization_fn
 
     @abc.abstractmethod
     def call(

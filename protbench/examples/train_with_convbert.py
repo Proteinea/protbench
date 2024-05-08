@@ -37,12 +37,6 @@ def main(config_args: omegaconf.DictConfig):
                 gradient_checkpointing=config_args.train_config.gradient_checkpointing,
             )
             embedding_dim = pretrained_model.config.d_model
-            tokenizer = partial(
-                tokenizer,
-                add_special_tokens=True,
-                padding="longest",
-                return_tensors="pt",
-            )
 
         for task_name, task_cls in applications.get_tasks(
             tasks_to_run=config_args.tasks
@@ -63,13 +57,7 @@ def main(config_args: omegaconf.DictConfig):
             save_dirs = embedder.SaveDirectories()
             compute_embeddings_wrapper = embedder.ComputeEmbeddingsWrapper(
                 model=pretrained_model,
-                tokenizer=tokenizer.encode,
-                tokenizer_options={
-                    "add_special_tokens": True,
-                    "padding": True,
-                    "truncation": False,
-                    "return_tensors": "pt",
-                },
+                tokenization_fn=applications.pretrained.ankh.DefaultTokenizationFunction(tokenizer),
                 post_processing_function=applications.pretrained.ankh.embeddings_postprocessing_fn,
                 pad_token_id=0,
                 low_memory=config_args.train_config.low_memory,

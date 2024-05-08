@@ -14,9 +14,8 @@ class TorchEmbeddingFunction(EmbeddingFunction):
     def __init__(
         self,
         model: torch.nn.Module,
-        tokenizer: Callable,
+        tokenization_fn: Callable,
         device: int | torch.device,
-        tokenizer_options: Dict = {},
         forward_options: Dict = {},
         embeddings_postprocessing_fn: Callable[[Any], torch.Tensor] = None,
         pad_token_id: int = 0,
@@ -35,15 +34,12 @@ class TorchEmbeddingFunction(EmbeddingFunction):
             pad_token_id (int, optional): tokenizer's pad token id.
                 Defaults to 0.
         """
-        super().__init__(model, tokenizer)
+        super().__init__(model, tokenization_fn)
         if self.model.training:
             self.model.eval()
 
         self.forward_options = (
             forward_options if forward_options is not None else {}
-        )
-        self.tokenizer_options = (
-            tokenizer_options if tokenizer_options is not None else {}
         )
         self.embeddings_postprocessing_fn = embeddings_postprocessing_fn
         self.device = device
@@ -91,8 +87,7 @@ class TorchEmbeddingFunction(EmbeddingFunction):
                 False, returns a tensor of embeddings with shape
                 (batch_size, max_seq_len, embd_dim).
         """
-
-        input_ids = self.tokenizer(sequences, **self.tokenizer_options)
+        input_ids = self.tokenization_fn(sequences)
         try:
             model_outputs = self.model(
                 input_ids.to(self.device),

@@ -13,6 +13,8 @@ from protbench.applications.benchmarking_task import BenchmarkingTask
 from protbench.models.heads import BinaryClassificationHead
 from protbench.tasks import HuggingFaceSequenceToClass
 from protbench.utils import preprocess_binary_classification_logits
+from protbench.utils import collate_inputs
+from protbench.utils import collate_sequence_and_labels
 
 
 def get_solubility_dataset():
@@ -76,6 +78,15 @@ class Solubility(BenchmarkingTask):
         train_dataset, eval_dataset, test_dataset = supported_datasets[
             dataset
         ]()
+        if from_embeddings:
+            collate_fn = collate_inputs
+        elif tokenizer is not None:
+            collate_fn = collate_sequence_and_labels(tokenizer)
+        else:
+            raise ValueError(
+                "Expected a `tokenizer`  when `from_embeddings` "
+                f"is set to `False`. Received: {tokenizer}."
+            )
         super().__init__(
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
@@ -85,6 +96,7 @@ class Solubility(BenchmarkingTask):
             metric_for_best_model="eval_validation_accuracy",
             from_embeddings=from_embeddings,
             tokenizer=tokenizer,
+            collate_fn=collate_fn,
         )
 
     def get_train_data(self) -> Tuple:

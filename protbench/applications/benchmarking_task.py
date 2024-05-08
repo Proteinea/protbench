@@ -8,8 +8,6 @@ from protbench.models.downstream_models import (
     DownstreamModelWithPretrainedBackbone,
 )
 from protbench.tasks.task import Task
-from protbench.utils import collate_inputs
-from protbench.utils import collate_sequence_and_labels
 
 
 class BenchmarkingTask(abc.ABC):
@@ -26,6 +24,7 @@ class BenchmarkingTask(abc.ABC):
         metric_for_best_model: str = None,
         from_embeddings: bool = False,
         tokenizer: Callable = None,
+        collate_fn: Callable = None,
     ):
         """Base class for benchmarking datasets.
 
@@ -48,16 +47,6 @@ class BenchmarkingTask(abc.ABC):
         Raises:
             ValueError: If `tokenizer` is None while `from_embeddings` is False.
         """
-        if self.from_embeddings:
-            self.collate_fn = collate_inputs
-        elif tokenizer is not None:
-            self.collate_fn = collate_sequence_and_labels(tokenizer)
-        else:
-            raise ValueError(
-                "Expected a `tokenizer`  when `from_embeddings` "
-                f"is set to `False`. Received: {tokenizer}."
-            )
-
         self.train_dataset = train_dataset
         self.eval_dataset = eval_dataset
         self.test_dataset = test_dataset
@@ -66,6 +55,7 @@ class BenchmarkingTask(abc.ABC):
         self.metric_for_best_model = metric_for_best_model
         self.from_embeddings = from_embeddings
         self.tokenizer = tokenizer
+        self.collate_fn = collate_fn
 
     @abc.abstractmethod
     def get_train_data(self):
@@ -81,7 +71,6 @@ class BenchmarkingTask(abc.ABC):
     def get_task_head(self, embedding_dim):
         raise NotImplementedError("Should be implemented in a subclass.")
 
-    @abc.abstractmethod
     def get_downstream_model(
         self, backbone_model, embedding_dim, pooling=None
     ):

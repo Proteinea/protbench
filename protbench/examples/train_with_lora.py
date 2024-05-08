@@ -1,10 +1,10 @@
 # flake8: noqa: E402
 
 import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 from protbench.applications.benchmarking_task import BenchmarkingTask
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 import gc
 from functools import partial

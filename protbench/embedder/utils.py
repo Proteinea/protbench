@@ -49,7 +49,7 @@ class SaveDirectories:
 
 def compute_embeddings(
     model: torch.nn.Module,
-    tokenizer: Callable,
+    tokenization_fn: Callable,
     train_seqs: List[str],
     val_seqs: List[str] | None = None,
     test_seqs: List[str] | None = None,
@@ -57,13 +57,11 @@ def compute_embeddings(
     post_processing_fn: Callable = None,
     device: torch.device | None = None,
     pad_token_id: int = 0,
-    tokenizer_options: Dict = {},
 ):
     embedding_fn = TorchEmbeddingFunction(
         model=model,
-        tokenizer=tokenizer,
+        tokenization_fn=tokenization_fn,
         device=device,
-        tokenizer_options=tokenizer_options,
         forward_options=forward_options,
         embeddings_postprocessing_fn=post_processing_fn,
         pad_token_id=pad_token_id,
@@ -89,7 +87,7 @@ def compute_embeddings(
 
 def compute_embeddings_and_save_to_disk(
     model: torch.nn.Module,
-    tokenizer: Callable,
+    tokenization_fn: Callable,
     save_directories: SaveDirectories,
     train_seqs: List[str],
     val_seqs: List[str] | None = None,
@@ -98,13 +96,11 @@ def compute_embeddings_and_save_to_disk(
     post_processing_fn: Callable = None,
     device: torch.device | None = None,
     pad_token_id: int = 0,
-    tokenizer_options: Dict = {},
 ):
     embedding_fn = TorchEmbeddingFunction(
         model=model,
-        tokenizer=tokenizer,
+        tokenization_fn=tokenization_fn,
         device=device,
-        tokenizer_options=tokenizer_options,
         forward_options=forward_options,
         embeddings_postprocessing_fn=post_processing_fn,
         pad_token_id=pad_token_id,
@@ -145,8 +141,7 @@ class ComputeEmbeddingsWrapper:
     def __init__(
         self,
         model: torch.nn.Module,
-        tokenizer: Callable,
-        tokenizer_options: Dict = {},
+        tokenization_fn: Callable,
         forward_options: Dict = {},
         post_processing_function: Callable | None = None,
         device: torch.device = None,
@@ -162,8 +157,7 @@ class ComputeEmbeddingsWrapper:
             )
 
         self.model = model
-        self.tokenizer = tokenizer
-        self.tokenizer_options = tokenizer_options
+        self.tokenization_fn = tokenization_fn
         self.post_processing_function = post_processing_function
         if device is None:
             device = "cuda:0" if torch.cuda.is_available() else "cpu"
@@ -179,27 +173,27 @@ class ComputeEmbeddingsWrapper:
     ) -> EmbeddingsContainer | None:
         if self.low_memory:
             compute_embeddings_and_save_to_disk(
-                self.model,
-                self.tokenizer,
-                self.save_directories,
+                model=self.model,
+                tokenization_fn=self.tokenization_fn,
+                save_directories=self.save_directories,
                 train_seqs=train_seqs,
                 val_seqs=val_seqs,
                 test_seqs=test_seqs,
+                forward_options=self.forward_options,
                 post_processing_fn=self.post_processing_function,
                 pad_token_id=self.pad_token_id,
-                tokenizer_options=self.tokenizer_options,
             )
         else:
             outputs = compute_embeddings(
-                self.model,
-                self.tokenizer,
+                model=self.model,
+                tokenization_fn=self.tokenization_fn,
                 train_seqs=train_seqs,
                 val_seqs=val_seqs,
                 test_seqs=test_seqs,
+                forward_options=self.forward_options,
                 post_processing_fn=self.post_processing_function,
                 device=self.device,
                 pad_token_id=self.pad_token_id,
-                tokenizer_options=self.tokenizer_options,
             )
             train_embeds, val_embeds, test_embeds = outputs
             return EmbeddingsContainer(

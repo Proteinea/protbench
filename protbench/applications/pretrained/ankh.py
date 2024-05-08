@@ -27,6 +27,25 @@ def embeddings_postprocessing_fn(model_outputs):
     return model_outputs.last_hidden_state
 
 
+class DefaultTokenizationFunction:
+    def __init__(self, tokenizer):
+        """Default tokenization function for Ankh.
+        This implementation contains some default parameters
+        and the user can replace this entire class with any
+        other implementation"""
+        self.tokenizer = tokenizer
+
+    def __call__(self, x):
+        output = self.tokenizer(
+            x,
+            add_special_tokens=True,
+            padding=True,
+            truncation=False,
+            return_tensors="pt",
+        )["input_ids"]
+        return output
+
+
 def initialize_model_from_checkpoint(
     checkpoint: str,
     initialize_with_lora: bool = False,
