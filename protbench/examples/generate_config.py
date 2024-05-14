@@ -39,7 +39,22 @@ def generate_config() -> Dict:
             "ankh-v2-41",
             "ankh-v2-45",
             "ankh-large",
+            "esm2_650M",
+            "esm2_3B",
+            "esm2_t48_15B_UR50D",
         ],
+        "model_checkpoints_forward_options": {
+            "esm2_650": {
+                "repr_layers": [33],
+                "need_head_weights": False,
+                "return_contacts": False,
+            },
+            "esm2_3B": {
+                "repr_layers": [36],
+                "need_head_weights": False,
+                "return_contacts": False,
+            },
+        },
         "tasks": [
             "ssp3_casp12",
             "ssp3_casp14",

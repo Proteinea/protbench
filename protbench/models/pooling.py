@@ -4,15 +4,6 @@ import torch
 from torch import nn
 
 
-def prepare_attention_mask(
-    attention_mask: torch.Tensor,
-    dtype: torch.dtype,
-    device: torch.device,
-) -> torch.Tensor:
-    attention_mask = attention_mask.to(device=device, dtype=dtype)
-    return attention_mask.unsqueeze(-1)
-
-
 class GlobalMaxPooling1D(nn.Module):
     def __init__(self):
         """Applies global max pooling over timesteps dimension"""
@@ -31,11 +22,10 @@ class GlobalMaxPooling1D(nn.Module):
                 (batch_size, seq_len). Defaults to None.
         """
         if attention_mask is not None:
-            attention_mask = prepare_attention_mask(
-                attention_mask=attention_mask,
-                dtype=x.dtype,
-                device=x.device,
+            attention_mask = attention_mask.to(
+                device=x.device, dtype=x.dtype
             )
+            attention_mask = attention_mask.unsqueeze(-1)
             x = x * attention_mask
 
         x = torch.amax(x, dim=1)
@@ -60,11 +50,10 @@ class GlobalAvgPooling1D(nn.Module):
                 (batch_size, seq_len). Defaults to None.
         """
         if attention_mask is not None:
-            attention_mask = prepare_attention_mask(
-                attention_mask=attention_mask,
-                dtype=x.dtype,
-                device=x.device,
+            attention_mask = attention_mask.to(
+                device=x.device, dtype=x.dtype
             )
+            attention_mask = attention_mask.unsqueeze(-1)
             x = x * attention_mask
             return torch.sum(x, dim=1) / torch.sum(attention_mask, dim=1)
         else:

@@ -35,9 +35,9 @@ class DefaultTokenizationFunction:
         other implementation"""
         self.tokenizer = tokenizer
 
-    def __call__(self, x):
+    def __call__(self, sequence):
         output = self.tokenizer(
-            x,
+            sequence,
             add_special_tokens=True,
             padding=True,
             truncation=False,

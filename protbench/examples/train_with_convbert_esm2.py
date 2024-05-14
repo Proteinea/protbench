@@ -4,8 +4,6 @@ import os
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
-from functools import partial
-
 import hydra
 import omegaconf
 import torch
@@ -31,12 +29,12 @@ def main(config_args: omegaconf.DictConfig):
             (
                 pretrained_model,
                 tokenizer,
-            ) = applications.pretrained.ankh.initialize_model_from_checkpoint(
+            ) = applications.pretrained.esm2.initialize_model_from_checkpoint(
                 checkpoint,
                 initialize_with_lora=False,
                 gradient_checkpointing=config_args.train_config.gradient_checkpointing,
             )
-            embedding_dim = pretrained_model.config.d_model
+            embedding_dim = pretrained_model.embed_dim
 
         for task_name, task_cls in applications.get_tasks(
             tasks_to_run=config_args.tasks
@@ -59,15 +57,15 @@ def main(config_args: omegaconf.DictConfig):
                 model=pretrained_model,
                  # The default tokenization function is just a class that wraps the tokenizer with some default arguments.
                  # You can replace the default tokenization function with any other function you want,
-                tokenization_fn=applications.pretrained.ankh.DefaultTokenizationFunction(tokenizer),
+                tokenization_fn=applications.pretrained.esm2.DefaultTokenizationFunction(tokenizer),
                 # A simple function that takes the output of the model and modify it if needed
                 # or if the model returns an object that has the embedding inside it you will
                 # need to pass this function to return the tensor itself.
-                post_processing_function=applications.pretrained.ankh.embeddings_postprocessing_fn,
+                post_processing_function=applications.pretrained.esm2.embeddings_postprocessing_fn,
                 pad_token_id=0,
                 low_memory=config_args.train_config.low_memory,
                 save_directories=save_dirs,
-                forward_options={},
+                forward_options=config_args.model_checkpoints_forward_options.get(checkpoint),
             )
             embedding_outputs = compute_embeddings_wrapper(
                 train_seqs=train_seqs,
@@ -81,14 +79,14 @@ def main(config_args: omegaconf.DictConfig):
 
             if config_args.train_config.low_memory:
                 train_dataset = dataset_adapters.EmbeddingsDatasetFromDisk(
-                    save_dirs.train, train_labels
+                    save_dirs.train_path, train_labels
                 )
                 val_dataset = dataset_adapters.EmbeddingsDatasetFromDisk(
-                    save_dirs.validation, val_labels
+                    save_dirs.validation_path, val_labels
                 )
                 if task.test_dataset is not None:
                     test_dataset = dataset_adapters.EmbeddingsDatasetFromDisk(
-                        save_dirs.test, test_labels
+                        save_dirs.test_path, test_labels
                     )
             else:
                 train_embeds, val_embeds, test_embeds = embedding_outputs

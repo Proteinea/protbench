@@ -35,15 +35,15 @@ class SaveDirectories:
         Path(directory).mkdir(exist_ok=True)
 
     @property
-    def train(self) -> PathLike:
+    def train_path(self) -> PathLike:
         return os.path.join(self.parent_dir, self.train_dir)
 
     @property
-    def validation(self) -> PathLike:
+    def validation_path(self) -> PathLike:
         return os.path.join(self.parent_dir, self.validation_dir)
 
     @property
-    def test(self) -> PathLike:
+    def test_path(self) -> PathLike:
         return os.path.join(self.parent_dir, self.test_dir)
 
 
@@ -106,19 +106,21 @@ def compute_embeddings_and_save_to_disk(
         pad_token_id=pad_token_id,
     )
 
-    save_directories.create_or_clean_directory(save_directories.train)
+    save_directories.create_or_clean_directory(save_directories.train_path)
 
     compute_data = [
-        (train_seqs, save_directories.train),
+        (train_seqs, save_directories.train_path),
     ]
 
     if val_seqs is not None:
-        save_directories.create_or_clean_directory(save_directories.validation)
-        compute_data.append((val_seqs, save_directories.validation))
+        save_directories.create_or_clean_directory(
+            save_directories.validation_path,
+        )
+        compute_data.append((val_seqs, save_directories.validation_path))
 
     if test_seqs is not None:
-        save_directories.create_or_clean_directory(save_directories.test)
-        compute_data.append((test_seqs, save_directories.test))
+        save_directories.create_or_clean_directory(save_directories.test_path)
+        compute_data.append((test_seqs, save_directories.test_path))
 
     for data, path in compute_data:
         embedder = TorchEmbedder(
