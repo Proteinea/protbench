@@ -121,7 +121,7 @@ def main(config_args: omegaconf.DictConfig):
                     input_dim=embedding_dim,
                     nhead=config_args.convbert_config.nhead,
                     hidden_dim=config_args.convbert_config.hidden_dim
-                    or int(embedding_dim / 2),  # noqa
+                    or int(embedding_dim / 2),
                     num_layers=config_args.convbert_config.num_layers,
                     kernel_size=config_args.convbert_config.kernel_size,
                     dropout=config_args.convbert_config.dropout,
@@ -130,10 +130,22 @@ def main(config_args: omegaconf.DictConfig):
                     else None,
                 )
 
-                model = task.get_downstream_model(
-                    downstream_model,
-                    embedding_dim,
+                model = applications.pretrained.utils.initialize_model(
+                    task=task,
+                    embedding_dim=embedding_dim,
+                    from_embeddings=True,
+                    # No need for the backbone because
+                    # we already used it to extract embeddings,
+                    # now we will just use the extracted embeddings
+                    # to pass it to the downstream model which
+                    # we passed to this function..
+                    backbone=None,
+                    downstream_model=downstream_model,
                     pooling=config_args.convbert_config.pooling,
+                    # No need to pass embedding postprocessing
+                    # function because we do not have a
+                    # pretrained backbone.
+                    embedding_postprocessing_fn=None,
                 )
 
                 training_args = TrainingArguments(

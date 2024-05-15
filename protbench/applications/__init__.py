@@ -28,7 +28,7 @@ tasks = {
         "solubility": Solubility,
         "remote_homology": RemoteHomology,
         "fluorescence": Fluorescence,
-        "gb1": GB1Sampled,
+        "gb1_sampled": GB1Sampled,
         "thermostability": Thermostability,
     }
 
@@ -46,23 +46,7 @@ def get_task(identifier) -> BenchmarkingTask:
 def get_tasks(
     tasks_to_run: List | None = None,
 ) -> Generator[Tuple[str, BenchmarkingTask]]:
-    tasks = {
-        "ssp3_casp12": SSP3,
-        "ssp3_casp14": SSP3,
-        "ssp3_cb513": SSP3,
-        "ssp3_ts115": SSP3,
-        "ssp8_casp12": SSP8,
-        "ssp8_casp14": SSP8,
-        "ssp8_cb513": SSP8,
-        "ssp8_ts115": SSP8,
-        "deeploc": DeepLoc,
-        "solubility": Solubility,
-        "remote_homology": RemoteHomology,
-        "fluorescence": Fluorescence,
-        "gb1": GB1Sampled,
-        "thermostability": Thermostability,
-    }
-
+    global tasks
     # Check whether all specified tasks exist or not.
     for t in tasks_to_run:
         if t not in tasks:

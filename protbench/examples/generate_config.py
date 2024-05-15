@@ -9,7 +9,7 @@ def generate_config() -> Dict:
         "train_config": {
             "num_trials_per_checkpoint": 1,
             "seed": 7,
-            "gradient_checkpointing": True,
+            "gradient_checkpointing": False,
             "num_train_epochs": 5,
             "per_device_train_batch_size": 1,
             "per_device_eval_batch_size": 1,
@@ -41,10 +41,10 @@ def generate_config() -> Dict:
             "ankh-large",
             "esm2_650M",
             "esm2_3B",
-            "esm2_t48_15B_UR50D",
+            "esm2_15B",
         ],
         "model_checkpoints_forward_options": {
-            "esm2_650": {
+            "esm2_650M": {
                 "repr_layers": [33],
                 "need_head_weights": False,
                 "return_contacts": False,
@@ -69,8 +69,6 @@ def generate_config() -> Dict:
             "remote_homology",
             "fluorescence",
             "gb1_sampled",
-            "pli",
-            "ppi",
         ],
         "convbert_config": {
             "nhead": 4,

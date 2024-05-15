@@ -1,15 +1,13 @@
 from typing import List
-from typing import Literal
-
-import esm
 from peft import LoraConfig
-from peft import TaskType
 from peft import get_peft_model
+from transformers import AutoModel
+from transformers import AutoTokenizer
 
 model_url_map = {
-    "esm2_650M": esm.pretrained.esm2_t33_650M_UR50D,
-    "esm2_3B": esm.pretrained.esm2_t36_3B_UR50D,
-    "esm2_t48_15B_UR50D": esm.pretrained.esm2_t48_15B_UR50D,
+    "esm2_650M": "facebook/esm2_t33_650M_UR50D",
+    "esm2_3B": "facebook/esm2_t36_3B_UR50D",
+    "esm2_15B": "facebook/esm2_t48_15B_UR50D",
 }
 
 
@@ -17,40 +15,34 @@ class DefaultTokenizationFunction:
     def __init__(self, tokenizer):
         self.tokenizer = tokenizer
 
-    def __call__(self, sequence):
-        _, _, encoded_sequence = self.tokenizer(
-            [("sequence", sequence)]
-        )
-        return encoded_sequence
+    def __call__(self, sequences):
+        return self.tokenizer(
+            sequences,
+            add_special_tokens=True,
+            padding=True,
+            truncation=False,
+            return_tensors="pt",
+        )["input_ids"]
 
 
-def embeddings_postprocessing_fn(
-    output,
-    repr_layer: int | Literal["last"] = "last"
-):
-    if repr_layer == "last":
-        key = sorted(list(output["representations"].keys()))[-1]
-    else:
-        key = repr_layer
-    return output["representations"][key]
+def embeddings_postprocessing_fn(model_outputs):
+    return model_outputs.last_hidden_state
 
 
 def initialize_model_from_checkpoint(
         checkpoint,
         initialize_with_lora: bool = False,
-        lora_task_type: TaskType = None,
         lora_r: int = 16,
         lora_alpha: int = 16,
         lora_dropout: float = 0.1,
         lora_bias: str = "none",
         target_modules: List = ["q", "k"],
         gradient_checkpointing: bool = False,):
-    model, alphabet = model_url_map[checkpoint]()
-    batch_converter = alphabet.get_batch_converter()
+    model = AutoModel.from_pretrained(model_url_map[checkpoint])
+    tokenizer = AutoTokenizer.from_pretrained(model_url_map[checkpoint])
 
     if initialize_with_lora:
         peft_config = LoraConfig(
-            task_type=lora_task_type,
             inference_mode=False,
             r=lora_r,
             lora_alpha=lora_alpha,
@@ -63,4 +55,4 @@ def initialize_model_from_checkpoint(
     if gradient_checkpointing:
         raise ValueError("ESM does not support gradient checkpointing.")
 
-    return model, batch_converter
+    return model, tokenizer

@@ -46,7 +46,6 @@ def main(config_args: omegaconf.DictConfig):
                     target_modules=config_args.model_with_lora_config.target_modules,
                     gradient_checkpointing=config_args.train_config.gradient_checkpointing,
                 )
-
                 embedding_dim = pretrained_model.config.d_model
                 tokenizer = partial(
                     tokenizer,
@@ -99,6 +98,17 @@ def main(config_args: omegaconf.DictConfig):
                     if task.requires_pooling
                     else None,
                 )
+
+                model = applications.pretrained.utils.initialize_model(
+                    task=task,
+                    embedding_dim=embedding_dim,
+                    from_embeddings=True,
+                    backbone=pretrained_model,
+                    downstream_model=None,
+                    pooling=config_args.convbert_config.pooling,
+                    embedding_postprocessing_fn=applications.pretrained.ankh.embeddings_postprocessing_fn,
+                )
+
                 training_args = TrainingArguments(
                     output_dir=os.path.join("trainer-outputs", run_name),
                     run_name=run_name,

@@ -13,14 +13,14 @@ from protbench.models.pooling import GlobalMaxPooling1D
 class DownstreamModelFromEmbedding(nn.Module):
     def __init__(
         self,
-        downstream_backbone: nn.Module,
+        downstream_mpdel: nn.Module,
         head: nn.Module,
         pad_token_id: int = 0,
     ):
         """Initializes a downstream model using a backbone and a head.
 
         Args:
-            downstream_backbone (nn.Module): downstream backbone. Should
+            downstream_mpdel (nn.Module): downstream backbone. Should
                                              receive the last hidden state of
                                              the embedding model
                                              (batch_size, seq_len, embd_dim),
@@ -38,7 +38,7 @@ class DownstreamModelFromEmbedding(nn.Module):
                                           the backbone will be None.
         """
         super(DownstreamModelFromEmbedding, self).__init__()
-        self.downstream_backbone = downstream_backbone
+        self.downstream_mpdel = downstream_mpdel
         self.head = head
         self.pad_token_id = pad_token_id
 
@@ -59,7 +59,7 @@ class DownstreamModelFromEmbedding(nn.Module):
             attention_mask = (embds != self.pad_token_id).all(dim=-1)
         else:
             attention_mask = None
-        hidden_states = self.downstream_backbone(embds, attention_mask)
+        hidden_states = self.downstream_mpdel(embds, attention_mask)
         return self.head(hidden_states, labels=labels)
 
 
@@ -69,6 +69,7 @@ class DownstreamModelWithPretrainedBackbone(nn.Module):
         backbone: nn.Module,
         head: nn.Module,
         pooling: Union[Callable, nn.Module] = None,
+        embedding_postprocessing_fn=None,
     ) -> None:
         """Initializes a Downstream model with a head and
            pooling layer attached to it.
@@ -82,6 +83,7 @@ class DownstreamModelWithPretrainedBackbone(nn.Module):
         super(DownstreamModelWithPretrainedBackbone, self).__init__()
         self.backbone = backbone
         self.head = head
+        self.embedding_postprocessing_fn = embedding_postprocessing_fn
 
         if pooling == "max":
             self.pooling = GlobalMaxPooling1D()
@@ -93,7 +95,10 @@ class DownstreamModelWithPretrainedBackbone(nn.Module):
     def forward(self, input_ids, attention_mask=None, labels=None):
         embeddings = self.backbone(
             input_ids=input_ids, attention_mask=attention_mask
-        ).last_hidden_state
+        )
+
+        if self.embedding_postprocessing_fn is not None:
+            embeddings = self.embedding_postprocessing_fn(embeddings)
 
         if self.pooling is not None:
             embeddings = self.pooling(embeddings, attention_mask)

@@ -15,7 +15,7 @@ from protbench.tasks import HuggingFaceResidueToClass
 from protbench.utils.preprocessing_utils import (
     preprocess_multi_classification_logits,
 )
-from protbench.utils import collate_inputs
+from protbench.utils import collate_inputs_and_labels
 from protbench.utils import collate_sequence_and_align_labels
 
 
@@ -153,7 +153,7 @@ class SSP3(BenchmarkingTask):
     ):
         train_dataset, eval_dataset = supported_datasets[dataset]()
         if from_embeddings:
-            collate_fn = collate_inputs
+            collate_fn = collate_inputs_and_labels
         elif tokenizer is not None:
             collate_fn = collate_sequence_and_align_labels(tokenizer)
         else:
