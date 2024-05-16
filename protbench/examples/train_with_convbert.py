@@ -19,7 +19,7 @@ from protbench.examples.utils import create_run_name
 from protbench.examples.utils import set_seed
 from protbench.models import ConvBert
 from protbench.utils import dataset_adapters
-from protbench.models.utils import initialize_model
+from protbench.models import initialize_model
 
 
 @hydra.main(config_name="config", config_path="config", version_base=None)

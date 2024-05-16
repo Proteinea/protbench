@@ -17,7 +17,7 @@ from protbench import applications
 from protbench.examples.utils import create_run_name
 from protbench.examples.utils import set_seed
 from protbench.utils import SequenceAndLabelsDataset
-from protbench.models.utils import initialize_model
+from protbench.models import initialize_model
 
 
 @hydra.main(config_name="config", config_path="config", version_base=None)
