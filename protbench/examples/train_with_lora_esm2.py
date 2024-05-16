@@ -92,7 +92,7 @@ def main(config_args: omegaconf.DictConfig):
                 model = initialize_model(
                     task=task,
                     embedding_dim=embedding_dim,
-                    from_embeddings=True,
+                    from_embeddings=False,
                     backbone=pretrained_model,
                     downstream_model=None,
                     pooling=config_args.model_with_lora_config.pooling
