@@ -19,6 +19,7 @@ from protbench.examples.utils import create_run_name
 from protbench.examples.utils import set_seed
 from protbench.models import ConvBert
 from protbench.utils import dataset_adapters
+from protbench.models.utils import initialize_model
 
 
 @hydra.main(config_name="config", config_path="config", version_base=None)
@@ -132,7 +133,7 @@ def main(config_args: omegaconf.DictConfig):
                     else None,
                 )
 
-                model = applications.pretrained.utils.initialize_model(
+                model = initialize_model(
                     task=task,
                     embedding_dim=embedding_dim,
                     from_embeddings=True,
