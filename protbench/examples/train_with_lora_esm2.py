@@ -43,7 +43,7 @@ def main(config_args: omegaconf.DictConfig):
                     target_modules=config_args.model_with_lora_config.target_modules,
                     gradient_checkpointing=config_args.train_config.gradient_checkpointing,
                 )
-                embedding_dim = pretrained_model.config.d_model
+                embedding_dim = pretrained_model.config.hidden_size
                 tokenizer = partial(
                     tokenizer,
                     add_special_tokens=True,
