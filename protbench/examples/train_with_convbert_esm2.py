@@ -35,7 +35,7 @@ def main(config_args: omegaconf.DictConfig):
                 initialize_with_lora=False,
                 gradient_checkpointing=config_args.train_config.gradient_checkpointing,
             )
-            embedding_dim = pretrained_model.embed_dim
+            embedding_dim = pretrained_model.config.d_model
 
         for task_name, task_cls in applications.get_tasks(
             tasks_to_run=config_args.tasks
