@@ -89,21 +89,15 @@ def main(config_args: omegaconf.DictConfig):
                 )
                 set_seed(config_args.train_config.seed)
 
-                model = task.get_downstream_model(
-                    pretrained_model,
-                    embedding_dim,
-                    pooling=config_args.model_with_lora_config.pooling
-                    if task.requires_pooling
-                    else None,
-                )
-
                 model = initialize_model(
                     task=task,
                     embedding_dim=embedding_dim,
                     from_embeddings=True,
                     backbone=pretrained_model,
                     downstream_model=None,
-                    pooling=config_args.convbert_config.pooling,
+                    pooling=config_args.model_with_lora_config.pooling
+                    if task.requires_pooling
+                    else None,
                     embedding_postprocessing_fn=applications.pretrained.esm2.embeddings_postprocessing_fn,
                 )
 
