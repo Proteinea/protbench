@@ -30,6 +30,7 @@ def generate_config() -> Dict:
             "lora_alpha": 16,
             "lora_dropout": 0.1,
             "lora_bias": "none",
+            "target_modules": ["q", "v"]
         },
         "model_checkpoints": [
             "ankh-base",
