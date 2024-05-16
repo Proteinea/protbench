@@ -11,3 +11,4 @@ from protbench.models.heads import RegressionHead
 from protbench.models.heads import TokenClassificationHead
 from protbench.models.pooling import GlobalAvgPooling1D
 from protbench.models.pooling import GlobalMaxPooling1D
+from protbench.models.utils import initialize_model
