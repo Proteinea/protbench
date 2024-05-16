@@ -66,7 +66,7 @@ def main(config_args: omegaconf.DictConfig):
                 pad_token_id=0,
                 low_memory=config_args.train_config.low_memory,
                 save_directories=save_dirs,
-                forward_options=config_args.model_checkpoints_forward_options.get(checkpoint),
+                forward_options=None,
             )
             embedding_outputs = compute_embeddings_wrapper(
                 train_seqs=train_seqs,
