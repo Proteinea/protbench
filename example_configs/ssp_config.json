@@ -1,0 +1,86 @@
+{
+    "general": {
+        "seed": 42,
+        "sequence_max_length": null
+    },
+    "task": {
+        "name": "residue_to_class",
+        "kwargs": {
+            "seqs_file": "data/ssp/sequences.fasta",
+            "labels_file": "data/ssp/labels.fasta",
+            "label_ignore_value": -100
+        }
+    },
+    "pretrained_model": {
+        "name": "huggingface",
+        "kwargs": {
+            "model_url": "ElnaggarLab/ankh-base",
+            "batch_size": 1,
+            "num_workers": 2
+        }
+    },
+    "downstream_model": {
+        "name": "convbert_for_multiclass_token_classification",
+        "kwargs": {
+            "input_dim": 768,
+            "num_tokens": 3,
+            "nhead": 4,
+            "hidden_dim": 384,
+            "num_layers": 1,
+            "kernel_size": 7,
+            "dropout": 0.2,
+            "loss_ignore_index": -100
+        }
+    },
+    "training_args": {
+        "output_dir": "ssp_3states_casp12",
+        "run_name": "ssp_3states_casp12",
+        "num_train_epochs": 5,
+        "per_device_train_batch_size": 1,
+        "per_device_eval_batch_size": 1,
+        "warmup_steps": 1000,
+        "learning_rate": 1e-03,
+        "weight_decay": 0.0,
+        "logging_steps": 200,
+        "do_train": true,
+        "do_eval": true,
+        "evaluation_strategy": "epoch",
+        "gradient_accumulation_steps": 16,
+        "fp16": false,
+        "fp16_opt_level": "O2",
+        "save_strategy": "no",
+        "metric_for_best_model": "eval_accuracy",
+        "greater_is_better": true,
+        "report_to": "wandb"
+    },
+    "metrics": 
+    [
+        {
+            "name": "accuracy",
+            "kwargs": {
+                "ignore_index": -100
+            }
+        },
+        {
+            "name": "precision",
+            "kwargs": {
+                "ignore_index": -100,
+                "average": "macro"
+            }
+        },
+        {
+            "name": "recall",
+            "kwargs": {
+                "ignore_index": -100,
+                "average": "macro"
+            }
+        },
+        {
+            "name": "f1",
+            "kwargs": {
+                "ignore_index": -100,
+                "average": "macro"
+            }
+        }
+    ]
+}

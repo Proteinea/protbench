@@ -1,6 +1,4 @@
-from os import PathLike
-from typing import List
-from typing import Tuple
+from typing import Tuple, List
 
 from Bio import SeqIO
 
@@ -8,13 +6,12 @@ from protbench.tasks.sequence_to_value.sequence_to_value import SequenceToValue
 
 
 class FastaSequenceToValue(SequenceToValue):
-    def __init__(self, data_file: PathLike) -> None:
+    def __init__(self, data_file: str) -> None:
         """Generic task of predicting a value for a sequence.
 
         Args:
-            data_file (PathLike): Path to the fasta file containing
-                the sequences and labels. The file must have the
-                following format:
+            data_file (str): path to the fasta file containing the sequences and labels.
+                The file must have the following format:
                 >seq_id VALUE=value
                 sequence
 

@@ -1,27 +1,23 @@
 import abc
-from typing import Any
-from typing import Callable
-from typing import List
-from typing import Union
+from typing import Any, List, Union, Any
 
 
 class EmbeddingFunction(abc.ABC):
-    def __init__(self, model: Callable, tokenization_fn: Callable):
+    def __init__(self, model: Any, tokenizer: Any):
         """Abstract class for embedding functions.
 
         Args:
-            model (Callable): model to use for embedding.
-            tokenizer (Callable): tokenizer to use for embedding.
+            model (Any): model to use for embedding.
+            tokenizer (Any): tokenizer to use for embedding.
         """
         self.model = model
-        self.tokenization_fn = tokenization_fn
+        self.tokenizer = tokenizer
 
     @abc.abstractmethod
     def call(
         self, sequence: Union[str, List[str]], *args, **kwargs
     ) -> Union[Any, List[Any]]:
-        # Embed a sequence or a list of sequences. If a single sequence is
-        # passed, a single embedding is returned.
+        # Embed a sequence or a list of sequences. If a single sequence is passed, a single embedding is returned.
         # If a list of sequences is passed, a list of embeddings is returned.
         raise NotImplementedError
 
