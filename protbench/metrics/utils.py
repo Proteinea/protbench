@@ -11,11 +11,13 @@ def remove_ignored_predictions(
     Args:
         predictions (np.ndarray): numpy array of predictions of shape (N,)
         labels (np.ndarray): numpy array of labels of shape (N,)
-        ignore_value (int, optional): value to ignore in the labels. Defaults to -100.
+        ignore_value (int, optional): value to ignore in the labels.
+            Defaults to -100.
 
     Returns:
-        Tuple[np.ndarray, np.ndarray]: tuple of predictions and labels with ignored values removed
-            each of shape (N',) where N' is the number of non-ignored values.
+        Tuple[np.ndarray, np.ndarray]: tuple of predictions and labels with
+            ignored values removed each of shape (N',) where N' is the number
+            of non-ignored values.
     """
     non_ignored_mask = np.where(labels != ignore_value)
     predictions = predictions[non_ignored_mask]

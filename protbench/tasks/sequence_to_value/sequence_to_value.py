@@ -1,19 +1,13 @@
 import abc
-from typing import Tuple, List
+from typing import List
+from typing import Tuple
 
-class SequenceToValue(abc.ABC):
-    def __init__(
-        self,
-    ) -> None:
-        """Generic task of predicting a value for a sequence.
+from protbench.tasks.task import Task
 
-        Args:
-            data_file (str): path to the fasta file containing the sequences and labels.
-                The file must have the following format:
-                >seq_id VALUE=value
-                sequence
 
-        """
+class SequenceToValue(Task):
+    def __init__(self) -> None:
+        """Generic task of predicting a value for a sequence."""
         super().__init__()
 
     @property

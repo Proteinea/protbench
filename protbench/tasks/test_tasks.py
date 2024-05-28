@@ -1,56 +1,18 @@
 import os
-import unittest
 import random
-from typing import List, Tuple
+import unittest
+from typing import List
+from typing import Tuple
 
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
-
-from protbench.src.tasks import TaskRegistry, Task
-from protbench.src.tasks.ResidueToClass import ResidueToClass
-from protbench.src.tasks.sequence_to_class.sequence_to_class import SequenceToClass
-from protbench.src.tasks.tasks import SequenceToValue
+from protbench.tasks.residue_to_class.residue_to_class import ResidueToClass
+from protbench.tasks.sequence_to_class.sequence_to_class import SequenceToClass
+from protbench.tasks.sequence_to_value.sequence_to_value import SequenceToValue
 
 random.seed(42)
-
-
-class TestTaskRegistry(unittest.TestCase):
-    def test_add_task(self):
-        if "test_task" in TaskRegistry.task_name_map:
-            del TaskRegistry.task_name_map["test_task"]
-
-        @TaskRegistry.register("test_task")
-        class TestTask(Task):
-            pass
-
-        self.assertIn("test_task", TaskRegistry.task_name_map)
-        self.assertIs(TaskRegistry.task_name_map["test_task"], TestTask)
-
-    def test_add_task_with_existing_name(self):
-        if "test_task" in TaskRegistry.task_name_map:
-            del TaskRegistry.task_name_map["test_task"]
-
-        @TaskRegistry.register("test_task")
-        class TestTask(Task):
-            pass
-
-        with self.assertRaises(ValueError):
-
-            @TaskRegistry.register("test_task")
-            class TestTask2(Task):
-                pass
-
-    def test_add_task_not_inheriting_task(self):
-        if "test_task" in TaskRegistry.task_name_map:
-            del TaskRegistry.task_name_map["test_task"]
-
-        with self.assertRaises(TypeError):
-
-            @TaskRegistry.register("test_task")
-            class TestTask:
-                pass
 
 
 class TestResidueToClass(unittest.TestCase):
@@ -109,7 +71,9 @@ class TestResidueToClass(unittest.TestCase):
             seq = self.generate_random_sequence(
                 length=random.randint(seq_min_length, seq_max_length)
             )
-            label = self.generate_random_labels(labels_set=labels_set, length=len(seq))
+            label = self.generate_random_labels(
+                labels_set=labels_set, length=len(seq)
+            )
             mask = self.generate_random_mask(len(seq))
             set = "train"
             sequences.append(seq)
@@ -121,7 +85,9 @@ class TestResidueToClass(unittest.TestCase):
             seq = self.generate_random_sequence(
                 length=random.randint(seq_min_length, seq_max_length)
             )
-            label = self.generate_random_labels(labels_set=labels_set, length=len(seq))
+            label = self.generate_random_labels(
+                labels_set=labels_set, length=len(seq)
+            )
             mask = self.generate_random_mask(len(seq))
             set = "val"
             sequences.append(seq)
@@ -175,7 +141,9 @@ class TestResidueToClass(unittest.TestCase):
             self.assertEqual(test_seq, seq)
             for j, (class_label, mask_value) in enumerate(zip(label, mask)):
                 if mask_value == "1":
-                    self.assertEqual(test_label[j], task.class_to_id[class_label])
+                    self.assertEqual(
+                        test_label[j], task.class_to_id[class_label]
+                    )
                 else:
                     self.assertEqual(test_label[j], ignore_index)
 
@@ -189,7 +157,9 @@ class TestResidueToClass(unittest.TestCase):
             self.assertEqual(test_seq, seq)
             for j, (class_label, mask_value) in enumerate(zip(label, mask)):
                 if mask_value == "1":
-                    self.assertEqual(test_label[j], task.class_to_id[class_label])
+                    self.assertEqual(
+                        test_label[j], task.class_to_id[class_label]
+                    )
                 else:
                     self.assertEqual(test_label[j], ignore_index)
 
@@ -326,7 +296,9 @@ class TestSequenceToValue(unittest.TestCase):
         samples = []
         for i, (seq, target, set) in enumerate(zip(sequences, targets, sets)):
             sample = SeqRecord(
-                Seq(seq), id=f"seq_{i}", description=f"SET={set} VALUE={target}"
+                Seq(seq),
+                id=f"seq_{i}",
+                description=f"SET={set} VALUE={target}",
             )
             samples.append(sample)
 

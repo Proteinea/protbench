@@ -14,5 +14,6 @@ def validate_type(attribute_name: str, value: Any, valid_type: Any) -> None:
     """
     if not isinstance(value, valid_type):
         raise TypeError(
-            f"Expected {attribute_name} to be {valid_type} but got {type(value)} instead."
+            f"Expected {attribute_name} to be {valid_type} but "
+            f"got {type(value)} instead."
         )

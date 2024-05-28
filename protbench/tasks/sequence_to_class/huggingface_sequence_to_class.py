@@ -1,8 +1,14 @@
-from typing import Dict, List, Tuple, Union, Optional, Callable
+from __future__ import annotations
+
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Tuple
+from typing import Union
 
 from datasets import load_dataset
 
-from protbench.tasks.sequence_to_class import SequenceToClass
+from protbench.tasks.sequence_to_class.sequence_to_class import SequenceToClass
 
 
 class HuggingFaceSequenceToClass(SequenceToClass):
@@ -13,19 +19,27 @@ class HuggingFaceSequenceToClass(SequenceToClass):
         data_key: str,
         seqs_col: str,
         labels_col: str,
-        class_to_id: Optional[Dict[str, int]] = None,
-        preprocessing_function: Optional[Callable] = None,
+        class_to_id: Dict[str, int] | None = None,
+        preprocessing_function: Callable | None = None,
     ) -> None:
-        """Generic task of predicting a class for a sequence.
+        """A generic class for any task where the goal is to predict a class
+           for each residue in a protein sequence. The data is loaded from
+           a huggingface dataset.
 
         Args:
-            data_file (str): path to the fasta file containing the sequences and labels.
-                The file must have the following format:
-                >seq_id LABEL=class
-                sequence
-            where SET is either train or val and LABEL is the class label.
+            dataset_url (str): URL of the huggingface dataset.
+            data_files (str): Name of the data files in the dataset.
+            data_key (str): Key of the data in the DatasetDict.
+            seqs_col (str): Name of the column containing the sequences.
+            labels_col (str): Name of the column containing the labels.
+            class_to_id (Dict[str, int] | None): Dictionary containing class
+                names and their corresponding ids.
+            preprocessing_function (Callable | None): Function to
+                preprocess the a row of (seq, label, mask). Defaults to None.
         """
-        super(HuggingFaceSequenceToClass, self).__init__(class_to_id=class_to_id)
+        super(HuggingFaceSequenceToClass, self).__init__(
+            class_to_id=class_to_id
+        )
 
         self._data = self.load_and_preprocess_data(
             dataset_url,
@@ -48,7 +62,7 @@ class HuggingFaceSequenceToClass(SequenceToClass):
         data_key: str,
         seqs_col: str,
         labels_col: str,
-        preprocessing_function: Optional[Callable] = None,
+        preprocessing_function: Callable | None = None,
     ) -> Tuple[List[str], List[int]]:
         # load the examples from the dataset
         dataset = load_dataset(dataset_url, data_files=data_files)
