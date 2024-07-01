@@ -36,10 +36,12 @@ def main(config_args: omegaconf.DictConfig):
                 gradient_checkpointing=config_args.train_config.gradient_checkpointing,
             )
             embedding_dim = pretrained_model.config.hidden_size
-
+        
+        # Loop over the tasks.
         for task_name, task_cls in applications.get_tasks(
             tasks_to_run=config_args.tasks
         ):
+            # Create a task instance. (e.g. SSP3, SSP8, etc...)
             task = task_cls(
                 dataset=task_name, from_embeddings=True, tokenizer=tokenizer
             )
@@ -53,7 +55,13 @@ def main(config_args: omegaconf.DictConfig):
 
             num_classes = task.get_num_classes()
 
+            # This instance is just a data class where it
+            # stores the paths for saving the embeddings.
             save_dirs = embedder.SaveDirectories()
+
+            # Create ComputeEmbeddingsWrapper dataset that loops
+            # over the dataset, tokenizes each sequence and
+            # extracts the sequence embeddings (last hidden state).
             compute_embeddings_wrapper = embedder.ComputeEmbeddingsWrapper(
                 model=pretrained_model,
                  # The default tokenization function is just a class that wraps the tokenizer with some default arguments.
@@ -118,6 +126,7 @@ def main(config_args: omegaconf.DictConfig):
 
                 set_seed(config_args.train_config.seed)
 
+                # Load our downstream model.
                 downstream_model = ConvBert(
                     input_dim=embedding_dim,
                     nhead=config_args.convbert_config.nhead,
@@ -131,6 +140,11 @@ def main(config_args: omegaconf.DictConfig):
                     else None,
                 )
 
+                # Then we connect everything together,
+                # by using this function we will create
+                # a downstream convbert model with an
+                # output layer that corresponds to
+                # the current task and we add pooling layer if required.
                 model = initialize_model(
                     task=task,
                     embedding_dim=embedding_dim,
