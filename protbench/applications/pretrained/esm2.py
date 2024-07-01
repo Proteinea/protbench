@@ -53,6 +53,6 @@ def initialize_model_from_checkpoint(
         model = get_peft_model(model, peft_config)
 
     if gradient_checkpointing:
-        raise ValueError("ESM does not support gradient checkpointing.")
+        model.gradient_checkpointing_enable()
 
     return model, tokenizer
