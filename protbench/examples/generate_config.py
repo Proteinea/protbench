@@ -68,7 +68,7 @@ def generate_config() -> Dict:
             "pooling": "max",
         },
         "env_variables": {
-            "WANDB_PROJECT": "AnkhV2-LoRA",
+            "WANDB_PROJECT": "Benchmarking",
         },
         "tokenizer_config": {
             "max_length": None,
