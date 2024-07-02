@@ -55,5 +55,5 @@ def get_tasks(
                 f"supported tasks are {list(tasks.keys())}."
             )
 
-    for task_name, task_cls in tasks.items():
-        yield task_name, task_cls
+    for task_name in tasks_to_run:
+        yield task_name, get_task(task_name)
