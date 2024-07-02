@@ -66,7 +66,10 @@ def main(config_args: omegaconf.DictConfig):
                 model=pretrained_model,
                  # The default tokenization function is just a class that wraps the tokenizer with some default arguments.
                  # You can replace the default tokenization function with any other function you want,
-                tokenization_fn=applications.pretrained.esm2.DefaultTokenizationFunction(tokenizer),
+                tokenization_fn=applications.pretrained.esm2.DefaultTokenizationFunction(
+                    tokenizer,
+                    tokenizer_options=config_args.tokenizer_config,
+                ),
                 # A simple function that takes the output of the model and modify it if needed
                 # or if the model returns an object that has the embedding inside it you will
                 # need to pass this function to return the tensor itself.

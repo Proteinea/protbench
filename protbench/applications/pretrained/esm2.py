@@ -12,16 +12,25 @@ model_url_map = {
 
 
 class DefaultTokenizationFunction:
-    def __init__(self, tokenizer):
+    def __init__(self, tokenizer, tokenizer_options={}):
         self.tokenizer = tokenizer
+        self.tokenizer_options = (
+            tokenizer_options if tokenizer_options is not None else {}
+        )
+        add_special_tokens = self.tokenizer_options.get(
+            "add_special_tokens",
+            None,
+        )
+        if add_special_tokens:
+            self.tokenizer_options.pop("add_special_tokens")
+        self.tokenizer_options.pop("return_tensors")
 
     def __call__(self, sequences):
         return self.tokenizer(
             sequences,
             add_special_tokens=True,
-            padding=True,
-            truncation=False,
             return_tensors="pt",
+            **self.tokenizer_options,
         )["input_ids"]
 
 
@@ -30,14 +39,15 @@ def embeddings_postprocessing_fn(model_outputs):
 
 
 def initialize_model_from_checkpoint(
-        checkpoint,
-        initialize_with_lora: bool = False,
-        lora_r: int = 16,
-        lora_alpha: int = 16,
-        lora_dropout: float = 0.1,
-        lora_bias: str = "none",
-        target_modules: List = ["q", "k"],
-        gradient_checkpointing: bool = False,):
+    checkpoint,
+    initialize_with_lora: bool = False,
+    lora_r: int = 16,
+    lora_alpha: int = 16,
+    lora_dropout: float = 0.1,
+    lora_bias: str = "none",
+    target_modules: List = ["q", "k"],
+    gradient_checkpointing: bool = False,
+):
     model = AutoModel.from_pretrained(model_url_map[checkpoint])
     tokenizer = AutoTokenizer.from_pretrained(model_url_map[checkpoint])
 

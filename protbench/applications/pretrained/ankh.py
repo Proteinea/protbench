@@ -28,20 +28,25 @@ def embeddings_postprocessing_fn(model_outputs):
 
 
 class DefaultTokenizationFunction:
-    def __init__(self, tokenizer):
-        """Default tokenization function for Ankh.
-        This implementation contains some default parameters
-        and the user can replace this entire class with any
-        other implementation"""
+    def __init__(self, tokenizer, tokenizer_options={}):
         self.tokenizer = tokenizer
+        self.tokenizer_options = (
+            tokenizer_options if tokenizer_options is not None else {}
+        )
+        add_special_tokens = self.tokenizer_options.get(
+            "add_special_tokens",
+            None,
+        )
+        if add_special_tokens:
+            self.tokenizer_options.pop("add_special_tokens")
+        self.tokenizer_options.pop("return_tensors")
 
     def __call__(self, sequence):
         output = self.tokenizer(
             sequence,
             add_special_tokens=True,
-            padding=True,
-            truncation=False,
             return_tensors="pt",
+            **self.tokenizer_options,
         )["input_ids"]
         return output
 
