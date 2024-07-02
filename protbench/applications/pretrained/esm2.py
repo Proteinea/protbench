@@ -45,7 +45,7 @@ def initialize_model_from_checkpoint(
     lora_alpha: int = 16,
     lora_dropout: float = 0.1,
     lora_bias: str = "none",
-    target_modules: List = ["q", "k"],
+    target_modules: List = ["q", "v"],
     gradient_checkpointing: bool = False,
 ):
     model = AutoModel.from_pretrained(model_url_map[checkpoint])
