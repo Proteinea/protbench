@@ -2,7 +2,6 @@ from typing import List
 from typing import Tuple
 
 from peft import LoraConfig
-from peft import TaskType
 from peft import get_peft_model
 from transformers import AutoTokenizer
 from transformers import T5EncoderModel
