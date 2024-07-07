@@ -15,15 +15,15 @@ class DefaultTokenizationFunction:
     def __init__(self, tokenizer, tokenizer_options={}):
         self.tokenizer = tokenizer
         self.tokenizer_options = (
-            tokenizer_options if tokenizer_options is not None else {}
+            dict(**tokenizer_options) if tokenizer_options is not None else {}
         )
         add_special_tokens = self.tokenizer_options.get(
             "add_special_tokens",
             None,
         )
         if add_special_tokens:
-            self.tokenizer_options.pop("add_special_tokens")
-        self.tokenizer_options.pop("return_tensors")
+            self.tokenizer_options.pop("add_special_tokens", None)
+        self.tokenizer_options.pop("return_tensors", None)
 
     def __call__(self, sequences):
         return self.tokenizer(
