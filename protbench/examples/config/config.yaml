@@ -1,56 +1,60 @@
 convbert_config:
   dropout: 0.1
-  hidden_dim: 384
+  hidden_dim: 768
   kernel_size: 7
   nhead: 4
   num_layers: 1
   pooling: avg
 env_variables:
-  WANDB_PROJECT: DeepLocFinalIter
+  WANDB_PROJECT: Benchmarking
 model_checkpoints:
-- ankh-v2-23
-# - ankh-v2-32
-# - ankh-v2-33
-# - ankh-v2-41
-- ankh-v2-45
 - ankh-base
+- ankh-v2-23
+- ankh-v2-32
+- ankh-v2-33
+- ankh-v2-41
+- ankh-v2-45
 - ankh-large
+- esm2_650M
+- esm2_3B
+- esm2_15B
 model_with_lora_config:
-  lora_alpha: 32
+  lora_alpha: 16
   lora_bias: none
-  lora_dropout: 0.0
+  lora_dropout: 0.1
   lora_r: 16
-  pooling: avg
+  pooling: max
+  target_modules:
+  - q
+  - v
   use_lora: true
-  target_modules: ["q", "v"]
 tasks:
-  # - ssp3_casp12
-  # - ssp3_casp14
-  # - ssp3_cb513
-  # - ssp3_ts115
-  # - ssp8_casp14
-  # - ssp8_casp12
-  # - ssp8_cb513
-  # - ssp8_ts115
-  - deeploc
-  # - solubility
-  # - remote_homology
-  # - fluorescence
-  # - gb1_sampled
-  # - pli
-  # - ppi
+- ssp3_casp12
+- ssp3_casp14
+- ssp3_cb513
+- ssp3_ts115
+- ssp8_casp14
+- ssp8_casp12
+- ssp8_cb513
+- ssp8_ts115
+- deeploc
+- solubility
+- remote_homology
+- fluorescence
+- gb1_sampled
+- thermostability
 tokenizer_config:
-  max_length: 2048
-  padding: true
-  truncation: true
+  max_length: null
+  padding: false
+  truncation: false
 train_config:
   evaluation_strategy: epoch
   gradient_accumulation_steps: 16
   gradient_checkpointing: false
   learning_rate: 0.001
   logging_steps: 10
-  low_memory: false
-  num_train_epochs: 10
+  low_memory: true
+  num_train_epochs: 5
   num_trials_per_checkpoint: 1
   per_device_eval_batch_size: 1
   per_device_train_batch_size: 1

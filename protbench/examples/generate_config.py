@@ -58,6 +58,7 @@ def generate_config() -> Dict:
             "remote_homology",
             "fluorescence",
             "gb1_sampled",
+            "thermostability",
         ],
         "convbert_config": {
             "nhead": 4,
@@ -65,7 +66,7 @@ def generate_config() -> Dict:
             "num_layers": 1,
             "kernel_size": 7,
             "dropout": 0.1,
-            "pooling": "max",
+            "pooling": "avg",
         },
         "env_variables": {
             "WANDB_PROJECT": "Benchmarking",
