@@ -66,7 +66,6 @@ def initialize_model_from_checkpoint(
             model_url_map[checkpoint]
         )
         peft_config = LoraConfig(
-            # task_type=lora_task_type,
             inference_mode=False,
             r=lora_r,
             lora_alpha=lora_alpha,

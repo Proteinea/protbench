@@ -17,7 +17,7 @@ class ConvBert(nn.Module):
         num_layers: int = 1,
         kernel_size: int = 7,
         dropout: float = 0.2,
-        pooling: str = None,
+        pooling: str | nn.Module = None,
     ):
         """
         Base ConvBert encoder model.
@@ -37,7 +37,7 @@ class ConvBert(nn.Module):
             pooling: String specifying the global pooling function.
                      Accepts "avg" or "max". Default: "max".
         """
-        super(ConvBert, self).__init__()
+        super().__init__()
 
         config = c_bert.ConvBertConfig(
             hidden_size=input_dim,
@@ -49,7 +49,7 @@ class ConvBert(nn.Module):
         )
         self.transformer_encoder = c_bert.ConvBertModel(config).encoder
 
-        if pooling is not None:
+        if pooling is not None and not isinstance(pooling, nn.Module):
             if pooling in {"avg", "mean"}:
                 self.pooling = GlobalAvgPooling1D()
             elif pooling == "max":
@@ -59,6 +59,8 @@ class ConvBert(nn.Module):
                     "Expected pooling to be [`avg`, `max`]. "
                     f"Recieved: {pooling}."
                 )
+        elif isinstance(pooling, nn.Module):
+            self.pooling = pooling
         else:
             self.pooling = None
 
