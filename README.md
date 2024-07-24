@@ -10,6 +10,11 @@ Welcome to ProtBench! This library is designed to make benchmarking protein lang
 - **LoRA Integration**: Use LoRA (Low-Rank Adaptation) for efficient benchmarking.
 - **Embedding Extraction**: Extract embeddings and save them to disk for later use.
 
+
+## Results
+![Ankh Results](imgs/current_results.png)
+
+
 ## Installation
 
 To install the library, simply use pip:
