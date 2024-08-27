@@ -83,7 +83,7 @@ def main(config_args: omegaconf.DictConfig):
             )
             # We do not need this model
             # anymore so we free up space.
-            pretrained_model.cpu()
+            pretrained_model.model.cpu()
             torch.cuda.empty_cache()
 
             # if we cannot store the embeddings in our
