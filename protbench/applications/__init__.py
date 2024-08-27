@@ -46,7 +46,7 @@ def get_task(identifier) -> BenchmarkingTask:
         return tasks[identifier]
 
 
-def get_tasks(
+def load_tasks(
     tasks_to_run: List | None = None,
 ) -> Generator[Tuple[str, BenchmarkingTask]]:
     global tasks
@@ -58,5 +58,4 @@ def get_tasks(
                 f"supported tasks are {list(tasks.keys())}."
             )
 
-    for task_name in tasks_to_run:
-        yield task_name, get_task(task_name)
+    return [(task_name, get_task(task_name)) for task_name in tasks_to_run]
