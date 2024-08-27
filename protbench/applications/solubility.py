@@ -17,7 +17,7 @@ from protbench.utils import collate_sequence_and_labels
 from protbench.utils import preprocess_binary_classification_logits
 
 
-def get_solubility_dataset():
+def load_solubility_dataset():
     train_data = HuggingFaceSequenceToClass(
         dataset_url="proteinea/solubility",
         data_files=None,
@@ -45,7 +45,7 @@ def get_solubility_dataset():
 
 
 supported_datasets = {
-    "solubility": get_solubility_dataset,
+    "solubility": load_solubility_dataset,
 }
 
 
@@ -99,15 +99,15 @@ class Solubility(BenchmarkingTask):
             collate_fn=collate_fn,
         )
 
-    def get_train_data(self) -> Tuple:
+    def load_train_data(self) -> Tuple:
         return self.train_dataset.data[0], self.train_dataset.data[1]
 
-    def get_eval_data(self) -> Tuple:
+    def load_eval_data(self) -> Tuple:
         return self.eval_dataset.data[0], self.eval_dataset.data[1]
 
-    def get_test_data(self) -> Tuple:
+    def load_test_data(self) -> Tuple:
         return self.test_dataset.data[0], self.test_dataset.data[1]
 
-    def get_task_head(self, embedding_dim) -> torch.nn.Module:
+    def load_task_head(self, embedding_dim) -> torch.nn.Module:
         head = BinaryClassificationHead(input_dim=embedding_dim)
         return head

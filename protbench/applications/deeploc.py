@@ -20,7 +20,7 @@ from protbench.utils.preprocessing_utils import \
     preprocess_multi_classification_logits
 
 
-def get_deeploc_dataset() -> Tuple:
+def load_deeploc_dataset() -> Tuple:
     train_data = HuggingFaceSequenceToClass(
         dataset_url="proteinea/deeploc",
         seqs_col="input",
@@ -41,7 +41,7 @@ def get_deeploc_dataset() -> Tuple:
 
 
 supported_datasets = {
-    "deeploc": get_deeploc_dataset,
+    "deeploc": load_deeploc_dataset,
 }
 
 
@@ -99,14 +99,14 @@ class DeepLoc(BenchmarkingTask):
             collate_fn=collate_fn,
         )
 
-    def get_train_data(self) -> Tuple:
+    def load_train_data(self) -> Tuple:
         return self.train_dataset.data[0], self.train_dataset.data[1]
 
-    def get_eval_data(self) -> Tuple:
+    def load_eval_data(self) -> Tuple:
         return self.eval_dataset.data[0], self.eval_dataset.data[1]
 
-    def get_task_head(self, embedding_dim: int) -> torch.nn.Module:
+    def load_task_head(self, embedding_dim: int) -> torch.nn.Module:
         head = MultiClassClassificationHead(
-            input_dim=embedding_dim, output_dim=self.get_num_classes()
+            input_dim=embedding_dim, output_dim=self.num_classes
         )
         return head

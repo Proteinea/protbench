@@ -19,7 +19,7 @@ from protbench.utils import collate_inputs
 from protbench.utils import collate_sequence_and_labels
 
 
-def get_remote_homology_dataset():
+def load_remote_homology_dataset():
     train_data = HuggingFaceSequenceToClass(
         dataset_url="proteinea/remote_homology",
         seqs_col="primary",
@@ -49,7 +49,7 @@ def get_remote_homology_dataset():
 
 
 supported_datasets = {
-    "remote_homology": get_remote_homology_dataset,
+    "remote_homology": load_remote_homology_dataset,
 }
 
 
@@ -108,17 +108,17 @@ class RemoteHomology(BenchmarkingTask):
             collate_fn=collate_fn,
         )
 
-    def get_train_data(self) -> Tuple:
+    def load_train_data(self) -> Tuple:
         return self.train_dataset.data[0], self.train_dataset.data[1]
 
-    def get_eval_data(self) -> Tuple:
+    def load_eval_data(self) -> Tuple:
         return self.eval_dataset.data[0], self.eval_dataset.data[1]
 
-    def get_test_data(self) -> Tuple:
+    def load_test_data(self) -> Tuple:
         return self.test_dataset.data[0], self.test_dataset.data[1]
 
-    def get_task_head(self, embedding_dim) -> torch.nn.Module:
+    def load_task_head(self, embedding_dim) -> torch.nn.Module:
         head = MultiClassClassificationHead(
-            input_dim=embedding_dim, output_dim=self.get_num_classes()
+            input_dim=embedding_dim, output_dim=self.num_classes
         )
         return head

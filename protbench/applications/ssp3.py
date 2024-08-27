@@ -23,7 +23,7 @@ def preprocess_ssp_rows(seq, label, mask):
     return seq, label, mask
 
 
-def get_ssp3_casp12_dataset():
+def load_ssp3_casp12_dataset():
     train_data = HuggingFaceResidueToClass(
         dataset_url="proteinea/secondary_structure_prediction",
         data_files="training_hhblits.csv",
@@ -47,7 +47,7 @@ def get_ssp3_casp12_dataset():
     return train_data, val_data
 
 
-def get_ssp3_casp14_dataset():
+def load_ssp3_casp14_dataset():
     train_data = HuggingFaceResidueToClass(
         dataset_url="proteinea/secondary_structure_prediction",
         data_files="training_hhblits.csv",
@@ -70,7 +70,7 @@ def get_ssp3_casp14_dataset():
     return train_data, val_data
 
 
-def get_ssp3_cb513_dataset():
+def load_ssp3_cb513_dataset():
     train_data = HuggingFaceResidueToClass(
         dataset_url="proteinea/secondary_structure_prediction",
         data_files="training_hhblits.csv",
@@ -93,7 +93,7 @@ def get_ssp3_cb513_dataset():
     return train_data, val_data
 
 
-def get_ssp3_ts115_dataset():
+def load_ssp3_ts115_dataset():
     train_data = HuggingFaceResidueToClass(
         dataset_url="proteinea/secondary_structure_prediction",
         data_files="training_hhblits.csv",
@@ -117,10 +117,10 @@ def get_ssp3_ts115_dataset():
 
 
 supported_datasets = {
-    "ssp3_casp12": get_ssp3_casp12_dataset,
-    "ssp3_casp14": get_ssp3_casp14_dataset,
-    "ssp3_ts115": get_ssp3_ts115_dataset,
-    "ssp3_cb513": get_ssp3_cb513_dataset,
+    "ssp3_casp12": load_ssp3_casp12_dataset,
+    "ssp3_casp14": load_ssp3_casp14_dataset,
+    "ssp3_ts115": load_ssp3_ts115_dataset,
+    "ssp3_cb513": load_ssp3_cb513_dataset,
 }
 
 
@@ -171,14 +171,14 @@ class SSP3(BenchmarkingTask):
             collate_fn=collate_fn,
         )
 
-    def get_train_data(self) -> Tuple:
+    def load_train_data(self) -> Tuple:
         return self.train_dataset.data[0], self.train_dataset.data[1]
 
-    def get_eval_data(self) -> Tuple:
+    def load_eval_data(self) -> Tuple:
         return self.eval_dataset.data[0], self.eval_dataset.data[1]
 
-    def get_task_head(self, embedding_dim) -> torch.nn.Module:
+    def load_task_head(self, embedding_dim) -> torch.nn.Module:
         head = TokenClassificationHead(
-            input_dim=embedding_dim, output_dim=self.get_num_classes()
+            input_dim=embedding_dim, output_dim=self.num_classes
         )
         return head

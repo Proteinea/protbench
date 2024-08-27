@@ -16,7 +16,7 @@ from protbench.utils import collate_inputs
 from protbench.utils import collate_sequence_and_labels
 
 
-def get_fluorescence_dataset():
+def load_fluorescence_dataset():
     train_data = HuggingFaceSequenceToValue(
         dataset_url="proteinea/fluorosence",
         data_files=None,
@@ -44,7 +44,7 @@ def get_fluorescence_dataset():
 
 
 supported_datasets = {
-    "fluorescence": get_fluorescence_dataset,
+    "fluorescence": load_fluorescence_dataset,
 }
 
 
@@ -98,15 +98,15 @@ class Fluorescence(BenchmarkingTask):
             collate_fn=collate_fn,
         )
 
-    def get_train_data(self) -> Tuple:
+    def load_train_data(self) -> Tuple:
         return self.train_dataset.data[0], self.train_dataset.data[1]
 
-    def get_eval_data(self) -> Tuple:
+    def load_eval_data(self) -> Tuple:
         return self.eval_dataset.data[0], self.eval_dataset.data[1]
 
-    def get_test_data(self) -> Tuple:
+    def load_test_data(self) -> Tuple:
         return self.test_dataset.data[0], self.test_dataset.data[1]
 
-    def get_task_head(self, embedding_dim) -> torch.nn.Module:
+    def load_task_head(self, embedding_dim) -> torch.nn.Module:
         head = RegressionHead(input_dim=embedding_dim)
         return head
