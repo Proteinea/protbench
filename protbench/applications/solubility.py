@@ -12,9 +12,9 @@ from protbench import metrics
 from protbench.applications.benchmarking_task import BenchmarkingTask
 from protbench.models.heads import BinaryClassificationHead
 from protbench.tasks import HuggingFaceSequenceToClass
-from protbench.utils import preprocess_binary_classification_logits
 from protbench.utils import collate_inputs
 from protbench.utils import collate_sequence_and_labels
+from protbench.utils import preprocess_binary_classification_logits
 
 
 def get_solubility_dataset():

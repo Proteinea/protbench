@@ -32,6 +32,19 @@ def generate_config() -> Dict:
             "lora_bias": "none",
             "target_modules": ["q", "v"]
         },
+        "models_family": [
+            "ankh",
+            "ankh",
+            "ankh",
+            "ankh",
+            "ankh",
+            "ankh",
+            "ankh",
+            "esm2",
+            "esm2",
+            "esm2",
+            "prottrans",
+        ],
         "model_checkpoints": [
             "ankh-base",
             "ankh-v2-23",
@@ -43,6 +56,7 @@ def generate_config() -> Dict:
             "esm2_650M",
             "esm2_3B",
             "esm2_15B",
+            "prott5",
         ],
         "tasks": [
             "ssp3_casp12",

@@ -4,8 +4,6 @@ import os
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
-from functools import partial
-
 import hydra
 import omegaconf
 import torch
@@ -27,35 +25,33 @@ def main(config_args: omegaconf.DictConfig):
     for env_variable, value in config_args.env_variables.items():
         os.environ[env_variable] = value
 
-    for checkpoint in config_args.model_checkpoints:
+    for model_family, checkpoint in zip(config_args.models_family, config_args.model_checkpoints):
         with torch.device("cuda:0"):
-            (
-                pretrained_model,
-                tokenizer,
-            ) = applications.pretrained.ankh.initialize_model_from_checkpoint(
+            pretrained_model = applications.initialize_model_from_checkpoint(
+                model_family,
                 checkpoint,
-                initialize_with_lora=False,
+            )
+            pretrained_model.initialze_model_from_checkpoint(
                 gradient_checkpointing=config_args.train_config.gradient_checkpointing,
             )
-            embedding_dim = pretrained_model.config.d_model
+            embedding_dim = pretrained_model.embedding_dim
 
          # Loop over the tasks.
-        for task_name, task_cls in applications.get_tasks(
+        for task_name, task_cls in applications.load_tasks(
             tasks_to_run=config_args.tasks
         ): 
             # Create a task instance. (e.g. SSP3, SSP8, etc...)
-            task = task_cls(
-                dataset=task_name, from_embeddings=True, tokenizer=tokenizer
+            task = task_cls.initialize(
+                dataset=task_name, from_embeddings=True, tokenizer=pretrained_model.tokenizer
             )
-            train_seqs, train_labels = task.get_train_data()
-            val_seqs, val_labels = task.get_eval_data()
+            train_seqs, train_labels = task.load_train_data()
+            val_seqs, val_labels = task.load_eval_data()
 
+            test_seqs, test_labels = None, None
             if task.test_dataset is not None:
-                test_seqs, test_labels = task.get_test_data()
-            else:
-                test_seqs, test_labels = None, None
+                test_seqs, test_labels = task.load_test_data()
 
-            num_classes = task.get_num_classes()
+            num_classes = task.num_classes
 
             # This instance is just a data class where it
             # stores the paths for saving the embeddings.
@@ -65,21 +61,20 @@ def main(config_args: omegaconf.DictConfig):
             # over the dataset, tokenizes each sequence and
             # extracts the sequence embeddings (last hidden state).
             compute_embeddings_wrapper = embedder.ComputeEmbeddingsWrapper(
-                model=pretrained_model,
+                model=pretrained_model.model,
                  # The default tokenization function is just a class that wraps the tokenizer with some default arguments.
                  # You can replace the default tokenization function with any other function you want,
-                tokenization_fn=applications.pretrained.ankh.DefaultTokenizationFunction(
-                    tokenizer,
-                    tokenizer_options=config_args.tokenizer_config,
+                tokenization_fn=pretrained_model.load_default_tokenization_function(
+                    return_input_ids_only=True, tokenizer_options=config_args.tokenizer_config
                 ),
                 # A simple function that takes the output of the model and modify it if needed
                 # or if the model returns an object that has the embedding inside it you will
                 # need to pass this function to return the tensor itself.
-                post_processing_function=applications.pretrained.ankh.embeddings_postprocessing_fn,
+                post_processing_function=pretrained_model.embeddings_postprocessing_fn,
                 pad_token_id=0,
                 low_memory=config_args.train_config.low_memory,
                 save_directories=save_dirs,
-                forward_options={},
+                forward_options={}, # Used in case the forward function requires arguments other than the `input_ids``
             )
             embedding_outputs = compute_embeddings_wrapper(
                 train_seqs=train_seqs,

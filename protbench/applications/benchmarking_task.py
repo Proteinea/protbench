@@ -4,9 +4,8 @@ import abc
 from typing import Callable
 
 from protbench.models.downstream_models import DownstreamModelFromEmbedding
-from protbench.models.downstream_models import (
-    DownstreamModelWithPretrainedBackbone,
-)
+from protbench.models.downstream_models import \
+    DownstreamModelWithPretrainedBackbone
 from protbench.tasks.task import Task
 
 
@@ -57,24 +56,28 @@ class BenchmarkingTask(abc.ABC):
         self.tokenizer = tokenizer
         self.collate_fn = collate_fn
 
-    @abc.abstractmethod
-    def get_train_data(self):
-        raise NotImplementedError("Should be implemented in a subclass.")
-
-    def get_eval_data(self):
-        raise NotImplementedError("Should be implemented in a subclass.")
-
-    def get_test_data(self):
-        raise NotImplementedError("Should be implemented in a subclass.")
+    @property
+    def num_classes(self):
+        return getattr(self.train_dataset, "num_classes", None)
 
     @abc.abstractmethod
-    def get_task_head(self, embedding_dim):
+    def load_train_data(self):
         raise NotImplementedError("Should be implemented in a subclass.")
 
-    def get_downstream_model(
+    def load_eval_data(self):
+        raise NotImplementedError("Should be implemented in a subclass.")
+
+    def load_test_data(self):
+        raise NotImplementedError("Should be implemented in a subclass.")
+
+    @abc.abstractmethod
+    def load_task_head(self, embedding_dim):
+        raise NotImplementedError("Should be implemented in a subclass.")
+
+    def load_downstream_model(
         self, backbone_model, embedding_dim, pooling=None
     ):
-        head = self.get_task_head(embedding_dim=embedding_dim)
+        head = self.load_task_head(embedding_dim=embedding_dim)
         if self.from_embeddings:
             model = DownstreamModelFromEmbedding(backbone_model, head)
         else:
@@ -83,5 +86,12 @@ class BenchmarkingTask(abc.ABC):
             )
         return model
 
-    def get_num_classes(self):
-        return getattr(self.train_dataset, "num_classes", None)
+    @classmethod
+    def initialize(
+        cls, dataset, from_embeddings, tokenizer
+    ) -> BenchmarkingTask:
+        return cls(
+            dataset=dataset,
+            from_embeddings=from_embeddings,
+            tokenizer=tokenizer,
+        )

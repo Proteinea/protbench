@@ -12,11 +12,10 @@ from protbench import metrics
 from protbench.applications.benchmarking_task import BenchmarkingTask
 from protbench.models.heads import TokenClassificationHead
 from protbench.tasks import HuggingFaceResidueToClass
-from protbench.utils.preprocessing_utils import (
-    preprocess_multi_classification_logits,
-)
 from protbench.utils import collate_inputs_and_labels
 from protbench.utils import collate_sequence_and_align_labels
+from protbench.utils.preprocessing_utils import \
+    preprocess_multi_classification_logits
 
 
 def preprocess_ssp_rows(seq, label, mask):

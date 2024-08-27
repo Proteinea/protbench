@@ -14,11 +14,10 @@ from protbench import metrics
 from protbench.applications.benchmarking_task import BenchmarkingTask
 from protbench.models.heads import MultiClassClassificationHead
 from protbench.tasks import HuggingFaceSequenceToClass
-from protbench.utils.preprocessing_utils import (
-    preprocess_multi_classification_logits,
-)
 from protbench.utils import collate_inputs
 from protbench.utils import collate_sequence_and_labels
+from protbench.utils.preprocessing_utils import \
+    preprocess_multi_classification_logits
 
 
 def get_deeploc_dataset() -> Tuple:
