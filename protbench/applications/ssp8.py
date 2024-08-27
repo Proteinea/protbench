@@ -59,15 +59,14 @@ def load_ssp8_casp14_dataset():
     )
     val_data = HuggingFaceResidueToClass(
         class_to_id=train_data.class_to_id,
-        dataset_url="proteinea/secondary_structure_prediction",
-        data_files="CASP14.csv",
+        dataset_url="proteinea/casp_14_labels",
+        data_files="casp_14_ss_v2.csv",
         data_key="train",
-        seqs_col="input",
-        labels_col="dssp8",
-        mask_col="disorder",
+        seqs_col="primary",
+        labels_col="ss8",
+        mask_col="valid_mask_v2",
         preprocessing_function=preprocess_ssp_rows,
     )
-
     return train_data, val_data
 
 
