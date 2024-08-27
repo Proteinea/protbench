@@ -1,18 +1,27 @@
 from typing import List
+from typing import Tuple
+
 from peft import LoraConfig
 from peft import get_peft_model
-from transformers import AutoModel
 from transformers import AutoTokenizer
+from transformers import T5EncoderModel
+import re
 
 model_url_map = {
-    "esm2_650M": "facebook/esm2_t33_650M_UR50D",
-    "esm2_3B": "facebook/esm2_t36_3B_UR50D",
-    "esm2_15B": "facebook/esm2_t48_15B_UR50D",
+    "prott5": "Rostlab/prot_t5_xl_uniref50",
 }
 
 
+def get_available_checkpoints():
+    return list(model_url_map.keys())
+
+
+def embeddings_postprocessing_fn(model_outputs):
+    return model_outputs.last_hidden_state
+
+
 def embedding_dim(model):
-    return model.config.hidden_size
+    return model.config.d_model
 
 
 class DefaultTokenizationFunction:
@@ -29,21 +38,22 @@ class DefaultTokenizationFunction:
             self.tokenizer_options.pop("add_special_tokens", None)
         self.tokenizer_options.pop("return_tensors", None)
 
+    def preprocess_sequences(self, sequences):
+        return [re.sub(r"[UZOB]", "X", sequence) for sequence in sequences]
+
     def __call__(self, sequences):
-        return self.tokenizer(
+        sequences = self.preprocess_sequences(sequences)
+        output = self.tokenizer(
             sequences,
             add_special_tokens=True,
             return_tensors="pt",
             **self.tokenizer_options,
         )["input_ids"]
-
-
-def embeddings_postprocessing_fn(model_outputs):
-    return model_outputs.last_hidden_state
+        return output
 
 
 def initialize_model_from_checkpoint(
-    checkpoint,
+    checkpoint: str,
     initialize_with_lora: bool = False,
     lora_r: int = 16,
     lora_alpha: int = 16,
@@ -51,9 +61,9 @@ def initialize_model_from_checkpoint(
     lora_bias: str = "none",
     target_modules: List = ["q", "v"],
     gradient_checkpointing: bool = False,
-):
-    model = AutoModel.from_pretrained(model_url_map[checkpoint])
+) -> Tuple[T5EncoderModel, AutoTokenizer]:
     tokenizer = AutoTokenizer.from_pretrained(model_url_map[checkpoint])
+    model = T5EncoderModel.from_pretrained(model_url_map[checkpoint])
 
     if initialize_with_lora:
         peft_config = LoraConfig(

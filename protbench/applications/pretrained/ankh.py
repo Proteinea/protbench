@@ -26,6 +26,10 @@ def embeddings_postprocessing_fn(model_outputs):
     return model_outputs.last_hidden_state
 
 
+def embedding_dim(model):
+    return model.config.d_model
+
+
 class DefaultTokenizationFunction:
     def __init__(self, tokenizer, tokenizer_options={}):
         self.tokenizer = tokenizer
