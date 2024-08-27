@@ -14,7 +14,7 @@ def initialize_model(
     pooling=None,
     embedding_postprocessing_fn=None,
 ):
-    head = task.get_task_head(embedding_dim=embedding_dim)
+    head = task.load_task_head(embedding_dim=embedding_dim)
     if from_embeddings:
         model = DownstreamModelFromEmbedding(
             downstream_mpdel=downstream_model,
