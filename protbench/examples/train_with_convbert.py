@@ -19,6 +19,9 @@ from protbench.models import ConvBert
 from protbench.utils import dataset_adapters
 from protbench.models import initialize_model
 
+torch.use_deterministic_algorithms(True)
+torch.backends.cudnn.deterministic = True
+
 
 @hydra.main(config_name="config", config_path="config", version_base=None)
 def main(config_args: omegaconf.DictConfig):
