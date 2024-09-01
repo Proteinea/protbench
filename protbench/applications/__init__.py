@@ -9,6 +9,9 @@ from protbench.applications.benchmarking_task import BenchmarkingTask
 from protbench.applications.deeploc import DeepLoc
 from protbench.applications.fluorescence import Fluorescence
 from protbench.applications.gb1_sampled import GB1Sampled
+from protbench.applications.pretrained.pretrained import PretrainedModelWrapper
+from protbench.applications.pretrained.pretrained import \
+    initialize_model_from_checkpoint
 from protbench.applications.remote_homology import RemoteHomology
 from protbench.applications.solubility import Solubility
 from protbench.applications.ssp3 import SSP3
@@ -43,7 +46,7 @@ def get_task(identifier) -> BenchmarkingTask:
         return tasks[identifier]
 
 
-def get_tasks(
+def load_tasks(
     tasks_to_run: List | None = None,
 ) -> Generator[Tuple[str, BenchmarkingTask]]:
     global tasks
@@ -55,5 +58,4 @@ def get_tasks(
                 f"supported tasks are {list(tasks.keys())}."
             )
 
-    for task_name in tasks_to_run:
-        yield task_name, get_task(task_name)
+    return [(task_name, get_task(task_name)) for task_name in tasks_to_run]

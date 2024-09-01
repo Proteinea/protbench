@@ -12,11 +12,10 @@ from protbench import metrics
 from protbench.applications.benchmarking_task import BenchmarkingTask
 from protbench.models.heads import TokenClassificationHead
 from protbench.tasks import HuggingFaceResidueToClass
-from protbench.utils.preprocessing_utils import (
-    preprocess_multi_classification_logits,
-)
 from protbench.utils import collate_inputs_and_labels
 from protbench.utils import collate_sequence_and_align_labels
+from protbench.utils.preprocessing_utils import \
+    preprocess_multi_classification_logits
 
 
 def preprocess_ssp_rows(seq, label, mask):
@@ -24,7 +23,7 @@ def preprocess_ssp_rows(seq, label, mask):
     return seq, label, mask
 
 
-def get_ssp8_casp12_dataset():
+def load_ssp8_casp12_dataset():
     train_data = HuggingFaceResidueToClass(
         dataset_url="proteinea/secondary_structure_prediction",
         data_files="training_hhblits.csv",
@@ -48,7 +47,7 @@ def get_ssp8_casp12_dataset():
     return train_data, val_data
 
 
-def get_ssp8_casp14_dataset():
+def load_ssp8_casp14_dataset():
     train_data = HuggingFaceResidueToClass(
         dataset_url="proteinea/secondary_structure_prediction",
         data_files="training_hhblits.csv",
@@ -60,19 +59,18 @@ def get_ssp8_casp14_dataset():
     )
     val_data = HuggingFaceResidueToClass(
         class_to_id=train_data.class_to_id,
-        dataset_url="proteinea/secondary_structure_prediction",
-        data_files="CASP14.csv",
+        dataset_url="proteinea/casp_14_labels",
+        data_files="casp_14_ss_v2.csv",
         data_key="train",
-        seqs_col="input",
-        labels_col="dssp8",
-        mask_col="disorder",
+        seqs_col="primary",
+        labels_col="ss8",
+        mask_col="valid_mask_v2",
         preprocessing_function=preprocess_ssp_rows,
     )
-
     return train_data, val_data
 
 
-def get_ssp8_cb513_dataset():
+def load_ssp8_cb513_dataset():
     train_data = HuggingFaceResidueToClass(
         dataset_url="proteinea/secondary_structure_prediction",
         data_files="training_hhblits.csv",
@@ -95,7 +93,7 @@ def get_ssp8_cb513_dataset():
     return train_data, val_data
 
 
-def get_ssp8_ts115_dataset():
+def load_ssp8_ts115_dataset():
     train_data = HuggingFaceResidueToClass(
         dataset_url="proteinea/secondary_structure_prediction",
         data_files="training_hhblits.csv",
@@ -119,10 +117,10 @@ def get_ssp8_ts115_dataset():
 
 
 supported_datasets = {
-    "ssp8_casp12": get_ssp8_casp12_dataset,
-    "ssp8_casp14": get_ssp8_casp14_dataset,
-    "ssp8_ts115": get_ssp8_ts115_dataset,
-    "ssp8_cb513": get_ssp8_cb513_dataset,
+    "ssp8_casp12": load_ssp8_casp12_dataset,
+    "ssp8_casp14": load_ssp8_casp14_dataset,
+    "ssp8_ts115": load_ssp8_ts115_dataset,
+    "ssp8_cb513": load_ssp8_cb513_dataset,
 }
 
 
@@ -173,14 +171,14 @@ class SSP8(BenchmarkingTask):
             collate_fn=collate_fn,
         )
 
-    def get_train_data(self) -> Tuple:
+    def load_train_data(self) -> Tuple:
         return self.train_dataset.data[0], self.train_dataset.data[1]
 
-    def get_eval_data(self) -> Tuple:
+    def load_eval_data(self) -> Tuple:
         return self.eval_dataset.data[0], self.eval_dataset.data[1]
 
-    def get_task_head(self, embedding_dim) -> torch.nn.Module:
+    def load_task_head(self, embedding_dim) -> torch.nn.Module:
         head = TokenClassificationHead(
-            input_dim=embedding_dim, output_dim=self.get_num_classes()
+            input_dim=embedding_dim, output_dim=self.num_classes
         )
         return head

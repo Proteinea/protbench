@@ -22,6 +22,9 @@ class GlobalMaxPooling1D(nn.Module):
                 (batch_size, seq_len). Defaults to None.
         """
         if attention_mask is not None:
+            attention_mask = attention_mask.masked_fill(
+                attention_mask.logical_not(), -torch.inf,
+            )
             attention_mask = attention_mask.to(
                 device=x.device, dtype=x.dtype
             )

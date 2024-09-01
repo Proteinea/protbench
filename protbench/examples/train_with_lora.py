@@ -1,10 +1,10 @@
 # flake8: noqa: E402
 
 import os
+os.environ["WANDB_MODE"] = "disabled"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 import gc
-from functools import partial
 
 import hydra
 import omegaconf
@@ -19,24 +19,26 @@ from protbench.examples.utils import set_seed
 from protbench.utils import SequenceAndLabelsDataset
 from protbench.models import initialize_model
 
+torch.use_deterministic_algorithms(True)
+torch.backends.cudnn.deterministic = True
+
 
 @hydra.main(config_name="config", config_path="config", version_base=None)
 def main(config_args: omegaconf.DictConfig):
     for env_variable, value in config_args.env_variables.items():
         os.environ[env_variable] = value
 
-    for checkpoint in config_args.model_checkpoints:
-        for task_name, task_cls in applications.get_tasks(
+    for model_family, checkpoint in zip(config_args.models_family, config_args.model_checkpoints):
+        for task_name, task_cls in applications.load_tasks(
             tasks_to_run=config_args.tasks
         ):
             with torch.device("cuda:0"):
-                (
-                    pretrained_model,
-                    tokenizer,
-                ) = applications.pretrained.ankh.initialize_model_from_checkpoint(
+                pretrained_model = applications.initialize_model_from_checkpoint(
+                    model_family,
                     checkpoint,
-                    initialize_with_lora=config_args.model_with_lora_config.use_lora,  # noqa
-                    lora_task_type=task_cls.task_type,
+                )
+
+                pretrained_model.initialze_model_from_checkpoint_with_lora(
                     lora_r=config_args.model_with_lora_config.lora_r,
                     lora_alpha=config_args.model_with_lora_config.lora_alpha,
                     lora_dropout=config_args.model_with_lora_config.lora_dropout,  # noqa
@@ -44,25 +46,33 @@ def main(config_args: omegaconf.DictConfig):
                     target_modules=config_args.model_with_lora_config.target_modules,
                     gradient_checkpointing=config_args.train_config.gradient_checkpointing,
                 )
-                embedding_dim = pretrained_model.config.d_model
-                tokenizer = partial(
-                    tokenizer,
-                    add_special_tokens=True,
-                    padding=config_args.tokenizer_config.padding,
-                    max_length=config_args.tokenizer_config.max_length,
-                    truncation=config_args.tokenizer_config.truncation,
-                    return_tensors="pt",
+                embedding_dim = pretrained_model.embedding_dim
+
+                # You can still use the loaded tokenizer 
+                # instead of calling this function by directly
+                # accessing the tokenizer using `pretrained_model.tokenzier`.
+                # This class that will be returned from this function
+                # just does some extra pre and post processing depending on the model
+                # so its convenient to use it instead.
+                tokenizer = pretrained_model.load_default_tokenization_function(
+                    return_input_ids_only=False,
+                    tokenizer_options={
+                        "add_special_tokens": True,
+                        "padding": config_args.tokenizer_config.padding,
+                        "max_length": config_args.tokenizer_config.max_length,
+                        "truncation": config_args.tokenizer_config.truncation,
+                        "return_tensors": "pt"},
                 )
 
-            task = task_cls(
+            task = task_cls.initialize(
                 dataset=task_name, from_embeddings=False, tokenizer=tokenizer
             )
-            task: applications.BenchmarkingTask
-            train_seqs, train_labels = task.get_train_data()
-            val_seqs, val_labels = task.get_eval_data()
+
+            train_seqs, train_labels = task.load_train_data()
+            val_seqs, val_labels = task.load_eval_data()
             if task.test_dataset is not None:
-                test_seqs, test_labels = task.get_test_data()
-            num_classes = task.get_num_classes()
+                test_seqs, test_labels = task.load_test_data()
+            num_classes = task.num_classes
 
             train_dataset = SequenceAndLabelsDataset(train_seqs, train_labels)
             val_dataset = SequenceAndLabelsDataset(val_seqs, val_labels)
@@ -85,7 +95,7 @@ def main(config_args: omegaconf.DictConfig):
                     lora_alpha=config_args.model_with_lora_config.lora_alpha,
                     lora_dropout=config_args.model_with_lora_config.lora_dropout,
                     lora_bias=config_args.model_with_lora_config.lora_bias,
-                    target_modules=config_args.model_with_lora_config.target_modules,
+                    target_modules=list(config_args.model_with_lora_config.target_modules),
                 )
                 set_seed(config_args.train_config.seed)
 
@@ -93,12 +103,12 @@ def main(config_args: omegaconf.DictConfig):
                     task=task,
                     embedding_dim=embedding_dim,
                     from_embeddings=False,
-                    backbone=pretrained_model,
+                    backbone=pretrained_model.model,
                     downstream_model=None,
                     pooling=config_args.model_with_lora_config.pooling
                     if task.requires_pooling
                     else None,
-                    embedding_postprocessing_fn=applications.pretrained.ankh.embeddings_postprocessing_fn,
+                    embedding_postprocessing_fn=pretrained_model.embeddings_postprocessing_fn,
                 )
 
                 training_args = TrainingArguments(
