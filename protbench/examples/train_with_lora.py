@@ -1,8 +1,7 @@
 # flake8: noqa: E402
 
 import os
-os.environ["WANDB_MODE"] = "disabled"
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 import gc
 
@@ -18,9 +17,6 @@ from protbench.examples.utils import create_run_name
 from protbench.examples.utils import set_seed
 from protbench.utils import SequenceAndLabelsDataset
 from protbench.models import initialize_model
-
-torch.use_deterministic_algorithms(True)
-torch.backends.cudnn.deterministic = True
 
 
 @hydra.main(config_name="config", config_path="config", version_base=None)
@@ -93,8 +89,6 @@ def main(config_args: omegaconf.DictConfig):
                     pooling=config_args.model_with_lora_config.pooling,
                     lora_r=config_args.model_with_lora_config.lora_r,
                     lora_alpha=config_args.model_with_lora_config.lora_alpha,
-                    lora_dropout=config_args.model_with_lora_config.lora_dropout,
-                    lora_bias=config_args.model_with_lora_config.lora_bias,
                     target_modules=list(config_args.model_with_lora_config.target_modules),
                 )
                 set_seed(config_args.train_config.seed)

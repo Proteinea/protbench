@@ -19,9 +19,6 @@ from protbench.models import ConvBert
 from protbench.utils import dataset_adapters
 from protbench.models import initialize_model
 
-torch.use_deterministic_algorithms(True)
-torch.backends.cudnn.deterministic = True
-
 
 @hydra.main(config_name="config", config_path="config", version_base=None)
 def main(config_args: omegaconf.DictConfig):
@@ -93,14 +90,14 @@ def main(config_args: omegaconf.DictConfig):
             # memory then we save it to the disk.
             if config_args.train_config.low_memory:
                 train_dataset = dataset_adapters.EmbeddingsDatasetFromDisk(
-                    save_dirs.train, train_labels
+                    save_dirs.train_path, train_labels
                 )
                 val_dataset = dataset_adapters.EmbeddingsDatasetFromDisk(
-                    save_dirs.validation, val_labels
+                    save_dirs.validation_path, val_labels
                 )
                 if task.test_dataset is not None:
                     test_dataset = dataset_adapters.EmbeddingsDatasetFromDisk(
-                        save_dirs.test, test_labels
+                        save_dirs.test_path, test_labels
                     )
             else:
                 train_embeds, val_embeds, test_embeds = embedding_outputs
