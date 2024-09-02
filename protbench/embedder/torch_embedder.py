@@ -51,6 +51,10 @@ class TorchEmbedder(Embedder):
                 torch.device(f"cuda:{i}")
                 for i in range(torch.cuda.device_count())
             ]
+
+        if len(devices) == 0:
+            devices = [torch.device("cpu")]
+
         self.devices = devices
         self.batch_size = batch_size
 
@@ -108,7 +112,7 @@ class TorchEmbedder(Embedder):
             assert output_queue.empty()
         return embeddings
 
-    def _run_single_gpu(self, sequences: Iterable[str]) -> List[torch.Tensor]:
+    def _run_single_process(self, sequences: Iterable[str]) -> List[torch.Tensor]:
         # run on a single gpu
         num_batches = ceil(len(sequences) / self.batch_size)
         embeddings = []
@@ -136,7 +140,7 @@ class TorchEmbedder(Embedder):
                     embeddings.append(embedding)
         return embeddings
 
-    def _run_multiple_gpus(
+    def _run_multiple_processes(
         self, sequences: Iterable[str]
     ) -> List[torch.Tensor]:
         # run on multiple gpus
@@ -187,9 +191,9 @@ class TorchEmbedder(Embedder):
                 this list will be empty.
         """
         if len(self.devices) == 1:
-            return self._run_single_gpu(sequences)
+            return self._run_single_process(sequences)
         else:
-            return self._run_multiple_gpus(sequences)
+            return self._run_multiple_processes(sequences)
 
     @staticmethod
     def _run_entrypoint(
