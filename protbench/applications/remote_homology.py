@@ -13,10 +13,13 @@ from sklearn.metrics import precision_recall_fscore_support
 from sklearn.metrics import top_k_accuracy_score
 
 from protbench.applications.benchmarking_task import BenchmarkingTask
+from protbench.metrics.metrics import compute_accuracies_error_bar
+from protbench.metrics.metrics import compute_accuracies_std
 from protbench.models.heads import MultiClassClassificationHead
 from protbench.tasks import HuggingFaceSequenceToClass
 from protbench.utils import collate_inputs
 from protbench.utils import collate_sequence_and_labels
+from transformers import EvalPrediction
 
 
 def load_remote_homology_dataset():
@@ -53,9 +56,19 @@ supported_datasets = {
 }
 
 
-def compute_remote_homology_metrics(p, num_classes) -> Dict:
+def compute_remote_homology_metrics(p: EvalPrediction, num_classes) -> Dict:
     prfs = precision_recall_fscore_support(
         p.label_ids, p.predictions.argmax(axis=1), average="macro"
+    )
+
+    num_examples = p.predictions.shape[0]
+    accuracies_std = compute_accuracies_std(
+        p=p,
+        ignore_index=-100,
+    )
+    error_bar = compute_accuracies_error_bar(
+        accuracies_std=accuracies_std,
+        num_examples=num_examples,
     )
 
     return {
@@ -66,6 +79,8 @@ def compute_remote_homology_metrics(p, num_classes) -> Dict:
         "hits10": top_k_accuracy_score(
             p.label_ids, p.predictions, k=10, labels=np.arange(num_classes)
         ),
+        "accuracies_std": accuracies_std,
+        "error_bar": error_bar,
     }
 
 
