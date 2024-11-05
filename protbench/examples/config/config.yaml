@@ -18,6 +18,8 @@ model_checkpoints:
 - esm2_650M
 - esm2_3B
 - esm2_15B
+- ankh3-xl
+- ankh3-large
 model_with_lora_config:
   lora_alpha: 16
   lora_bias: none

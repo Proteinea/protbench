@@ -47,6 +47,7 @@ AVAILABLE_MODELS = [
     "esm2",
     "ankh",
     "prottrans",
+    "ankh3",
 ]
 
 
