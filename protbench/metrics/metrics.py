@@ -5,7 +5,7 @@ from scipy.stats import pearsonr
 from scipy.stats import spearmanr
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import f1_score
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import root_mean_squared_error
 from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 from transformers import EvalPrediction
@@ -18,7 +18,7 @@ def compute_pearsonr(p: EvalPrediction, ignore_index: int = -100, **kwargs):
 
 
 def compute_rmse(p: EvalPrediction, ignore_index: int = -100, **kwargs):
-    return mean_squared_error(p.label_ids.flatten(), p.predictions.flatten())
+    return root_mean_squared_error(p.label_ids.flatten(), p.predictions.flatten())
 
 
 def compute_accuracy(
