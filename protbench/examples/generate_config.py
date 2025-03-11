@@ -10,7 +10,7 @@ def generate_config() -> Dict:
             "num_trials_per_checkpoint": 1,
             "seed": 7,
             "gradient_checkpointing": False,
-            "num_train_epochs": 5,
+            "num_train_epochs": 20,
             "per_device_train_batch_size": 1,
             "per_device_eval_batch_size": 1,
             "warmup_steps": 1000,
@@ -24,12 +24,12 @@ def generate_config() -> Dict:
             "low_memory": True,
         },
         "pooling_config": {
-            "name": "max",
+            "name": "avg",
         },
         "lora_config": {
             "use_lora": True,
             "rank": 16,
-            "alpha": 16,
+            "alpha": 32,
             "dropout": 0.1,
             "bias": "none",
             "target_modules": None

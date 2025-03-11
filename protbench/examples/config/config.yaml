@@ -4,9 +4,15 @@ convbert_config:
   kernel_size: 7
   nhead: 4
   num_layers: 1
-  pooling: avg
 env_variables:
   WANDB_PROJECT: Benchmarking
+lora_config:
+  alpha: 16
+  bias: none
+  dropout: 0.1
+  rank: 16
+  target_modules: null
+  use_lora: true
 model_checkpoints:
 - ankh:
   - ankh-base
@@ -25,16 +31,8 @@ model_checkpoints:
 - ankh3:
   - ankh3-large
   - ankh3-xl
-model_with_lora_config:
-  lora_alpha: 16
-  lora_bias: none
-  lora_dropout: 0.1
-  lora_r: 16
-  pooling: max
-  target_modules:
-  - q
-  - v
-  use_lora: true
+pooling_config:
+  name: max
 shifting_config:
   shift_left: null
   shift_right: null
