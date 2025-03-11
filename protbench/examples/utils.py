@@ -18,3 +18,9 @@ def set_seed(seed: int) -> None:
     torch.manual_seed(seed)
     np.random.seed(seed)
     random.seed(seed)
+
+
+def unpack_list_of_dicts(list_of_dicts):
+    for model_family in list_of_dicts:
+        for model_name, checkpoint in model_family.items():
+            yield model_name, checkpoint

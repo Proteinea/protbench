@@ -10,6 +10,8 @@ from transformers import T5ForConditionalGeneration
 from transformers import T5Tokenizer
 
 from protbench.applications.pretrained.pretrained import PretrainedModelWrapper
+from protbench.applications.pretrained.utils import shift_embeddings
+
 
 model_url_map = {
     "prott5": "Rostlab/prot_t5_xl_uniref50",
@@ -20,8 +22,14 @@ def get_available_checkpoints():
     return list(model_url_map.keys())
 
 
-def embeddings_postprocessing_fn(model_outputs):
-    return model_outputs.last_hidden_state
+def embeddings_postprocessing_fn(
+    model_outputs,
+    shift_left: int | None = None,
+    shift_right: int | None = None,
+):
+    output = model_outputs.last_hidden_state
+    output = shift_embeddings(output, shift_left, shift_right)
+    return output
 
 
 def embedding_dim(model):

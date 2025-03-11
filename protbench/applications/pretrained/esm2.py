@@ -6,6 +6,8 @@ from transformers import AutoModel
 from transformers import AutoTokenizer
 
 from protbench.applications.pretrained.pretrained import PretrainedModelWrapper
+from protbench.applications.pretrained.utils import shift_embeddings
+
 
 model_url_map = {
     "esm2_650M": "facebook/esm2_t33_650M_UR50D",
@@ -20,6 +22,16 @@ def get_available_checkpoints():
 
 def embedding_dim(model):
     return model.config.hidden_size
+
+
+def embeddings_postprocessing_fn(
+    model_outputs,
+    shift_left: int | None = None,
+    shift_right: int | None = None,
+):
+    output = model_outputs.last_hidden_state
+    output = shift_embeddings(output, shift_left, shift_right)
+    return output
 
 
 class DefaultTokenizationFunction:
@@ -52,10 +64,6 @@ class DefaultTokenizationFunction:
             **self.tokenizer_options,
         )
         return output["input_ids"] if self.return_input_ids_only else output
-
-
-def embeddings_postprocessing_fn(model_outputs):
-    return model_outputs.last_hidden_state
 
 
 def initialize_model_from_checkpoint(

@@ -6,7 +6,7 @@ from torch.utils.data import Dataset
 
 
 class EmbeddingsDataset(Dataset):
-    def __init__(self, embeddings, labels, shift_left=0, shift_right=1):
+    def __init__(self, embeddings, labels):
         """Dataset for embeddings and corresponding labels of a task.
 
         Args:
@@ -22,15 +22,13 @@ class EmbeddingsDataset(Dataset):
             )
         self.embeddings = embeddings
         self.labels = labels
-        self.shift_left = shift_left
-        self.shift_right = shift_right
 
     def __len__(self):
         return len(self.embeddings)
 
     def __getitem__(self, idx):
         # fmt: off
-        embds = self.embeddings[idx][self.shift_left: -self.shift_right, :]
+        embds = self.embeddings[idx]
         # fmt: on
         labels = torch.tensor(self.labels[idx])
         return {
@@ -40,7 +38,7 @@ class EmbeddingsDataset(Dataset):
 
 
 class EmbeddingsDatasetFromDisk(Dataset):
-    def __init__(self, embeddings_path, labels, shift_left=0, shift_right=1):
+    def __init__(self, embeddings_path, labels):
         """Dataset for embeddings and corresponding labels of a task.
 
         Args:
@@ -56,8 +54,6 @@ class EmbeddingsDatasetFromDisk(Dataset):
             )
         self.embeddings = embeddings_path
         self.labels = labels
-        self.shift_left = shift_left
-        self.shift_right = shift_right
 
     def __len__(self):
         return len(os.listdir(self.embeddings))

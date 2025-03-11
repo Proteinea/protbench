@@ -32,31 +32,11 @@ def generate_config() -> Dict:
             "lora_bias": "none",
             "target_modules": ["q", "v"]
         },
-        "models_family": [
-            "ankh",
-            "ankh",
-            "ankh",
-            "ankh",
-            "ankh",
-            "ankh",
-            "ankh",
-            "esm2",
-            "esm2",
-            "esm2",
-            "prottrans",
-        ],
         "model_checkpoints": [
-            "ankh-base",
-            "ankh-v2-23",
-            "ankh-v2-32",
-            "ankh-v2-33",
-            "ankh-v2-41",
-            "ankh-v2-45",
-            "ankh-large",
-            "esm2_650M",
-            "esm2_3B",
-            "esm2_15B",
-            "prott5",
+            {"ankh": ["ankh-base", "ankh-large", "ankh-v2-23", "ankh-v2-32", "ankh-v2-33", "ankh-v2-41", "ankh-v2-45"]}, # noqa
+            {"esm2": ["esm2_650M", "esm2_3B", "esm2_15B"]},
+            {"prottrans": ["prott5"]},
+            {"ankh3": ["ankh3-large", "ankh3-xl"]},
         ],
         "tasks": [
             "ssp3_casp12",
@@ -84,6 +64,10 @@ def generate_config() -> Dict:
         },
         "env_variables": {
             "WANDB_PROJECT": "Benchmarking",
+        },
+        "shifting_config": {
+            "shift_left": None,
+            "shift_right": None,
         },
         "tokenizer_config": {
             "max_length": None,

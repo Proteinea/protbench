@@ -4,7 +4,7 @@ import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 import gc
-
+from functools import partial
 import hydra
 import omegaconf
 import torch
@@ -17,6 +17,7 @@ from protbench.examples.utils import create_run_name
 from protbench.examples.utils import set_seed
 from protbench.utils import SequenceAndLabelsDataset
 from protbench.models import initialize_model
+from protbench.examples.utils import unpack_list_of_dicts
 
 
 @hydra.main(config_name="config", config_path="config", version_base=None)
@@ -24,7 +25,7 @@ def main(config_args: omegaconf.DictConfig):
     for env_variable, value in config_args.env_variables.items():
         os.environ[env_variable] = value
 
-    for model_family, checkpoint in zip(config_args.models_family, config_args.model_checkpoints):
+    for model_family, checkpoint in unpack_list_of_dicts(config_args.model_checkpoints):
         for task_name, task_cls in applications.load_tasks(
             tasks_to_run=config_args.tasks
         ):
@@ -102,7 +103,11 @@ def main(config_args: omegaconf.DictConfig):
                     pooling=config_args.model_with_lora_config.pooling
                     if task.requires_pooling
                     else None,
-                    embedding_postprocessing_fn=pretrained_model.embeddings_postprocessing_fn,
+                    embedding_postprocessing_fn=partial(
+                        pretrained_model.embeddings_postprocessing_fn,
+                        shift_left=config_args.shifting_config.shift_left,
+                        shift_right=config_args.shifting_config.shift_right,
+                    ),
                 )
 
                 training_args = TrainingArguments(

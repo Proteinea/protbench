@@ -37,7 +37,7 @@ class DownstreamModelFromEmbedding(nn.Module):
                                           If None, the padding mask passed to
                                           the backbone will be None.
         """
-        super(DownstreamModelFromEmbedding, self).__init__()
+        super().__init__()
         self.downstream_mpdel = downstream_mpdel
         self.head = head
         self.pad_token_id = pad_token_id
@@ -80,7 +80,7 @@ class DownstreamModelWithPretrainedBackbone(nn.Module):
             pooling (Union[Callable, nn.Module], optional): Pooling layer.
                                                             Defaults to None.
         """
-        super(DownstreamModelWithPretrainedBackbone, self).__init__()
+        super().__init__()
         self.backbone = backbone
         self.head = head
         self.embedding_postprocessing_fn = embedding_postprocessing_fn

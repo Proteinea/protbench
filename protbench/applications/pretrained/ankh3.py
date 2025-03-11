@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import List
 from typing import Tuple
 
@@ -8,6 +9,8 @@ from transformers import T5EncoderModel
 from transformers import T5ForConditionalGeneration
 
 from protbench.applications.pretrained.pretrained import PretrainedModelWrapper
+from protbench.applications.pretrained.utils import shift_embeddings
+
 
 model_url_map = {
     "ankh3-xl": "proteinea-ea/ankh3-xl",
@@ -19,8 +22,14 @@ def get_available_checkpoints():
     return list(model_url_map.keys())
 
 
-def embeddings_postprocessing_fn(model_outputs):
-    return model_outputs.last_hidden_state
+def embeddings_postprocessing_fn(
+    model_outputs,
+    shift_left: int | None = None,
+    shift_right: int | None = None,
+):
+    output = model_outputs.last_hidden_state
+    output = shift_embeddings(output, shift_left, shift_right)
+    return output
 
 
 def embedding_dim(model):
@@ -50,6 +59,7 @@ class DefaultTokenizationFunction:
         output = []
         for sequence in sequences:
             output.append("[NLU]" + sequence)
+        return output
 
     def __call__(self, sequences):
         if not isinstance(sequences, list):

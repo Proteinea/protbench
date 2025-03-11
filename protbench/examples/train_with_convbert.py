@@ -10,7 +10,7 @@ import torch
 import wandb
 from transformers import Trainer
 from transformers import TrainingArguments
-
+from functools import partial
 from protbench import applications
 from protbench import embedder
 from protbench.examples.utils import create_run_name
@@ -18,6 +18,7 @@ from protbench.examples.utils import set_seed
 from protbench.models import ConvBert
 from protbench.utils import dataset_adapters
 from protbench.models import initialize_model
+from protbench.examples.utils import unpack_list_of_dicts
 
 
 @hydra.main(config_name="config", config_path="config", version_base=None)
@@ -25,7 +26,9 @@ def main(config_args: omegaconf.DictConfig):
     for env_variable, value in config_args.env_variables.items():
         os.environ[env_variable] = value
 
-    for model_family, checkpoint in zip(config_args.models_family, config_args.model_checkpoints):
+
+    # loop on a list of dictionaries
+    for model_family, checkpoint in unpack_list_of_dicts(config_args.model_checkpoints):
         with torch.device("cuda:0"):
             pretrained_model = applications.initialize_model_from_checkpoint(
                 model_family,
@@ -70,7 +73,11 @@ def main(config_args: omegaconf.DictConfig):
                 # A simple function that takes the output of the model and modify it if needed
                 # or if the model returns an object that has the embedding inside it you will
                 # need to pass this function to return the tensor itself.
-                post_processing_function=pretrained_model.embeddings_postprocessing_fn,
+                post_processing_function=partial(
+                    pretrained_model.embeddings_postprocessing_fn,
+                    shift_left=config_args.shifting_config.shift_left,
+                    shift_right=config_args.shifting_config.shift_right,
+                ),
                 pad_token_id=0,
                 low_memory=config_args.train_config.low_memory,
                 save_directories=save_dirs,
@@ -90,26 +97,32 @@ def main(config_args: omegaconf.DictConfig):
             # memory then we save it to the disk.
             if config_args.train_config.low_memory:
                 train_dataset = dataset_adapters.EmbeddingsDatasetFromDisk(
-                    save_dirs.train_path, train_labels
+                    save_dirs.train_path,
+                    train_labels,
                 )
                 val_dataset = dataset_adapters.EmbeddingsDatasetFromDisk(
-                    save_dirs.validation_path, val_labels
+                    save_dirs.validation_path,
+                    val_labels,
                 )
                 if task.test_dataset is not None:
                     test_dataset = dataset_adapters.EmbeddingsDatasetFromDisk(
-                        save_dirs.test_path, test_labels
+                        save_dirs.test_path,
+                        test_labels,
                     )
             else:
                 train_embeds, val_embeds, test_embeds = embedding_outputs
                 train_dataset = dataset_adapters.EmbeddingsDataset(
-                    train_embeds, train_labels
+                    train_embeds,
+                    train_labels,
                 )
                 val_dataset = dataset_adapters.EmbeddingsDataset(
-                    val_embeds, val_labels
+                    val_embeds,
+                    val_labels,
                 )
                 if task.test_dataset is not None:
                     test_dataset = dataset_adapters.EmbeddingsDataset(
-                        test_embeds, test_labels
+                        test_embeds,
+                        test_labels,
                     )
 
             print("Number of train embeddings: ", len(train_dataset))

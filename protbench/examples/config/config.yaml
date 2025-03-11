@@ -8,18 +8,23 @@ convbert_config:
 env_variables:
   WANDB_PROJECT: Benchmarking
 model_checkpoints:
-- ankh-base
-- ankh-v2-23
-- ankh-v2-32
-- ankh-v2-33
-- ankh-v2-41
-- ankh-v2-45
-- ankh-large
-- esm2_650M
-- esm2_3B
-- esm2_15B
-- ankh3-xl
-- ankh3-large
+- ankh:
+  - ankh-base
+  - ankh-large
+  - ankh-v2-23
+  - ankh-v2-32
+  - ankh-v2-33
+  - ankh-v2-41
+  - ankh-v2-45
+- esm2:
+  - esm2_650M
+  - esm2_3B
+  - esm2_15B
+- prottrans:
+  - prott5
+- ankh3:
+  - ankh3-large
+  - ankh3-xl
 model_with_lora_config:
   lora_alpha: 16
   lora_bias: none
@@ -30,6 +35,9 @@ model_with_lora_config:
   - q
   - v
   use_lora: true
+shifting_config:
+  shift_left: null
+  shift_right: null
 tasks:
 - ssp3_casp12
 - ssp3_casp14
