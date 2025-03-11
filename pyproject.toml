@@ -43,6 +43,7 @@ dependencies = [
     "torch==2.6.0",
     "safetensors==0.5.2",
     "huggingface-hub==0.29.1",
+    "torchvision==0.21.0",
 ]
 
 [tool.black]
