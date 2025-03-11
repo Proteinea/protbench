@@ -7,7 +7,7 @@ convbert_config:
 env_variables:
   WANDB_PROJECT: Benchmarking
 lora_config:
-  alpha: 16
+  alpha: 32
   bias: none
   dropout: 0.1
   rank: 16
@@ -32,7 +32,7 @@ model_checkpoints:
   - ankh3-large
   - ankh3-xl
 pooling_config:
-  name: max
+  name: avg
 shifting_config:
   shift_left: null
   shift_right: null
@@ -62,7 +62,7 @@ train_config:
   learning_rate: 0.001
   logging_steps: 10
   low_memory: true
-  num_train_epochs: 5
+  num_train_epochs: 20
   num_trials_per_checkpoint: 1
   per_device_eval_batch_size: 1
   per_device_train_batch_size: 1
