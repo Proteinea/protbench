@@ -23,14 +23,16 @@ def generate_config() -> Dict:
             "report_to": "wandb",
             "low_memory": True,
         },
-        "model_with_lora_config": {
-            "pooling": "max",
+        "pooling_config": {
+            "name": "max",
+        },
+        "lora_config": {
             "use_lora": True,
-            "lora_r": 16,
-            "lora_alpha": 16,
-            "lora_dropout": 0.1,
-            "lora_bias": "none",
-            "target_modules": ["q", "v"]
+            "rank": 16,
+            "alpha": 16,
+            "dropout": 0.1,
+            "bias": "none",
+            "target_modules": None
         },
         "model_checkpoints": [
             {"ankh": ["ankh-base", "ankh-large", "ankh-v2-23", "ankh-v2-32", "ankh-v2-33", "ankh-v2-41", "ankh-v2-45"]}, # noqa
@@ -60,7 +62,6 @@ def generate_config() -> Dict:
             "num_layers": 1,
             "kernel_size": 7,
             "dropout": 0.1,
-            "pooling": "avg",
         },
         "env_variables": {
             "WANDB_PROJECT": "Benchmarking",

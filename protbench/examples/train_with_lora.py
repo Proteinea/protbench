@@ -36,11 +36,11 @@ def main(config_args: omegaconf.DictConfig):
                 )
 
                 pretrained_model.initialze_model_from_checkpoint_with_lora(
-                    lora_r=config_args.model_with_lora_config.lora_r,
-                    lora_alpha=config_args.model_with_lora_config.lora_alpha,
-                    lora_dropout=config_args.model_with_lora_config.lora_dropout,  # noqa
-                    lora_bias=config_args.model_with_lora_config.lora_bias,
-                    target_modules=config_args.model_with_lora_config.target_modules,
+                    rank=config_args.lora_config.rank,
+                    alpha=config_args.lora_config.alpha,
+                    dropout=config_args.lora_config.dropout,  # noqa
+                    bias=config_args.lora_config.bias,
+                    target_modules=config_args.lora_config.target_modules,
                     gradient_checkpointing=config_args.train_config.gradient_checkpointing,
                 )
                 embedding_dim = pretrained_model.embedding_dim
@@ -87,10 +87,10 @@ def main(config_args: omegaconf.DictConfig):
                     num_trial=i,
                     checkpoint=checkpoint,
                     task_name=task_name,
-                    pooling=config_args.model_with_lora_config.pooling,
-                    lora_r=config_args.model_with_lora_config.lora_r,
-                    lora_alpha=config_args.model_with_lora_config.lora_alpha,
-                    target_modules=list(config_args.model_with_lora_config.target_modules),
+                    pooling=config_args.pooling_config.name,
+                    lora_r=config_args.lora_config.rank,
+                    lora_alpha=config_args.lora_config.alpha,
+                    target_modules=list(config_args.lora_config.target_modules),
                 )
                 set_seed(config_args.train_config.seed)
 
@@ -100,7 +100,7 @@ def main(config_args: omegaconf.DictConfig):
                     from_embeddings=False,
                     backbone=pretrained_model.model,
                     downstream_model=None,
-                    pooling=config_args.model_with_lora_config.pooling
+                    pooling=config_args.pooling_config.name
                     if task.requires_pooling
                     else None,
                     embedding_postprocessing_fn=partial(

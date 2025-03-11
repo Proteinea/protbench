@@ -75,10 +75,10 @@ class DefaultTokenizationFunction:
 def initialize_model_from_checkpoint(
     checkpoint: str,
     initialize_with_lora: bool = False,
-    lora_r: int = 16,
-    lora_alpha: int = 16,
-    lora_dropout: float = 0.1,
-    lora_bias: str = "none",
+    rank: int = 16,
+    alpha: int = 16,
+    dropout: float = 0.1,
+    bias: str = "none",
     target_modules: List = ["q", "v"],
     gradient_checkpointing: bool = False,
 ) -> Tuple[T5EncoderModel, AutoTokenizer]:
@@ -89,10 +89,10 @@ def initialize_model_from_checkpoint(
         )
         peft_config = LoraConfig(
             inference_mode=False,
-            r=lora_r,
-            lora_alpha=lora_alpha,
-            lora_dropout=lora_dropout,
-            bias=lora_bias,
+            r=rank,
+            lora_alpha=alpha,
+            lora_dropout=dropout,
+            bias=bias,
             target_modules=target_modules,
         )
         model = get_peft_model(model, peft_config).encoder

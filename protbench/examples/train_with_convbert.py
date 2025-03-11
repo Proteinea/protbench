@@ -85,8 +85,8 @@ def main(config_args: omegaconf.DictConfig):
                 forward_options={}, # Used in case the forward function requires arguments other than the `input_ids``
             )
             embedding_outputs = compute_embeddings_wrapper(
-                train_seqs=train_seqs[:10],
-                val_seqs=val_seqs[:10],
+                train_seqs=train_seqs,
+                val_seqs=val_seqs,
                 test_seqs=test_seqs,
             )
             # We do not need this model
@@ -99,11 +99,11 @@ def main(config_args: omegaconf.DictConfig):
             if config_args.train_config.low_memory:
                 train_dataset = dataset_adapters.EmbeddingsDatasetFromDisk(
                     save_dirs.train_path,
-                    train_labels[:10],
+                    train_labels,
                 )
                 val_dataset = dataset_adapters.EmbeddingsDatasetFromDisk(
                     save_dirs.validation_path,
-                    val_labels[:10],
+                    val_labels,
                 )
                 if task.test_dataset is not None:
                     test_dataset = dataset_adapters.EmbeddingsDatasetFromDisk(
@@ -137,7 +137,7 @@ def main(config_args: omegaconf.DictConfig):
                     num_trial=i,
                     checkpoint=checkpoint,
                     task_name=task_name,
-                    pooling=config_args.convbert_config.pooling,
+                    pooling=config_args.pooling_config.name,
                 )
 
                 set_seed(config_args.train_config.seed)
@@ -151,7 +151,7 @@ def main(config_args: omegaconf.DictConfig):
                     num_layers=config_args.convbert_config.num_layers,
                     kernel_size=config_args.convbert_config.kernel_size,
                     dropout=config_args.convbert_config.dropout,
-                    pooling=config_args.convbert_config.pooling
+                    pooling=config_args.pooling_config.name
                     if task.requires_pooling
                     else None,
                 )
@@ -172,7 +172,7 @@ def main(config_args: omegaconf.DictConfig):
                     # we passed to this function..
                     backbone=None,
                     downstream_model=downstream_model,
-                    pooling=config_args.convbert_config.pooling,
+                    pooling=config_args.pooling_config.name,
                     # No need to pass embedding postprocessing
                     # function because we do not have a
                     # pretrained backbone.

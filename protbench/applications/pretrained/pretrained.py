@@ -20,10 +20,10 @@ class PretrainedModelWrapper(abc.ABC):
 
     def initialze_model_from_checkpoint_with_lora(
         self,
-        lora_r: int,
-        lora_alpha: int,
-        lora_dropout: float,
-        lora_bias: str,
+        rank: int,
+        alpha: int,
+        dropout: float,
+        bias: str,
         target_modules: List,
         gradient_checkpointing: bool = False,
     ):

@@ -69,10 +69,10 @@ class DefaultTokenizationFunction:
 def initialize_model_from_checkpoint(
     checkpoint,
     initialize_with_lora: bool = False,
-    lora_r: int = 16,
-    lora_alpha: int = 16,
-    lora_dropout: float = 0.1,
-    lora_bias: str = "none",
+    rank: int = 16,
+    alpha: int = 16,
+    dropout: float = 0.1,
+    bias: str = "none",
     target_modules: List = ["q", "v"],
     gradient_checkpointing: bool = False,
 ):
@@ -82,10 +82,10 @@ def initialize_model_from_checkpoint(
     if initialize_with_lora:
         peft_config = LoraConfig(
             inference_mode=False,
-            r=lora_r,
-            lora_alpha=lora_alpha,
-            lora_dropout=lora_dropout,
-            bias=lora_bias,
+            r=rank,
+            lora_alpha=alpha,
+            lora_dropout=dropout,
+            bias=bias,
             target_modules=target_modules,
         )
         model = get_peft_model(model, peft_config)
@@ -114,20 +114,20 @@ class ESM2(PretrainedModelWrapper):
 
     def initialze_model_from_checkpoint_with_lora(
         self,
-        lora_r: int,
-        lora_alpha: int,
-        lora_dropout: float,
-        lora_bias: str,
+        rank: int,
+        alpha: int,
+        dropout: float,
+        bias: str,
         target_modules: List,
         gradient_checkpointing: bool = False,
     ):
         self.model, self.tokenizer = initialize_model_from_checkpoint(
             checkpoint=self.checkpoint,
             initialize_with_lora=True,
-            lora_r=lora_r,
-            lora_alpha=lora_alpha,
-            lora_dropout=lora_dropout,
-            lora_bias=lora_bias,
+            rank=rank,
+            alpha=alpha,
+            dropout=dropout,
+            bias=bias,
             target_modules=target_modules,
             gradient_checkpointing=gradient_checkpointing,
         )
