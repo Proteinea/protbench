@@ -22,5 +22,6 @@ def set_seed(seed: int) -> None:
 
 def unpack_list_of_dicts(list_of_dicts):
     for model_family in list_of_dicts:
-        for model_name, checkpoint in model_family.items():
-            yield model_name, checkpoint
+        for model_name, checkpoints in model_family.items():
+            for checkpoint in checkpoints:
+                yield model_name, checkpoint

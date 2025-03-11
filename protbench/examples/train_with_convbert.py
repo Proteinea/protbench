@@ -3,6 +3,7 @@
 import os
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["WANDB_MODE"] = "disabled"
 
 import hydra
 import omegaconf
@@ -84,8 +85,8 @@ def main(config_args: omegaconf.DictConfig):
                 forward_options={}, # Used in case the forward function requires arguments other than the `input_ids``
             )
             embedding_outputs = compute_embeddings_wrapper(
-                train_seqs=train_seqs,
-                val_seqs=val_seqs,
+                train_seqs=train_seqs[:10],
+                val_seqs=val_seqs[:10],
                 test_seqs=test_seqs,
             )
             # We do not need this model
@@ -98,11 +99,11 @@ def main(config_args: omegaconf.DictConfig):
             if config_args.train_config.low_memory:
                 train_dataset = dataset_adapters.EmbeddingsDatasetFromDisk(
                     save_dirs.train_path,
-                    train_labels,
+                    train_labels[:10],
                 )
                 val_dataset = dataset_adapters.EmbeddingsDatasetFromDisk(
                     save_dirs.validation_path,
-                    val_labels,
+                    val_labels[:10],
                 )
                 if task.test_dataset is not None:
                     test_dataset = dataset_adapters.EmbeddingsDatasetFromDisk(

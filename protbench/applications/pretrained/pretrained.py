@@ -34,7 +34,12 @@ class PretrainedModelWrapper(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def embeddings_postprocessing_fn(self, model_outputs):
+    def embeddings_postprocessing_fn(
+        self,
+        model_outputs,
+        shift_left: int | None = None,
+        shift_right: int | None = None,
+    ):
         pass
 
     def load_default_tokenization_function(

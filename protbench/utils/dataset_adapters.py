@@ -60,12 +60,10 @@ class EmbeddingsDatasetFromDisk(Dataset):
 
     def __getitem__(self, idx):
         embedding_path = os.path.join(self.embeddings, f"{idx}.npy")
-        # fmt: off
-        embds = torch.from_numpy(
-            np.load(embedding_path)[self.shift_left: -self.shift_right, :]
-        )
-        # fmt: on
+        embds = torch.from_numpy(np.load(embedding_path))
+        print(embds.shape)
         labels = torch.tensor(self.labels[idx])
+        print(labels.shape)
         return {
             "embds": embds,
             "labels": labels,

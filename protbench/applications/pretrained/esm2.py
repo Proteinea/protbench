@@ -140,8 +140,16 @@ class ESM2(PretrainedModelWrapper):
         return embedding_dim(self.model)
 
     @staticmethod
-    def embeddings_postprocessing_fn(model_outputs):
-        return embeddings_postprocessing_fn(model_outputs=model_outputs)
+    def embeddings_postprocessing_fn(
+        model_outputs,
+        shift_left: int | None = None,
+        shift_right: int | None = None,
+    ):
+        return embeddings_postprocessing_fn(
+            model_outputs=model_outputs,
+            shift_left=shift_left,
+            shift_right=shift_right,
+        )
 
     @staticmethod
     def get_available_checkpoints():
