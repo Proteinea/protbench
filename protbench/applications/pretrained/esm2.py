@@ -73,7 +73,7 @@ def initialize_model_from_checkpoint(
     alpha: int = 16,
     dropout: float = 0.1,
     bias: str = "none",
-    target_modules: List = ["q", "v"],
+    target_modules: List = ["query", "value"],
     gradient_checkpointing: bool = False,
 ):
     model = AutoModel.from_pretrained(model_url_map[checkpoint])
